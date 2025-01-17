@@ -25,7 +25,7 @@ def criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual
     texto_valor = f"De €{preco_original:.2f} por €{preco_atual:.2f}"
     
     if cupom:
-        texto_cupom = f"Use o código: {cupom}"
+        texto_cupom = f"Use o código: {cupom}!"
     else:
         texto_cupom = ""
 
@@ -41,7 +41,7 @@ def criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual
     return imagem
 
 # Função para gerar o post com link
-def gerar_post(produto, link_referencia):
+def gerar_post(produto, link_referencia, tags):
     nome = produto['nome']
     preco_original = produto['preco_original']
     preco_atual = produto['preco_atual']
@@ -59,6 +59,9 @@ def gerar_post(produto, link_referencia):
     
     post_texto += f"👉 [Compre agora]({link_referencia})"
     
+    if tags:
+        post_texto += f"\n\n# {' #'.join(tags)}"  # Adiciona as tags ao final
+
     return post_texto
 
 # Função para gerar os links de compartilhamento para as redes sociais
@@ -120,6 +123,13 @@ st.header("Gerar Link de Afiliado")
 st.markdown("Acesse o Site Stripe da Amazon enquanto navega no site da Amazon e copie o link de afiliado gerado.")
 link_referencia = st.text_input("Cole aqui o Link de Afiliado gerado pelo Site Stripe")
 
+# Passo 7: Inserir tags
+st.header("Inserir Tags para o Post")
+tags = st.text_input("Digite as tags separadas por vírgula (ex: oferta, desconto, produto, amazon)")
+
+# Transformar as tags em uma lista
+tags = [tag.strip() for tag in tags.split(',')] if tags else []
+
 # Botão para gerar post
 if st.button("Gerar Post"):
     if nome_produto and link_referencia and preco_atual and imagem_url:
@@ -132,7 +142,7 @@ if st.button("Gerar Post"):
             "cupom": cupom
         }
         
-        post_texto = gerar_post(produto, link_referencia)
+        post_texto = gerar_post(produto, link_referencia, tags)
         
         st.subheader("Post Gerado")
         
