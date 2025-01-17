@@ -40,15 +40,22 @@ st.sidebar.header("Configurações")
 st.header("Adicionar nome do produto")
 nome_produto = st.text_input("Nome do Produto")
 
-# Passo 2: Inserir manualmente o preço atual
-st.header("Inserir preço atual do produto")
-preco_atual = st.number_input("Preço Atual (€)", min_value=0.0, step=0.01, format="%.2f")
+# Passo 2: Selecionar se o produto tem desconto
+st.header("O produto tem desconto?")
+tem_desconto = st.radio("Selecione a opção:", ('Sim', 'Não'))
 
-# Passo 3: Inserir manualmente o preço original (opcional)
-st.header("Inserir preço original do produto (opcional)")
-preco_original = st.number_input("Preço Original (€)", min_value=0.0, step=0.01, format="%.2f")
+# Passo 3: Inserir preços e desconto
+if tem_desconto == 'Sim':
+    st.header("Informar Desconto e Preço Atual")
+    desconto_percentual = st.number_input("Porcentagem de Desconto (%)", min_value=0.0, step=0.01, format="%.2f")
+    preco_atual = st.number_input("Preço Atual (€)", min_value=0.0, step=0.01, format="%.2f")
+    preco_original = preco_atual / (1 - desconto_percentual / 100)  # Cálculo automático do preço original
+else:
+    st.header("Inserir preços do produto")
+    preco_original = st.number_input("Preço Original (€)", min_value=0.0, step=0.01, format="%.2f")
+    preco_atual = st.number_input("Preço Atual (€)", min_value=0.0, step=0.01, format="%.2f")
 
-# Cálculo automático do desconto (caso o preço original seja fornecido)
+# Cálculo do desconto se o preço original e atual forem inseridos
 desconto = 0
 if preco_original > 0 and preco_atual < preco_original:
     desconto = calcular_desconto(preco_original, preco_atual)
@@ -64,7 +71,7 @@ link_referencia = st.text_input("Cole aqui o Link de Afiliado gerado pelo Site S
 
 # Exibir a imagem do produto (se o link for válido)
 if imagem_url:
-    st.image(imagem_url, caption="Imagem do Produto", use_container_width=True)  # Usando use_container_width
+    st.image(imagem_url, caption="Imagem do Produto", use_container_width=True)
 
 # Botão para gerar post
 if st.button("Gerar Post"):
