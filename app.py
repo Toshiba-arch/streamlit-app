@@ -48,6 +48,25 @@ def gerar_post(produto, link_referencia):
 """
     return post_texto
 
+# Função para gerar os links de compartilhamento para as redes sociais
+def gerar_links_compartilhamento(post_texto, link_referencia, imagem_url):
+    # Facebook
+    facebook_link = f"https://www.facebook.com/sharer/sharer.php?u={link_referencia}"
+
+    # Twitter
+    twitter_link = f"https://twitter.com/intent/tweet?url={link_referencia}&text={post_texto}"
+
+    # LinkedIn
+    linkedin_link = f"https://www.linkedin.com/shareArticle?mini=true&url={link_referencia}&title={post_texto}"
+
+    # WhatsApp
+    whatsapp_link = f"https://wa.me/?text={post_texto} {link_referencia}"
+
+    # Pinterest
+    pinterest_link = f"https://www.pinterest.com/pin/create/button/?url={link_referencia}&media={imagem_url}&description={post_texto}"
+
+    return facebook_link, twitter_link, linkedin_link, whatsapp_link, pinterest_link
+
 # Interface Streamlit
 st.title("Gerador de Conteúdo com Ofertas da Amazon")
 st.sidebar.header("Configurações")
@@ -100,22 +119,30 @@ if st.button("Gerar Post"):
         
         st.subheader("Post Gerado")
         
-        # Exibir o link de afiliado com o preview do Facebook
-        st.markdown(f"**Clique abaixo para compartilhar no Facebook com o preview da imagem**:")
-        st.markdown(f"[Compartilhar no Facebook](https://www.facebook.com/sharer/sharer.php?u={link_referencia})")
-
-        # Gerar a imagem com o texto sobreposto
+        # Exibir a imagem com o texto sobreposto
         imagem_com_texto = criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual, desconto)
         
         # Exibir a imagem com o texto
-        st.image(imagem_com_texto, caption="Imagem com Desconto", use_container_width=True)  # Atualizado
+        st.image(imagem_com_texto, caption="Imagem com Desconto", use_container_width=True)
 
         # Exibir o texto do post gerado
         st.text_area("Copie o texto abaixo para compartilhar nas redes sociais", post_texto, height=200)
 
+        # Gerar links de compartilhamento
+        facebook_link, twitter_link, linkedin_link, whatsapp_link, pinterest_link = gerar_links_compartilhamento(post_texto, link_referencia, imagem_url)
+
+        st.markdown("**Clique para Compartilhar nas Redes Sociais**:")
+
+        # Links para compartilhamento
+        st.markdown(f"[Compartilhar no Facebook]({facebook_link})")
+        st.markdown(f"[Compartilhar no Twitter]({twitter_link})")
+        st.markdown(f"[Compartilhar no LinkedIn]({linkedin_link})")
+        st.markdown(f"[Compartilhar no WhatsApp]({whatsapp_link})")
+        st.markdown(f"[Compartilhar no Pinterest]({pinterest_link})")
+
         st.markdown("""
-        **Dica**: Ao copiar o texto gerado e colá-lo no **Facebook**, a imagem com o texto sobreposto será visualizada junto com o link clicável. 
-        O **Facebook** irá gerar automaticamente o preview da imagem com o link, então você não precisa se preocupar em hospedar a imagem.
+        **Dica**: Ao copiar o texto gerado e colá-lo nas redes sociais, a imagem com o texto sobreposto será visualizada junto com o link clicável. 
+        O Facebook, Twitter, LinkedIn e outras redes sociais vão gerar automaticamente o preview da imagem com o link.
         """)
     else:
         st.error("Por favor, insira todos os detalhes do produto e o link de afiliado.")
