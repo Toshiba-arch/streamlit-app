@@ -62,7 +62,7 @@ def gerar_post(produto, link_referencia, tags):
     post_texto += f"👉 [Compre agora]({link_referencia})"
     
     if tags:
-        post_texto += f"\n\n# {' #'.join(tags)}"  # Adiciona as tags ao final
+        post_texto += f"\n\n" + " ".join([f"#{tag.strip()}" for tag in tags])  # Formatar tags corretamente
 
     return post_texto
 
@@ -139,7 +139,7 @@ link_referencia = st.text_input("Cole aqui o Link de Afiliado gerado pelo Site S
 
 # Passo 7: Inserir tags
 st.header("Inserir Tags para o Post")
-tags = st.text_input("Digite as tags separadas por vírgula (ex: oferta, desconto, produto, amazon)")
+tags = st.text_input("Digite as tags separadas por vírgula (ex: amazon, desconto, oferta)")
 
 # Transformar as tags em uma lista
 tags = [tag.strip() for tag in tags.split(',')] if tags else []
@@ -180,3 +180,7 @@ if st.button("Gerar Post"):
         st.markdown(f"[Compartilhar no LinkedIn]({linkedin_link})")
         st.markdown(f"[Compartilhar no WhatsApp]({whatsapp_link})")
         st.markdown(f"[Compartilhar no Pinterest]({pinterest_link})")
+
+        st.markdown("""**Dica**: Ao clicar nos links de compartilhamento, você será redirecionado para a rede social correspondente. O texto e a imagem gerada serão automaticamente incluídos no seu post.""")
+    else:
+        st.error("Por favor, insira todos os detalhes do produto e o link de afiliado.")
