@@ -3,6 +3,9 @@ from PIL import Image, ImageDraw, ImageFont
 import requests
 from io import BytesIO
 
+# Definir a configuração da página
+st.set_page_config(page_title="Gerador de Conteúdo de Ofertas", layout="wide")
+
 # Função para calcular o desconto
 def calcular_desconto(preco_original, preco_atual):
     if preco_original > preco_atual:
@@ -112,4 +115,3 @@ def run():
             st.markdown(f"[Compartilhar no LinkedIn]({linkedin_link})")
             st.markdown(f"[Compartilhar no WhatsApp]({whatsapp_link})")
             st.markdown(f"[Compartilhar no Pinterest]({pinterest_link})")
-
