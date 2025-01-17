@@ -1,7 +1,4 @@
 import streamlit as st
-from PIL import Image, ImageDraw, ImageFont
-import io
-import requests
 
 # Função para calcular o desconto
 def calcular_desconto(preco_original, preco_atual):
@@ -10,32 +7,8 @@ def calcular_desconto(preco_original, preco_atual):
         return round(desconto, 2)
     return 0
 
-# Função para criar a imagem com o texto sobreposto
-def criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual, desconto):
-    # Baixar a imagem da URL
-    response = requests.get(imagem_url)
-    
-    # Abrir a imagem a partir do conteúdo binário
-    imagem = Image.open(io.BytesIO(response.content))
-    
-    # Definir o texto a ser sobreposto
-    texto = f"{nome_produto}\nDe €{preco_original:.2f} por €{preco_atual:.2f}\nDesconto: {desconto}%"
-    
-    # Definir a posição do texto e o estilo
-    draw = ImageDraw.Draw(imagem)
-    font = ImageFont.load_default()  # Usando fonte padrão
-    largura, altura = imagem.size
-    draw.text((largura // 4, altura // 2), texto, font=font, fill=(255, 255, 255))
-    
-    # Salvar a imagem temporariamente
-    img_byte_arr = io.BytesIO()
-    imagem.save(img_byte_arr, format='PNG')
-    img_byte_arr.seek(0)
-    
-    return img_byte_arr
-
 # Função para criar o post
-def criar_post(produto, link_referencia, imagem_url):
+def criar_post(produto, link_referencia):
     nome = produto['nome']
     preco_original = produto['preco_original']
     preco_atual = produto['preco_atual']
@@ -46,9 +19,7 @@ def criar_post(produto, link_referencia, imagem_url):
 💰 De **€{preco_original:.2f}** por apenas **€{preco_atual:.2f}**!  
 📉 Economize **{desconto}%**!  
 👉 [Compre agora]({link_referencia})  
-
-🖼️ Veja a imagem do produto: {imagem_url}
-        """
+"""
     return post_text
 
 # Interface Streamlit
@@ -79,8 +50,8 @@ desconto = 0
 if preco_original > 0 and preco_atual < preco_original:
     desconto = calcular_desconto(preco_original, preco_atual)
 
-# Passo 4: Inserir manualmente a imagem
-st.header("Inserir Imagem do Produto")
+# Passo 4: Inserir o link da imagem do produto
+st.header("Inserir Link da Imagem do Produto")
 imagem_url = st.text_input("Cole o URL da Imagem do Produto")
 
 # Passo 5: Gerar link com o Site Stripe
@@ -99,20 +70,19 @@ if st.button("Gerar Post"):
             "imagem": imagem_url
         }
         
-        post_text = criar_post(produto, link_referencia, imagem_url)
-        
-        # Gerar a imagem com texto sobreposto
-        imagem_com_texto = criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual, desconto)
+        post_text = criar_post(produto, link_referencia)
         
         st.subheader("Post Gerado")
         
-        # Exibir imagem e o texto do post
-        st.image(imagem_com_texto)
+        # Exibir imagem como preview
+        st.image(imagem_url, caption="Imagem do Produto", use_column_width=True)
+        
+        # Exibir o texto do post gerado
         st.text_area("Copie o texto abaixo para compartilhar nas redes sociais", post_text, height=200)
 
         st.markdown("""
         **Dica**: Ao copiar o texto gerado e colá-lo no **Facebook**, a imagem com o texto sobreposto será visualizada junto com o link clicável. 
-        Certifique-se de que a imagem esteja hospedada publicamente (em um serviço como Imgur ou Google Drive) para que a visualização funcione corretamente.
+        O **Facebook** irá gerar automaticamente o preview da imagem com o link, então você não precisa se preocupar em hospedar a imagem.
         """)
 
     else:
