@@ -66,6 +66,7 @@ def run():
     st.title("Gerador de Conteúdo de Ofertas")
     st.sidebar.header("Configurações")
 
+    # Inputs do produto
     nome_produto = st.text_input("Nome do Produto")
     tem_desconto = st.radio("O produto tem desconto?", ('Sim', 'Não'))
 
@@ -81,6 +82,7 @@ def run():
     imagem_url = st.text_input("Link da Imagem do Produto")
     link_referencia = st.text_input("Link de Afiliado")
 
+    # Calcular desconto
     desconto = calcular_desconto(preco_original, preco_atual)
 
     if st.button("Gerar Post"):
@@ -103,8 +105,11 @@ def run():
             st.text_area("Texto do Post para Compartilhar", post_texto, height=200)
 
             facebook_link, twitter_link, linkedin_link, whatsapp_link, pinterest_link = gerar_links_compartilhamento(post_texto, link_referencia, imagem_url)
+
+            # Links para compartilhamento
             st.markdown(f"[Compartilhar no Facebook]({facebook_link})")
             st.markdown(f"[Compartilhar no Twitter]({twitter_link})")
             st.markdown(f"[Compartilhar no LinkedIn]({linkedin_link})")
             st.markdown(f"[Compartilhar no WhatsApp]({whatsapp_link})")
             st.markdown(f"[Compartilhar no Pinterest]({pinterest_link})")
+
