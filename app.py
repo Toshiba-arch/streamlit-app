@@ -81,20 +81,17 @@ if st.button("Gerar Post"):
         }
         post = criar_post(produto, link_referencia)
         st.subheader("Post Gerado")
-        
-        # Exibir o post gerado
+
+        # Exibir o post gerado com formatação HTML
         st.markdown(post, unsafe_allow_html=True)
 
         # Caixa de texto para copiar o post com a formatação
         st.text_area("Copie o texto abaixo para compartilhar nas redes sociais", post, height=200)
 
-        # Botão de copiar
-        st.download_button(
-            label="Clique para copiar o post",
-            data=post,
-            file_name="post_para_redes_sociais.txt",
-            mime="text/plain"
-        )
+        # Instrução para copiar o post
+        st.markdown("""
+        **Dica**: Ao copiar o texto gerado, cole diretamente no **Facebook** ou outras redes sociais. As imagens e links serão corretamente formatados.
+        """)
 
     else:
         st.error("Por favor, insira todos os detalhes do produto e o link de afiliado.")
