@@ -64,7 +64,7 @@ link_referencia = st.text_input("Cole aqui o Link de Afiliado gerado pelo Site S
 
 # Exibir a imagem do produto (se o link for válido)
 if imagem_url:
-    st.image(imagem_url, caption="Imagem do Produto", use_column_width=True)
+    st.image(imagem_url, caption="Imagem do Produto", use_container_width=True)  # Usando use_container_width
 
 # Botão para gerar post
 if st.button("Gerar Post"):
