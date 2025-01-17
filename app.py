@@ -85,7 +85,16 @@ if st.button("Gerar Post"):
         # Exibir o post gerado
         st.markdown(post, unsafe_allow_html=True)
 
-        # Caixa de texto para copiar o post
+        # Caixa de texto para copiar o post com a formatação
         st.text_area("Copie o texto abaixo para compartilhar nas redes sociais", post, height=200)
+
+        # Botão de copiar
+        st.download_button(
+            label="Clique para copiar o post",
+            data=post,
+            file_name="post_para_redes_sociais.txt",
+            mime="text/plain"
+        )
+
     else:
         st.error("Por favor, insira todos os detalhes do produto e o link de afiliado.")
