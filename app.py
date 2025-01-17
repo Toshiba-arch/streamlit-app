@@ -20,14 +20,14 @@ def criar_post(produto, link_referencia):
 🔹 **{nome}**  
 💰 De **€{preco_original:.2f}** por apenas **€{preco_atual:.2f}**!  
 📉 Economize **{desconto}%**!  
-![Imagem do Produto]({imagem_url})  
+[![Imagem do Produto]({imagem_url})]({link_referencia})  
 👉 [Compre agora]({link_referencia})  
         """
     else:
         post = f"""📢 **Confira este produto!** 📢  
 🔹 **{nome}**  
 💰 Preço atual: **€{preco_atual:.2f}**!  
-![Imagem do Produto]({imagem_url})  
+[![Imagem do Produto]({imagem_url})]({link_referencia})  
 👉 [Compre agora]({link_referencia})  
         """
     return post
@@ -69,10 +69,6 @@ st.header("Gerar Link de Afiliado")
 st.markdown("Acesse o Site Stripe da Amazon enquanto navega no site da Amazon e copie o link de afiliado gerado.")
 link_referencia = st.text_input("Cole aqui o Link de Afiliado gerado pelo Site Stripe")
 
-# Exibir a imagem do produto (se o link for válido)
-if imagem_url:
-    st.image(imagem_url, caption="Imagem do Produto", use_container_width=True)
-
 # Botão para gerar post
 if st.button("Gerar Post"):
     if nome_produto and link_referencia and preco_atual and imagem_url:
@@ -85,6 +81,11 @@ if st.button("Gerar Post"):
         }
         post = criar_post(produto, link_referencia)
         st.subheader("Post Gerado")
+        
+        # Exibir o post gerado
         st.markdown(post, unsafe_allow_html=True)
+
+        # Caixa de texto para copiar o post
+        st.text_area("Copie o texto abaixo para compartilhar nas redes sociais", post, height=200)
     else:
         st.error("Por favor, insira todos os detalhes do produto e o link de afiliado.")
