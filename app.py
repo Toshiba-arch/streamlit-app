@@ -35,10 +35,10 @@ def criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual
     largura, altura = imagem.size
 
     # Posicionar o texto
-    draw.text((10, altura - 50), texto_desconto, fill="white", font=font)
-    draw.text((10, altura - 30), texto_valor, fill="white", font=font)
+    draw.text((10, altura - 100), texto_desconto, fill="white", font=font)
+    draw.text((10, altura - 70), texto_valor, fill="white", font=font)
     if cupom:
-        draw.text((10, altura - 10), texto_cupom, fill="white", font=font)
+        draw.text((10, altura - 40), texto_cupom, fill="white", font=font)
 
     return imagem
 
@@ -89,21 +89,9 @@ def gerar_links_compartilhamento(post_texto, link_referencia, imagem_url):
 st.title("Gerador de Conteúdo com Ofertas da Amazon")
 st.sidebar.header("Configurações")
 
-# Estilo CSS para reduzir o tamanho da fonte
-st.markdown("""
-    <style>
-        .small-font input, .small-font textarea {
-            font-size: 14px;
-        }
-        .small-font h3 {
-            font-size: 16px;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
 # Passo 1: Inserir apenas o nome do produto
-st.header("Adicionar nome do produto", anchor="nome_produto")
-nome_produto = st.text_input("Nome do Produto", key="nome_produto", help="Insira o nome do produto", label_visibility="collapsed")
+st.header("Adicionar nome do produto")
+nome_produto = st.text_input("Nome do Produto")
 
 # Passo 2: Selecionar se o produto tem desconto
 st.header("O produto tem desconto?")
@@ -138,48 +126,48 @@ st.markdown("Acesse o Site Stripe da Amazon enquanto navega no site da Amazon e 
 link_referencia = st.text_input("Cole aqui o Link de Afiliado gerado pelo Site Stripe")
 
 # Passo 7: Inserir tags
-st.header("Inserir Tags para o Post")
-tags = st.text_input("Digite as tags separadas por vírgula (ex: amazon, desconto, oferta)")
+tags = st.text_input("Insira tags separadas por vírgula (ex: #amazon, #oferta)")
 
-# Transformar as tags em uma lista
-tags = [tag.strip() for tag in tags.split(',')] if tags else []
+# Botão para gerar post
+if st.button("Gerar Post"):
+    if nome_produto and link_referencia and preco_atual and imagem_url:
+        produto = {
+            "nome": nome_produto,
+            "preco_original": preco_original,
+            "preco_atual": preco_atual,
+            "desconto": desconto,
+            "imagem": imagem_url,
+            "cupom": cupom
+        }
+        
+        post_texto = gerar_post(produto, link_referencia, tags.split(','))  # Gerar post com as tags
 
-# Submenu lateral para exibir o resultado do post
-submenu = st.sidebar.radio("Visualizar Post Gerado", ["Visualizar Post", "Não visualizar"])
+        st.subheader("Post Gerado")
+        
+        # Exibir a imagem com o texto sobreposto
+        imagem_com_texto = criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual, desconto, cupom)
+        
+        # Exibir a imagem com o texto e a legenda personalizada
+        legenda_imagem = f"**{nome_produto}** - Desconto: {desconto}%"
+        st.image(imagem_com_texto, caption=legenda_imagem, use_container_width=True)
 
-if submenu == "Visualizar Post":
-    # Botão para gerar post
-    if st.button("Gerar Post"):
-        if nome_produto and link_referencia and preco_atual and imagem_url:
-            produto = {
-                "nome": nome_produto,
-                "preco_original": preco_original,
-                "preco_atual": preco_atual,
-                "desconto": desconto,
-                "imagem": imagem_url,
-                "cupom": cupom
-            }
-            
-            post_texto = gerar_post(produto, link_referencia, tags)
-            
-            # Exibir a imagem com o texto sobreposto
-            imagem_com_texto = criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual, desconto, cupom)
-            
-            # Gerar links de compartilhamento
-            facebook_link, twitter_link, linkedin_link, whatsapp_link, pinterest_link = gerar_links_compartilhamento(post_texto, link_referencia, imagem_url)
+        # Exibir o texto do post gerado
+        st.text_area("Copie o texto abaixo para compartilhar nas redes sociais", post_texto, height=200)
 
-            # Mostrar o post gerado na área do submenu
-            st.subheader("Post Gerado")
-            st.image(imagem_com_texto, caption="Imagem com Desconto", use_container_width=True)
-            st.text_area("Copie o texto abaixo para compartilhar nas redes sociais", post_texto, height=200)
+        # Gerar links de compartilhamento
+        facebook_link, twitter_link, linkedin_link, whatsapp_link, pinterest_link = gerar_links_compartilhamento(post_texto, link_referencia, imagem_url)
 
-            st.markdown("**Clique para Compartilhar nas Redes Sociais**:")
-            st.markdown(f"[Compartilhar no Facebook]({facebook_link})")
-            st.markdown(f"[Compartilhar no Twitter]({twitter_link})")
-            st.markdown(f"[Compartilhar no LinkedIn]({linkedin_link})")
-            st.markdown(f"[Compartilhar no WhatsApp]({whatsapp_link})")
-            st.markdown(f"[Compartilhar no Pinterest]({pinterest_link})")
+        st.markdown("**Clique para Compartilhar nas Redes Sociais**:")
 
-            st.markdown("""**Dica**: Ao clicar nos links de compartilhamento, você será redirecionado para a rede social correspondente. O texto e a imagem gerada serão automaticamente incluídos no seu post.""")
-        else:
-            st.error("Por favor, insira todos os detalhes do produto e o link de afiliado.")
+        # Links para compartilhamento
+        st.markdown(f"[Compartilhar no Facebook]({facebook_link})")
+        st.markdown(f"[Compartilhar no Twitter]({twitter_link})")
+        st.markdown(f"[Compartilhar no LinkedIn]({linkedin_link})")
+        st.markdown(f"[Compartilhar no WhatsApp]({whatsapp_link})")
+        st.markdown(f"[Compartilhar no Pinterest]({pinterest_link})")
+
+        st.markdown("""
+        **Dica**: Ao clicar nos links de compartilhamento, você será redirecionado para a rede social correspondente. O texto e a imagem gerada serão automaticamente incluídos no seu post.
+        """)
+    else:
+        st.error("Por favor, insira todos os detalhes do produto e o link de afiliado.")
