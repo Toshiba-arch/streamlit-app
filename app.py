@@ -95,9 +95,21 @@ def gerar_links_compartilhamento(post_texto, link_referencia, imagem_url):
 st.title("Gerador de Conteúdo com Ofertas da Amazon")
 st.sidebar.header("Configurações")
 
+# Estilo CSS para reduzir o tamanho da fonte
+st.markdown("""
+    <style>
+        .small-font input, .small-font textarea {
+            font-size: 14px;
+        }
+        .small-font h3 {
+            font-size: 16px;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 # Passo 1: Inserir apenas o nome do produto
-st.header("Adicionar nome do produto")
-nome_produto = st.text_input("Nome do Produto")
+st.header("Adicionar nome do produto", anchor="nome_produto")
+nome_produto = st.text_input("Nome do Produto", key="nome_produto", help="Insira o nome do produto", label_visibility="collapsed")
 
 # Passo 2: Selecionar se o produto tem desconto
 st.header("O produto tem desconto?")
@@ -152,31 +164,25 @@ if st.button("Gerar Post"):
         
         post_texto = gerar_post(produto, link_referencia, tags)
         
-        st.subheader("Post Gerado")
-        
         # Exibir a imagem com o texto sobreposto
         imagem_com_texto = criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual, desconto, cupom)
         
-        # Exibir a imagem com o texto
-        st.image(imagem_com_texto, caption="Imagem com Desconto", use_container_width=True)
-
-        # Exibir o texto do post gerado
-        st.text_area("Copie o texto abaixo para compartilhar nas redes sociais", post_texto, height=200)
-
         # Gerar links de compartilhamento
         facebook_link, twitter_link, linkedin_link, whatsapp_link, pinterest_link = gerar_links_compartilhamento(post_texto, link_referencia, imagem_url)
+        
+        # Gerar o link para visualizar o post gerado em uma nova aba
+        post_resultado_link = f"data:text/html,<html><body><h2>Post Gerado</h2><p>{post_texto}</p><img src='{imagem_com_texto}'/></body></html>"
+
+        # Link para abrir em uma nova aba
+        st.markdown(f"[Visualizar o Post Gerado em Nova Aba]({post_resultado_link})", unsafe_allow_html=True)
+
+        # Mostrar o post gerado
+        st.subheader("Post Gerado")
+        st.text_area("Copie o texto abaixo para compartilhar nas redes sociais", post_texto, height=200)
 
         st.markdown("**Clique para Compartilhar nas Redes Sociais**:")
-
-        # Links para compartilhamento
         st.markdown(f"[Compartilhar no Facebook]({facebook_link})")
         st.markdown(f"[Compartilhar no Twitter]({twitter_link})")
         st.markdown(f"[Compartilhar no LinkedIn]({linkedin_link})")
         st.markdown(f"[Compartilhar no WhatsApp]({whatsapp_link})")
         st.markdown(f"[Compartilhar no Pinterest]({pinterest_link})")
-
-        st.markdown("""
-        **Dica**: Ao clicar nos links de compartilhamento, você será redirecionado para a rede social correspondente. O texto e a imagem gerada serão automaticamente incluídos no seu post.
-        """)
-    else:
-        st.error("Por favor, insira todos os detalhes do produto e o link de afiliado.")
