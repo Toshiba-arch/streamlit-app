@@ -1,18 +1,32 @@
 import streamlit as st
 
+# Função para calcular desconto
+def calcular_desconto(preco_original, preco_atual):
+    if preco_original > preco_atual:
+        desconto = ((preco_original - preco_atual) / preco_original) * 100
+        return round(desconto, 2)
+    return 0
+
 # Função para criar o post
 def criar_post(produto, link_referencia):
     nome = produto['nome']
     preco_original = produto['preco_original']
-    preco_com_desconto = produto.get('preco_com_desconto', preco_original)
-    desconto = produto.get('desconto', 0)
+    preco_atual = produto['preco_atual']
+    desconto = produto['desconto']
 
-    post = f"""📢 **Oferta Imperdível!** 📢  
+    if desconto > 0:
+        post = f"""📢 **Oferta Imperdível!** 📢  
 🔹 **{nome}**  
-💰 De **€{preco_original:.2f}** por apenas **€{preco_com_desconto:.2f}**!  
+💰 De **€{preco_original:.2f}** por apenas **€{preco_atual:.2f}**!  
 📉 Economize **{desconto}%**!  
 👉 [Compre agora]({link_referencia})  
-    """
+        """
+    else:
+        post = f"""📢 **Confira este produto!** 📢  
+🔹 **{nome}**  
+💰 Preço atual: **€{preco_atual:.2f}**!  
+👉 [Compre agora]({link_referencia})  
+        """
     return post
 
 # Interface Streamlit
@@ -23,13 +37,19 @@ st.sidebar.header("Configurações")
 st.header("Adicionar detalhes do produto")
 nome_produto = st.text_input("Nome do Produto")
 preco_original = st.number_input("Preço Original (€)", min_value=0.0, step=0.01, format="%.2f")
-preco_com_desconto = st.number_input("Preço com Desconto (€)", min_value=0.0, step=0.01, format="%.2f")
-desconto = st.number_input("Percentual de Desconto (%)", min_value=0, step=1)
+preco_atual = st.number_input("Preço Atual (€)", min_value=0.0, step=0.01, format="%.2f")
+
+# Cálculo automático do desconto
+desconto = calcular_desconto(preco_original, preco_atual)
 
 # Passo 2: Gerar link com o Site Stripe
-st.header("Gerar Link de Afiliado")
+st.header("Gerar Link de Afiliado e Pré-Visualização")
 st.markdown("Acesse o Site Stripe da Amazon enquanto navega no site da Amazon e copie o link de afiliado gerado.")
 link_referencia = st.text_input("Cole aqui o Link de Afiliado gerado pelo Site Stripe")
+
+# Exibir pré-visualização da imagem (se o link for válido)
+if link_referencia:
+    st.image(link_referencia, caption="Pré-visualização do Produto", use_column_width=True)
 
 # Botão para gerar post
 if st.button("Gerar Post"):
@@ -37,7 +57,7 @@ if st.button("Gerar Post"):
         produto = {
             "nome": nome_produto,
             "preco_original": preco_original,
-            "preco_com_desconto": preco_com_desconto,
+            "preco_atual": preco_atual,
             "desconto": desconto
         }
         post = criar_post(produto, link_referencia)
