@@ -1,6 +1,9 @@
 import streamlit as st
 import random
 
+# Definir a configuração da página
+st.set_page_config(page_title="Gerador de Números do Euromilhões", layout="wide")
+
 # Função que gera os números do Euromilhões aleatoriamente
 def gerar_numeros_aleatorios():
     numeros_principais = random.sample(range(1, 51), 5)  # Números principais
@@ -18,8 +21,6 @@ def gerar_numeros_probabilidade():
 
 # Função para mostrar a interface da aplicação
 def run():
-    st.set_page_config(page_title="Gerador de Números do Euromilhões", layout="wide")
-
     st.title("Gerador de Números do Euromilhões")
 
     # Opções de escolha para o usuário
@@ -41,4 +42,3 @@ def run():
 
     # Link para os resultados oficiais do Euromilhões
     st.markdown("[Clique aqui para ver os resultados oficiais do Euromilhões](https://www.euro-millions.com/results)")
-
