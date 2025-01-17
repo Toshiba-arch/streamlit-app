@@ -1,10 +1,18 @@
-import os
 import streamlit as st
+import app_ofertas
+import app_euromilhoes
 
-st.title("Menu Principal")
-escolha = st.selectbox("Escolha uma funcionalidade", ["Gerador de Posts", "Gerador de Números do Euromilhões"])
+# Título principal
+st.title("Aplicação Multifunções")
 
-if escolha == "Gerador de Posts":
-    os.system("streamlit run app_ofertas.py")
-elif escolha == "Gerador de Números do Euromilhões":
-    os.system("streamlit run app_euromilhoes.py")
+# Dropdown para selecionar a funcionalidade
+app_selecionada = st.sidebar.selectbox(
+    "Selecione a funcionalidade",
+    ["Gerador de Ofertas", "Gerador de Números do Euromilhões"]
+)
+
+# Redirecionar para a funcionalidade selecionada
+if app_selecionada == "Gerador de Ofertas":
+    app_ofertas.run()
+elif app_selecionada == "Gerador de Números do Euromilhões":
+    app_euromilhoes.run()
