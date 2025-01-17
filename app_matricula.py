@@ -6,7 +6,7 @@ def obter_informacoes_veiculo(matricula):
     url = f"https://api.exemplo.com/consulta/{matricula}"  # URL fictícia, substitua pela API real
     headers = {"Authorization": "Bearer seu_token_aqui"}  # Substitua pelo seu token de autenticação, se necessário
 
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, verify=False)
     
     if response.status_code == 200:
         dados_veiculo = response.json()
