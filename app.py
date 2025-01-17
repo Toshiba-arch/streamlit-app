@@ -1,33 +1,11 @@
 import streamlit as st
-import requests
-
-# Função para buscar produtos na API da Amazon
-def buscar_produtos(amazon_api_key, amazon_api_secret, keywords):
-    # Exemplo básico de estrutura para busca na Amazon API
-    url = "https://api.amazon.com/advertising-api/v1/products"
-    headers = {
-        "Authorization": f"Bearer {amazon_api_key}",
-        "Content-Type": "application/json"
-    }
-    params = {
-        "keywords": keywords,
-        "marketplace": "BR",
-        "item_count": 10
-    }
-
-    response = requests.get(url, headers=headers, params=params)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        st.error("Erro ao buscar produtos: " + str(response.status_code))
-        return []
 
 # Função para criar o post
 def criar_post(produto, link_referencia):
-    nome = produto['title']
-    preco_original = produto['price']['amount']
-    preco_com_desconto = produto.get('discounted_price', preco_original)
-    desconto = produto.get('discount_percent', 0)
+    nome = produto['nome']
+    preco_original = produto['preco_original']
+    preco_com_desconto = produto.get('preco_com_desconto', preco_original)
+    desconto = produto.get('desconto', 0)
 
     post = f"""📢 **Oferta Imperdível!** 📢  
 🔹 **{nome}**  
@@ -41,22 +19,30 @@ def criar_post(produto, link_referencia):
 st.title("Gerador de Conteúdo com Ofertas da Amazon")
 st.sidebar.header("Configurações")
 
-# Configurações do usuário
-amazon_api_key = st.sidebar.text_input("API Key da Amazon", type="password")
-amazon_api_secret = st.sidebar.text_input("API Secret da Amazon", type="password")
-keywords = st.text_input("Palavra-chave para busca (ex: smartphone)")
+# Passo 1: Inserir detalhes do produto manualmente
+st.header("Adicionar detalhes do produto")
+nome_produto = st.text_input("Nome do Produto")
+preco_original = st.number_input("Preço Original (R$)", min_value=0.0, step=0.01)
+preco_com_desconto = st.number_input("Preço com Desconto (R$)", min_value=0.0, step=0.01)
+desconto = st.number_input("Percentual de Desconto (%)", min_value=0, step=1)
 
-# Botão de busca
-if st.button("Buscar Ofertas"):
-    if not amazon_api_key or not amazon_api_secret:
-        st.error("Por favor, insira as credenciais da API da Amazon.")
+# Passo 2: Gerar link com o Site Stripe
+st.header("Gerar Link de Afiliado")
+st.markdown("Acesse o Site Stripe da Amazon enquanto navega no site da Amazon e copie o link de afiliado gerado.")
+link_referencia = st.text_input("Cole aqui o Link de Afiliado gerado pelo Site Stripe")
+
+# Botão para gerar post
+if st.button("Gerar Post"):
+    if nome_produto and link_referencia:
+        produto = {
+            "nome": nome_produto,
+            "preco_original": preco_original,
+            "preco_com_desconto": preco_com_desconto,
+            "desconto": desconto
+        }
+        post = criar_post(produto, link_referencia)
+        st.subheader("Post Gerado")
+        st.markdown(post, unsafe_allow_html=True)
     else:
-        produtos = buscar_produtos(amazon_api_key, amazon_api_secret, keywords)
-        if produtos:
-            st.success(f"Foram encontrados {len(produtos)} produtos!")
-            for produto in produtos:
-                link_referencia = f"https://www.amazon.com/dp/{produto['asin']}?tag=seu_id_de_associado"
-                post = criar_post(produto, link_referencia)
-                st.markdown(post, unsafe_allow_html=True)
-        else:
-            st.warning("Nenhum produto encontrado.")
+        st.error("Por favor, insira todos os detalhes do produto e o link de afiliado.")
+
