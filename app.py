@@ -40,19 +40,24 @@ st.sidebar.header("Configurações")
 st.header("Adicionar nome do produto")
 nome_produto = st.text_input("Nome do Produto")
 
-# Passo 2: Inserir manualmente os preços
-st.header("Inserir detalhes do produto")
-preco_original = st.number_input("Preço Original (€)", min_value=0.0, step=0.01, format="%.2f")
+# Passo 2: Inserir manualmente o preço atual
+st.header("Inserir preço atual do produto")
 preco_atual = st.number_input("Preço Atual (€)", min_value=0.0, step=0.01, format="%.2f")
 
-# Cálculo automático do desconto
-desconto = calcular_desconto(preco_original, preco_atual)
+# Passo 3: Inserir manualmente o preço original (opcional)
+st.header("Inserir preço original do produto (opcional)")
+preco_original = st.number_input("Preço Original (€)", min_value=0.0, step=0.01, format="%.2f")
 
-# Passo 3: Inserir manualmente a imagem
+# Cálculo automático do desconto (caso o preço original seja fornecido)
+desconto = 0
+if preco_original > 0 and preco_atual < preco_original:
+    desconto = calcular_desconto(preco_original, preco_atual)
+
+# Passo 4: Inserir manualmente a imagem
 st.header("Inserir Imagem do Produto")
 imagem_url = st.text_input("Cole o URL da Imagem do Produto")
 
-# Passo 4: Gerar link com o Site Stripe
+# Passo 5: Gerar link com o Site Stripe
 st.header("Gerar Link de Afiliado")
 st.markdown("Acesse o Site Stripe da Amazon enquanto navega no site da Amazon e copie o link de afiliado gerado.")
 link_referencia = st.text_input("Cole aqui o Link de Afiliado gerado pelo Site Stripe")
@@ -63,7 +68,7 @@ if imagem_url:
 
 # Botão para gerar post
 if st.button("Gerar Post"):
-    if nome_produto and link_referencia and preco_original and preco_atual and imagem_url:
+    if nome_produto and link_referencia and preco_atual and imagem_url:
         produto = {
             "nome": nome_produto,
             "preco_original": preco_original,
