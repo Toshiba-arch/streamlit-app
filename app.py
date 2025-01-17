@@ -20,14 +20,12 @@ def criar_post(produto, link_referencia):
 🔹 **{nome}**  
 💰 De **€{preco_original:.2f}** por apenas **€{preco_atual:.2f}**!  
 📉 Economize **{desconto}%**!  
-[![Imagem do Produto]({imagem_url})]({link_referencia})  
 👉 [Compre agora]({link_referencia})  
         """
     else:
         post = f"""📢 **Confira este produto!** 📢  
 🔹 **{nome}**  
 💰 Preço atual: **€{preco_atual:.2f}**!  
-[![Imagem do Produto]({imagem_url})]({link_referencia})  
 👉 [Compre agora]({link_referencia})  
         """
     return post
@@ -88,9 +86,8 @@ if st.button("Gerar Post"):
         # Caixa de texto para copiar o post com a formatação
         st.text_area("Copie o texto abaixo para compartilhar nas redes sociais", post, height=200)
 
-        # Instrução para copiar o post
         st.markdown("""
-        **Dica**: Ao copiar o texto gerado, cole diretamente no **Facebook** ou outras redes sociais. As imagens e links serão corretamente formatados.
+        **Dica**: Ao copiar o link gerado e colá-lo no **Facebook**, o sistema irá automaticamente exibir a imagem e o título do produto na prévia do post.
         """)
 
     else:
