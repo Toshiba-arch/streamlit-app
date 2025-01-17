@@ -1,38 +1,6 @@
 import streamlit as st
-import requests
-from bs4 import BeautifulSoup
 
-# Função para extrair o preço e a imagem usando o link de afiliado
-def obter_dados_produto(link_referencia):
-    try:
-        # Fazer uma solicitação à página do produto
-        response = requests.get(link_referencia)
-        soup = BeautifulSoup(response.content, "html.parser")
-        
-        # Extrair preço (Amazon pode alterar as classes, então isso pode precisar de ajuste)
-        preco_original = soup.find("span", class_="a-price-whole")
-        preco_atual = soup.find("span", class_="a-price-symbol")
-        
-        # Verificar se encontrou os dados corretamente
-        if preco_original and preco_atual:
-            preco_original = float(preco_original.get_text().replace(",", "."))
-            preco_atual = float(preco_atual.get_text().replace(",", "."))
-        else:
-            preco_original = preco_atual = 0.0
-        
-        # Buscar imagem do produto
-        imagem_produto = soup.find("img", id="imgTagWrapperId")
-        if imagem_produto:
-            imagem_url = imagem_produto.get("src")
-        else:
-            imagem_url = ""
-        
-        return preco_original, preco_atual, imagem_url
-    except Exception as e:
-        st.error(f"Erro ao tentar obter dados do produto: {str(e)}")
-        return 0.0, 0.0, ""
-
-# Função para calcular desconto
+# Função para calcular o desconto
 def calcular_desconto(preco_original, preco_atual):
     if preco_original > preco_atual:
         desconto = ((preco_original - preco_atual) / preco_original) * 100
@@ -72,22 +40,30 @@ st.sidebar.header("Configurações")
 st.header("Adicionar nome do produto")
 nome_produto = st.text_input("Nome do Produto")
 
-# Passo 2: Gerar link com o Site Stripe
-st.header("Gerar Link de Afiliado e Pré-Visualização")
+# Passo 2: Inserir manualmente os preços
+st.header("Inserir detalhes do produto")
+preco_original = st.number_input("Preço Original (€)", min_value=0.0, step=0.01, format="%.2f")
+preco_atual = st.number_input("Preço Atual (€)", min_value=0.0, step=0.01, format="%.2f")
+
+# Cálculo automático do desconto
+desconto = calcular_desconto(preco_original, preco_atual)
+
+# Passo 3: Inserir manualmente a imagem
+st.header("Inserir Imagem do Produto")
+imagem_url = st.text_input("Cole o URL da Imagem do Produto")
+
+# Passo 4: Gerar link com o Site Stripe
+st.header("Gerar Link de Afiliado")
 st.markdown("Acesse o Site Stripe da Amazon enquanto navega no site da Amazon e copie o link de afiliado gerado.")
 link_referencia = st.text_input("Cole aqui o Link de Afiliado gerado pelo Site Stripe")
 
-# Obter dados do produto a partir do link
-if link_referencia:
-    preco_original, preco_atual, imagem_url = obter_dados_produto(link_referencia)
-    if preco_original > 0 and preco_atual > 0:
-        # Calcular o desconto
-        desconto = calcular_desconto(preco_original, preco_atual)
-        
-        # Exibir a imagem do produto
-        if imagem_url:
-            st.image(imagem_url, caption="Imagem do Produto", use_column_width=True)
-        
+# Exibir a imagem do produto (se o link for válido)
+if imagem_url:
+    st.image(imagem_url, caption="Imagem do Produto", use_column_width=True)
+
+# Botão para gerar post
+if st.button("Gerar Post"):
+    if nome_produto and link_referencia and preco_original and preco_atual and imagem_url:
         produto = {
             "nome": nome_produto,
             "preco_original": preco_original,
@@ -95,11 +71,8 @@ if link_referencia:
             "desconto": desconto,
             "imagem": imagem_url
         }
-        
-        # Gerar o post
-        if st.button("Gerar Post"):
-            post = criar_post(produto, link_referencia)
-            st.subheader("Post Gerado")
-            st.markdown(post, unsafe_allow_html=True)
+        post = criar_post(produto, link_referencia)
+        st.subheader("Post Gerado")
+        st.markdown(post, unsafe_allow_html=True)
     else:
-        st.warning("Não foi possível obter dados do produto. Verifique o link e tente novamente.")
+        st.error("Por favor, insira todos os detalhes do produto e o link de afiliado.")
