@@ -1,4 +1,7 @@
 import streamlit as st
+from PIL import Image, ImageDraw, ImageFont
+import requests
+from io import BytesIO
 
 # Função para calcular o desconto
 def calcular_desconto(preco_original, preco_atual):
@@ -7,7 +10,30 @@ def calcular_desconto(preco_original, preco_atual):
         return round(desconto, 2)
     return 0
 
-# Função para gerar o post
+# Função para gerar imagem com texto sobre o produto
+def criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual, desconto):
+    # Carregar a imagem do produto
+    response = requests.get(imagem_url)
+    imagem = Image.open(BytesIO(response.content))
+    
+    # Adicionar o texto sobre a imagem
+    draw = ImageDraw.Draw(imagem)
+    font = ImageFont.load_default()
+    
+    # Definir texto de desconto
+    texto_desconto = f"Desconto: {desconto}%"
+    texto_valor = f"De €{preco_original:.2f} por €{preco_atual:.2f}"
+
+    # Tamanho da imagem
+    largura, altura = imagem.size
+
+    # Posicionar o texto
+    draw.text((10, altura - 50), texto_desconto, fill="white", font=font)
+    draw.text((10, altura - 30), texto_valor, fill="white", font=font)
+
+    return imagem
+
+# Função para gerar o post com link
 def gerar_post(produto, link_referencia):
     nome = produto['nome']
     preco_original = produto['preco_original']
@@ -77,6 +103,12 @@ if st.button("Gerar Post"):
         # Exibir o link de afiliado com o preview do Facebook
         st.markdown(f"**Clique abaixo para compartilhar no Facebook com o preview da imagem**:")
         st.markdown(f"[Compartilhar no Facebook](https://www.facebook.com/sharer/sharer.php?u={link_referencia})")
+
+        # Gerar a imagem com o texto sobreposto
+        imagem_com_texto = criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual, desconto)
+        
+        # Exibir a imagem com o texto
+        st.image(imagem_com_texto, caption="Imagem com Desconto", use_column_width=True)
 
         # Exibir o texto do post gerado
         st.text_area("Copie o texto abaixo para compartilhar nas redes sociais", post_texto, height=200)
