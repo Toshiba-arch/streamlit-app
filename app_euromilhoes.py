@@ -18,6 +18,8 @@ def gerar_numeros_probabilidade():
 
 # Função para mostrar a interface da aplicação
 def run():
+    st.set_page_config(page_title="Gerador de Números do Euromilhões", layout="wide")
+
     st.title("Gerador de Números do Euromilhões")
 
     # Opções de escolha para o usuário
@@ -39,3 +41,4 @@ def run():
 
     # Link para os resultados oficiais do Euromilhões
     st.markdown("[Clique aqui para ver os resultados oficiais do Euromilhões](https://www.euro-millions.com/results)")
+
