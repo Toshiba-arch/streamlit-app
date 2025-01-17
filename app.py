@@ -9,7 +9,7 @@ def criar_post(produto, link_referencia):
 
     post = f"""📢 **Oferta Imperdível!** 📢  
 🔹 **{nome}**  
-💰 De **R${preco_original}** por apenas **R${preco_com_desconto}**!  
+💰 De **€{preco_original:.2f}** por apenas **€{preco_com_desconto:.2f}**!  
 📉 Economize **{desconto}%**!  
 👉 [Compre agora]({link_referencia})  
     """
@@ -22,8 +22,8 @@ st.sidebar.header("Configurações")
 # Passo 1: Inserir detalhes do produto manualmente
 st.header("Adicionar detalhes do produto")
 nome_produto = st.text_input("Nome do Produto")
-preco_original = st.number_input("Preço Original (R$)", min_value=0.0, step=0.01)
-preco_com_desconto = st.number_input("Preço com Desconto (R$)", min_value=0.0, step=0.01)
+preco_original = st.number_input("Preço Original (€)", min_value=0.0, step=0.01, format="%.2f")
+preco_com_desconto = st.number_input("Preço com Desconto (€)", min_value=0.0, step=0.01, format="%.2f")
 desconto = st.number_input("Percentual de Desconto (%)", min_value=0, step=1)
 
 # Passo 2: Gerar link com o Site Stripe
@@ -45,4 +45,3 @@ if st.button("Gerar Post"):
         st.markdown(post, unsafe_allow_html=True)
     else:
         st.error("Por favor, insira todos os detalhes do produto e o link de afiliado.")
-
