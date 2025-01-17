@@ -1,7 +1,6 @@
 import streamlit as st
 import random
 from collections import Counter
-import requests
 
 # Função para obter os últimos resultados (simulada aqui)
 def obter_ultimos_resultados():
@@ -38,28 +37,30 @@ def gerar_numeros_aleatorios():
     estrelas_aleatorias = random.sample(range(1, 13), 2)  # 2 estrelas de 1 a 12
     return sorted(numeros_aleatorios), sorted(estrelas_aleatorias)
 
-# Interface Streamlit
-st.title("Gerador de Números do Euromilhões")
+# Função de execução principal
+def run():
+    st.title("Gerador de Números do Euromilhões")
 
-menu = st.sidebar.selectbox("Escolha uma opção", ("Gerar Números Aleatórios", "Gerar Números Baseados em Frequência"))
+    menu = st.sidebar.selectbox("Escolha uma opção", ("Gerar Números Aleatórios", "Gerar Números Baseados em Frequência"))
 
-# Exibir os resultados aleatórios ou baseados em frequência
-if menu == "Gerar Números Aleatórios":
-    if st.button("Gerar Números Aleatórios"):
-        numeros, estrelas = gerar_numeros_aleatorios()
-        st.subheader("Números Gerados Aleatoriamente")
-        st.write(f"Números: {numeros}")
-        st.write(f"Estrelas: {estrelas}")
+    # Exibir os resultados aleatórios ou baseados em frequência
+    if menu == "Gerar Números Aleatórios":
+        if st.button("Gerar Números Aleatórios"):
+            numeros, estrelas = gerar_numeros_aleatorios()
+            st.subheader("Números Gerados Aleatoriamente")
+            st.write(f"Números: {numeros}")
+            st.write(f"Estrelas: {estrelas}")
 
-elif menu == "Gerar Números Baseados em Frequência":
-    # Obter os últimos resultados
-    resultados_passados = obter_ultimos_resultados()
-    
-    # Calcular a frequência dos números e estrelas
-    frequencia_numeros, frequencia_estrelas = calcular_frequencia(resultados_passados)
-    
-    if st.button("Gerar Números Baseados em Frequência"):
-        numeros_frequentes, estrelas_frequentes = gerar_numeros_mais_frequentes(frequencia_numeros, frequencia_estrelas)
-        st.subheader("Números Gerados Baseados em Frequência")
-        st.write(f"Números Frequentes: {numeros_frequentes}")
-        st.write(f"Estrelas Frequentes: {estrelas_frequentes}")
+    elif menu == "Gerar Números Baseados em Frequência":
+        # Obter os últimos resultados
+        resultados_passados = obter_ultimos_resultados()
+        
+        # Calcular a frequência dos números e estrelas
+        frequencia_numeros, frequencia_estrelas = calcular_frequencia(resultados_passados)
+        
+        if st.button("Gerar Números Baseados em Frequência"):
+            numeros_frequentes, estrelas_frequentes = gerar_numeros_mais_frequentes(frequencia_numeros, frequencia_estrelas)
+            st.subheader("Números Gerados Baseados em Frequência")
+            st.write(f"Números Frequentes: {numeros_frequentes}")
+            st.write(f"Estrelas Frequentes: {estrelas_frequentes}")
+
