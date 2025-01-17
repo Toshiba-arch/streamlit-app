@@ -1,12 +1,13 @@
 import streamlit as st
 import random
 
-# Função que gera os números do Euromilhões
+# Função que gera os números do Euromilhões aleatoriamente
 def gerar_numeros_aleatorios():
     numeros_principais = random.sample(range(1, 51), 5)  # Números principais
     estrelas = random.sample(range(1, 13), 2)  # Estrelas
     return sorted(numeros_principais), sorted(estrelas)
 
+# Função que gera os números com base em maior probabilidade (simplificado)
 def gerar_numeros_probabilidade():
     # Exemplo de números com maior chance (simplificado)
     numeros_frequentes = [1, 7, 10, 19, 23, 34, 38, 42, 46, 50]
@@ -19,17 +20,22 @@ def gerar_numeros_probabilidade():
 def run():
     st.title("Gerador de Números do Euromilhões")
 
+    # Opções de escolha para o usuário
     opcao = st.radio("Escolha uma opção", ("Gerar Números Aleatórios", "Gerar Números com Maior Probabilidade"))
 
     if opcao == "Gerar Números Aleatórios":
-        numeros, estrelas = gerar_numeros_aleatorios()
-        st.subheader("Números Sorteados Aleatoriamente")
-        st.write(f"Números principais: {numeros}")
-        st.write(f"Estrelas: {estrelas}")
+        if st.button("Gerar Números"):
+            numeros, estrelas = gerar_numeros_aleatorios()
+            st.subheader("Números Sorteados Aleatoriamente")
+            st.write(f"Números principais: {numeros}")
+            st.write(f"Estrelas: {estrelas}")
+    
     elif opcao == "Gerar Números com Maior Probabilidade":
-        numeros, estrelas = gerar_numeros_probabilidade()
-        st.subheader("Números Sorteados com Maior Probabilidade")
-        st.write(f"Números principais: {numeros}")
-        st.write(f"Estrelas: {estrelas}")
+        if st.button("Gerar Números"):
+            numeros, estrelas = gerar_numeros_probabilidade()
+            st.subheader("Números Sorteados com Maior Probabilidade")
+            st.write(f"Números principais: {numeros}")
+            st.write(f"Estrelas: {estrelas}")
 
+    # Link para os resultados oficiais do Euromilhões
     st.markdown("[Clique aqui para ver os resultados oficiais do Euromilhões](https://www.euro-millions.com/results)")
