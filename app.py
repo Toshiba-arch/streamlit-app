@@ -108,7 +108,7 @@ if st.button("Gerar Post"):
         imagem_com_texto = criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual, desconto)
         
         # Exibir a imagem com o texto
-        st.image(imagem_com_texto, caption="Imagem com Desconto", use_column_width=True)
+        st.image(imagem_com_texto, caption="Imagem com Desconto", use_container_width=True)  # Atualizado
 
         # Exibir o texto do post gerado
         st.text_area("Copie o texto abaixo para compartilhar nas redes sociais", post_texto, height=200)
