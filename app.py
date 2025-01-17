@@ -16,9 +16,8 @@ def criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual
     response = requests.get(imagem_url)
     imagem = Image.open(BytesIO(response.content))
     
-    # Definir o tamanho da fonte
-    font_size = 30  # Tamanho inicial da fonte
-    font = ImageFont.truetype("arial.ttf", font_size)
+    # Usar a fonte padrão do PIL
+    font = ImageFont.load_default()
     
     # Adicionar o texto sobre a imagem
     draw = ImageDraw.Draw(imagem)
@@ -34,11 +33,6 @@ def criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual
 
     # Tamanho da imagem
     largura, altura = imagem.size
-
-    # Ajustar o tamanho da fonte, caso o texto seja muito longo
-    while draw.textsize(texto_desconto, font=font)[0] > largura - 20:
-        font_size -= 2  # Reduzir o tamanho da fonte
-        font = ImageFont.truetype("arial.ttf", font_size)
 
     # Posicionar o texto
     draw.text((10, altura - 50), texto_desconto, fill="white", font=font)
