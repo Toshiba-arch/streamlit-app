@@ -1,6 +1,7 @@
 import streamlit as st
 from PIL import Image, ImageDraw, ImageFont
 import io
+import requests
 
 # Função para calcular o desconto
 def calcular_desconto(preco_original, preco_atual):
@@ -11,8 +12,11 @@ def calcular_desconto(preco_original, preco_atual):
 
 # Função para criar a imagem com o texto sobreposto
 def criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual, desconto):
-    # Baixar a imagem da URL diretamente
-    imagem = Image.open(imagem_url)  # A imagem deve ser carregada a partir de uma URL pública
+    # Baixar a imagem da URL
+    response = requests.get(imagem_url)
+    
+    # Abrir a imagem a partir do conteúdo binário
+    imagem = Image.open(io.BytesIO(response.content))
     
     # Definir o texto a ser sobreposto
     texto = f"{nome_produto}\nDe €{preco_original:.2f} por €{preco_atual:.2f}\nDesconto: {desconto}%"
