@@ -35,18 +35,19 @@ def criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual
     return img_byte_arr
 
 # Função para criar o post
-def criar_post(produto, link_referencia):
+def criar_post(produto, link_referencia, imagem_url):
     nome = produto['nome']
     preco_original = produto['preco_original']
     preco_atual = produto['preco_atual']
     desconto = produto['desconto']
-    imagem_url = produto['imagem']
 
     post_text = f"""📢 **Oferta Imperdível!** 📢  
 🔹 **{nome}**  
 💰 De **€{preco_original:.2f}** por apenas **€{preco_atual:.2f}**!  
 📉 Economize **{desconto}%**!  
 👉 [Compre agora]({link_referencia})  
+
+🖼️ Veja a imagem do produto: {imagem_url}
         """
     return post_text
 
@@ -98,7 +99,7 @@ if st.button("Gerar Post"):
             "imagem": imagem_url
         }
         
-        post_text = criar_post(produto, link_referencia)
+        post_text = criar_post(produto, link_referencia, imagem_url)
         
         # Gerar a imagem com texto sobreposto
         imagem_com_texto = criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual, desconto)
@@ -110,7 +111,8 @@ if st.button("Gerar Post"):
         st.text_area("Copie o texto abaixo para compartilhar nas redes sociais", post_text, height=200)
 
         st.markdown("""
-        **Dica**: Ao copiar o texto gerado e colá-lo no **Facebook**, a imagem com o texto sobreposto será visualizada junto com o link clicável.
+        **Dica**: Ao copiar o texto gerado e colá-lo no **Facebook**, a imagem com o texto sobreposto será visualizada junto com o link clicável. 
+        Certifique-se de que a imagem esteja hospedada publicamente (em um serviço como Imgur ou Google Drive) para que a visualização funcione corretamente.
         """)
 
     else:
