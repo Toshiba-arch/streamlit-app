@@ -25,7 +25,8 @@ def criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual
 
     # Definir a posição do texto
     largura_imagem, altura_imagem = imagem.size
-    texto_largura, texto_altura = draw.textbbox((0, 0), texto_desconto, font=font)[2:4]  # Usar textbbox para medir o texto
+    bbox = draw.textbbox((0, 0), texto_desconto, font=font)  # Usar textbbox para medir o texto
+    texto_largura, texto_altura = bbox[2] - bbox[0], bbox[3] - bbox[1]  # Calcular largura e altura do texto
     posicao_texto = (largura_imagem - texto_largura - 10, altura_imagem - texto_altura - 10)
 
     # Adicionar o texto sobre a imagem
