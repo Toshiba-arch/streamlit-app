@@ -1,43 +1,67 @@
 import streamlit as st
 import requests
 
-# Função para consultar a API e obter as informações do carro
+# Função para consultar o veículo pela matrícula
 def obter_informacoes_veiculo(matricula):
-    url = f"https://api.exemplo.com/consulta/{matricula}"  # URL fictícia, substitua pela API real
-    headers = {"Authorization": "Bearer seu_token_aqui"}  # Substitua pelo seu token de autenticação, se necessário
+    # Substitua pela URL da API que fornece dados de veículos com base na matrícula
+    url = f"https://api.example.com/consultar_matricula/{matricula}"
 
-    response = requests.get(url, headers=headers, verify=False)
-    
-    if response.status_code == 200:
-        dados_veiculo = response.json()
-        return dados_veiculo
-    else:
-        return None
+    headers = {
+        'Authorization': 'Bearer seu_token_aqui',  # Se necessário
+    }
 
-# Interface do Streamlit
+    try:
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            dados = response.json()
+            return dados
+        else:
+            return f"Erro na consulta: {response.status_code}"
+
+    except requests.exceptions.RequestException as e:
+        return f"Erro na requisição: {e}"
+
+# Função para consultar dados do veículo pelo VIN
+def obter_dados_por_vin(vin):
+    # Substitua pela URL da API que fornece dados de veículos com base no VIN
+    url = f"https://api.example.com/consultar_vin/{vin}"
+
+    headers = {
+        'Authorization': 'Bearer seu_token_aqui',  # Se necessário
+    }
+
+    try:
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            dados = response.json()
+            return dados
+        else:
+            return f"Erro na consulta: {response.status_code}"
+
+    except requests.exceptions.RequestException as e:
+        return f"Erro na requisição: {e}"
+
+# Função principal para a interface Streamlit
 def run():
-    st.title("Consulta de Marca do Carro pela Matrícula")
+    st.title("Consulta de Dados de Veículos")
 
-    # Passo 1: Inserir a matrícula do veículo
-    matricula = st.text_input("Insira a matrícula do veículo", "")
+    # Input para matrícula
+    matricula = st.text_input("Digite a matrícula do veículo (ex: 12-34-AB):")
+    
+    # Input para VIN
+    vin = st.text_input("Ou digite o VIN do veículo:")
 
-    # Passo 2: Botão para consultar
     if st.button("Consultar"):
         if matricula:
-            # Chamar a função que consulta a API com a matrícula fornecida
             dados_veiculo = obter_informacoes_veiculo(matricula)
-            
-            if dados_veiculo:
-                # Exibir as informações do veículo
-                marca = dados_veiculo.get("marca", "Marca não encontrada")
-                modelo = dados_veiculo.get("modelo", "Modelo não encontrado")
-                ano = dados_veiculo.get("ano", "Ano não encontrado")
-                
-                st.subheader("Informações do Veículo:")
-                st.write(f"**Marca:** {marca}")
-                st.write(f"**Modelo:** {modelo}")
-                st.write(f"**Ano:** {ano}")
-            else:
-                st.error("Não foi possível obter as informações do veículo. Verifique a matrícula.")
+            st.write(dados_veiculo)
+        elif vin:
+            dados_vin = obter_dados_por_vin(vin)
+            st.write(dados_vin)
         else:
-            st.warning("Por favor, insira uma matrícula para consultar.")
+            st.write("Por favor, insira uma matrícula ou VIN.")
+
+if __name__ == "__main__":
+    run()
