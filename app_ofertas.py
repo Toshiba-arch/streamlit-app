@@ -67,7 +67,6 @@ def gerar_links_compartilhamento(post_texto, link_referencia, imagem_url):
 # Função principal da app de ofertas
 def run():
     st.title("Gerador de Conteúdo de Ofertas")
-    st.sidebar.header("Configurações")
 
     # Inputs do produto
     nome_produto = st.text_input("Nome do Produto")
