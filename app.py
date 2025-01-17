@@ -1,7 +1,4 @@
 import streamlit as st
-from PIL import Image, ImageDraw, ImageFont
-import requests
-from io import BytesIO
 
 # Função para calcular o desconto
 def calcular_desconto(preco_original, preco_atual):
@@ -10,38 +7,12 @@ def calcular_desconto(preco_original, preco_atual):
         return round(desconto, 2)
     return 0
 
-# Função para criar a imagem com texto
-def criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual, desconto):
-    # Baixar a imagem do produto
-    resposta = requests.get(imagem_url)
-    imagem = Image.open(BytesIO(resposta.content))
-
-    # Criar o texto do desconto
-    texto_desconto = f"Desconto: {desconto}%"
-
-    # Adicionar o texto sobre a imagem
-    draw = ImageDraw.Draw(imagem)
-    font = ImageFont.load_default()  # Usar a fonte padrão, ou você pode escolher uma fonte mais bonita
-
-    # Definir a posição do texto
-    largura_imagem, altura_imagem = imagem.size
-    bbox = draw.textbbox((0, 0), texto_desconto, font=font)  # Usar textbbox para medir o texto
-    texto_largura, texto_altura = bbox[2] - bbox[0], bbox[3] - bbox[1]  # Calcular largura e altura do texto
-    posicao_texto = (largura_imagem - texto_largura - 10, altura_imagem - texto_altura - 10)
-
-    # Adicionar o texto sobre a imagem
-    draw.text(posicao_texto, texto_desconto, font=font, fill="white")
-
-    # Retornar a imagem gerada
-    return imagem
-
 # Função para gerar o post
 def gerar_post(produto, link_referencia):
     nome = produto['nome']
     preco_original = produto['preco_original']
     preco_atual = produto['preco_atual']
     desconto = produto['desconto']
-    imagem_url = produto['imagem']
 
     post_texto = f"""📢 **Oferta Imperdível!** 📢  
 🔹 **{nome}**  
@@ -103,12 +74,10 @@ if st.button("Gerar Post"):
         
         st.subheader("Post Gerado")
         
-        # Gerar a imagem com o texto sobre o desconto
-        imagem_com_texto = criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual, desconto)
-        
-        # Exibir a imagem gerada
-        st.image(imagem_com_texto, caption="Imagem do Produto com Desconto", use_column_width=True)
-        
+        # Exibir o link de afiliado com o preview do Facebook
+        st.markdown(f"**Clique abaixo para compartilhar no Facebook com o preview da imagem**:")
+        st.markdown(f"[Compartilhar no Facebook](https://www.facebook.com/sharer/sharer.php?u={link_referencia})")
+
         # Exibir o texto do post gerado
         st.text_area("Copie o texto abaixo para compartilhar nas redes sociais", post_texto, height=200)
 
