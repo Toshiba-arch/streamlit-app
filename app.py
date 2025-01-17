@@ -12,29 +12,17 @@ def calcular_desconto(preco_original, preco_atual):
 
 # Função para gerar imagem com texto sobre o produto
 def criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual, desconto, cupom=None):
-    # Carregar a imagem do produto
     response = requests.get(imagem_url)
     imagem = Image.open(BytesIO(response.content))
     
-    # Usar a fonte padrão do PIL
     font = ImageFont.load_default()
-    
-    # Adicionar o texto sobre a imagem
     draw = ImageDraw.Draw(imagem)
     
-    # Definir texto de desconto e cupom
     texto_desconto = f"Desconto: {desconto}%"
     texto_valor = f"De €{preco_original:.2f} por €{preco_atual:.2f}"
-    
-    if cupom:
-        texto_cupom = f"Use o código: {cupom}!"
-    else:
-        texto_cupom = ""
+    texto_cupom = f"Use o código: {cupom}" if cupom else ""
 
-    # Tamanho da imagem
     largura, altura = imagem.size
-
-    # Posicionar o texto
     draw.text((10, altura - 100), texto_desconto, fill="white", font=font)
     draw.text((10, altura - 70), texto_valor, fill="white", font=font)
     if cupom:
@@ -55,119 +43,78 @@ def gerar_post(produto, link_referencia, tags):
 💰 De **€{preco_original:.2f}** por apenas **€{preco_atual:.2f}**!  
 📉 Economize **{desconto}%**!  
 """
-
     if cupom:
         post_texto += f"💥 Use o código de cupom: **{cupom}** para mais descontos! \n"
     
     post_texto += f"👉 [Compre agora]({link_referencia})"
-    
     if tags:
-        post_texto += f"\n\n" + " ".join([f"#{tag.strip()}" for tag in tags])  # Formatar tags corretamente
+        post_texto += "\n\n" + " ".join([f"#{tag.strip()}" for tag in tags])
 
     return post_texto
 
 # Função para gerar os links de compartilhamento para as redes sociais
 def gerar_links_compartilhamento(post_texto, link_referencia, imagem_url):
-    # Facebook
     facebook_link = f"https://www.facebook.com/sharer/sharer.php?u={link_referencia}"
-
-    # Twitter
     twitter_link = f"https://twitter.com/intent/tweet?url={link_referencia}&text={post_texto}"
-
-    # LinkedIn
     linkedin_link = f"https://www.linkedin.com/shareArticle?mini=true&url={link_referencia}&title={post_texto}"
-
-    # WhatsApp
     whatsapp_link = f"https://wa.me/?text={post_texto} {link_referencia}"
-
-    # Pinterest
     pinterest_link = f"https://www.pinterest.com/pin/create/button/?url={link_referencia}&media={imagem_url}&description={post_texto}"
 
     return facebook_link, twitter_link, linkedin_link, whatsapp_link, pinterest_link
 
-# Interface Streamlit
-st.title("Gerador de Conteúdo com Ofertas da Amazon")
-st.sidebar.header("Configurações")
+# Header com navegação
+st.set_page_config(page_title="App de Ofertas", layout="wide")
 
-# Passo 1: Inserir apenas o nome do produto
-st.header("Adicionar nome do produto")
-nome_produto = st.text_input("Nome do Produto")
+st.markdown("<h1 style='text-align: center;'>App de Ofertas e Funcionalidades</h1>", unsafe_allow_html=True)
+st.sidebar.title("Menu")
 
-# Passo 2: Selecionar se o produto tem desconto
-st.header("O produto tem desconto?")
-tem_desconto = st.radio("Selecione a opção:", ('Sim', 'Não'))
+# Menu de navegação
+opcao = st.sidebar.radio("Escolha uma funcionalidade", ["Gerar Post de Oferta", "Outra Funcionalidade"])
 
-# Passo 3: Inserir preços e desconto
-if tem_desconto == 'Sim':
-    st.header("Informar Desconto e Preço Atual")
-    desconto_percentual = st.number_input("Porcentagem de Desconto (%)", min_value=0.0, step=0.01, format="%.2f")
-    preco_atual = st.number_input("Preço Atual (€)", min_value=0.0, step=0.01, format="%.2f")
-    preco_original = preco_atual / (1 - desconto_percentual / 100)  # Cálculo automático do preço original
-else:
-    st.header("Inserir preços do produto")
-    preco_original = st.number_input("Preço Original (€)", min_value=0.0, step=0.01, format="%.2f")
-    preco_atual = st.number_input("Preço Atual (€)", min_value=0.0, step=0.01, format="%.2f")
-
-# Passo 4: Inserir código de cupom (se houver)
-cupom = st.text_input("Código de Cupom (se houver)")
-
-# Cálculo do desconto se o preço original e atual forem inseridos
-desconto = 0
-if preco_original > 0 and preco_atual < preco_original:
-    desconto = calcular_desconto(preco_original, preco_atual)
-
-# Passo 5: Inserir o link da imagem do produto
-st.header("Inserir Link da Imagem do Produto")
-imagem_url = st.text_input("Cole o URL da Imagem do Produto")
-
-# Passo 6: Gerar link com o Site Stripe
-st.header("Gerar Link de Afiliado")
-st.markdown("Acesse o Site Stripe da Amazon enquanto navega no site da Amazon e copie o link de afiliado gerado.")
-link_referencia = st.text_input("Cole aqui o Link de Afiliado gerado pelo Site Stripe")
-
-# Passo 7: Inserir tags
-tags = st.text_input("Insira tags separadas por vírgula (ex: #amazon, #oferta)")
-
-# Botão para gerar post
-if st.button("Gerar Post"):
-    if nome_produto and link_referencia and preco_atual and imagem_url:
-        produto = {
-            "nome": nome_produto,
-            "preco_original": preco_original,
-            "preco_atual": preco_atual,
-            "desconto": desconto,
-            "imagem": imagem_url,
-            "cupom": cupom
-        }
-        
-        post_texto = gerar_post(produto, link_referencia, tags.split(','))  # Gerar post com as tags
-
-        st.subheader("Post Gerado")
-        
-        # Exibir a imagem com o texto sobreposto
-        imagem_com_texto = criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual, desconto, cupom)
-        
-        # Exibir a imagem com o texto e a legenda personalizada
-        legenda_imagem = f"**{nome_produto}** - Desconto: {desconto}%"
-        st.image(imagem_com_texto, caption=legenda_imagem, use_container_width=True)
-
-        # Exibir o texto do post gerado
-        st.text_area("Copie o texto abaixo para compartilhar nas redes sociais", post_texto, height=200)
-
-        # Gerar links de compartilhamento
-        facebook_link, twitter_link, linkedin_link, whatsapp_link, pinterest_link = gerar_links_compartilhamento(post_texto, link_referencia, imagem_url)
-
-        st.markdown("**Clique para Compartilhar nas Redes Sociais**:")
-
-        # Links para compartilhamento
-        st.markdown(f"[Compartilhar no Facebook]({facebook_link})")
-        st.markdown(f"[Compartilhar no Twitter]({twitter_link})")
-        st.markdown(f"[Compartilhar no LinkedIn]({linkedin_link})")
-        st.markdown(f"[Compartilhar no WhatsApp]({whatsapp_link})")
-        st.markdown(f"[Compartilhar no Pinterest]({pinterest_link})")
-
-        st.markdown("""
-        **Dica**: Ao clicar nos links de compartilhamento, você será redirecionado para a rede social correspondente. O texto e a imagem gerada serão automaticamente incluídos no seu post.
-        """)
+if opcao == "Gerar Post de Oferta":
+    st.subheader("Gerar Post de Oferta")
+    # Passo 1: Nome do Produto
+    nome_produto = st.text_input("Nome do Produto")
+    
+    # Passo 2: Produto com desconto
+    tem_desconto = st.radio("O produto tem desconto?", ["Sim", "Não"])
+    if tem_desconto == "Sim":
+        desconto_percentual = st.number_input("Porcentagem de Desconto (%)", min_value=0.0, step=0.01, format="%.2f")
+        preco_atual = st.number_input("Preço Atual (€)", min_value=0.0, step=0.01, format="%.2f")
+        preco_original = preco_atual / (1 - desconto_percentual / 100)
     else:
-        st.error("Por favor, insira todos os detalhes do produto e o link de afiliado.")
+        preco_original = st.number_input("Preço Original (€)", min_value=0.0, step=0.01, format="%.2f")
+        preco_atual = st.number_input("Preço Atual (€)", min_value=0.0, step=0.01, format="%.2f")
+
+    cupom = st.text_input("Código de Cupom (se houver)")
+    desconto = calcular_desconto(preco_original, preco_atual)
+    imagem_url = st.text_input("URL da Imagem do Produto")
+    link_referencia = st.text_input("Link de Afiliado")
+    tags = st.text_input("Insira tags separadas por vírgula (ex: #amazon, #oferta)")
+
+    if st.button("Gerar Post"):
+        if nome_produto and preco_atual > 0 and link_referencia and imagem_url:
+            produto = {
+                "nome": nome_produto,
+                "preco_original": preco_original,
+                "preco_atual": preco_atual,
+                "desconto": desconto,
+                "imagem": imagem_url,
+                "cupom": cupom
+            }
+            post_texto = gerar_post(produto, link_referencia, tags.split(","))
+            imagem_com_texto = criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual, desconto, cupom)
+            
+            legenda_imagem = f"**{nome_produto}** - Desconto: {desconto}%"
+            st.image(imagem_com_texto, caption=legenda_imagem, use_container_width=True)
+            st.text_area("Post Gerado:", post_texto, height=200)
+
+            links = gerar_links_compartilhamento(post_texto, link_referencia, imagem_url)
+            st.markdown("**Compartilhe nas Redes Sociais:**")
+            st.markdown(f"[Facebook]({links[0]}) | [Twitter]({links[1]}) | [LinkedIn]({links[2]}) | [WhatsApp]({links[3]}) | [Pinterest]({links[4]})")
+        else:
+            st.error("Preencha todas as informações para gerar o post.")
+
+elif opcao == "Outra Funcionalidade":
+    st.subheader("Nova Funcionalidade em Desenvolvimento")
+    st.write("Aqui você pode adicionar futuras funcionalidades.")
