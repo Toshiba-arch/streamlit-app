@@ -13,11 +13,6 @@ try:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 except FileNotFoundError:
     st.warning("O arquivo 'styles.css' não foi encontrado. Estilos personalizados não serão aplicados.")
-# (Continue com o restante do código da aplicação...)
-
-# Configuração da página
-title = "Gerador de Conteúdo de Ofertas"
-st.set_page_config(page_title=title, layout="wide")
 
 # Função para calcular o desconto
 def calcular_desconto(preco_original, preco_atual):
