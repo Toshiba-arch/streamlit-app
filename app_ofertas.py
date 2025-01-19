@@ -101,6 +101,17 @@ def run():
             imagem = Image.open(BytesIO(response.content))
             st.image(imagem, caption=f"Imagem de {nome_produto}", use_container_width=False, width=600)
 
+            # Adiciona opção para download da imagem
+            img_buffer = BytesIO()
+            imagem.save(img_buffer, format="PNG")
+            img_buffer.seek(0)
+            st.download_button(
+                label="Baixar Imagem",
+                data=img_buffer,
+                file_name=f"{nome_produto.replace(' ', '_')}.png",
+                mime="image/png"
+            )
+
             # Exibe o texto do post na interface
             st.text_area("Texto do Post para Compartilhar", post_texto, height=200)
 
