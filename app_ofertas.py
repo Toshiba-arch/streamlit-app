@@ -42,11 +42,21 @@ def criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual
 
     # Cria um fundo semitransparente para destacar o texto
     fundo_altura = int(altura * 0.15)
-    overlay = Image.new("RGBA", (largura, fundo_altura), (0, 0, 0, 180))
+    overlay = Image.new("RGBA", (largura, fundo_altura), (255, 255, 255, 200))
     imagem.paste(overlay, (0, altura - fundo_altura), overlay)
 
-    # Adiciona o texto na imagem
-    draw.text((margem, altura - fundo_altura + margem), texto, fill="white", font=font)
+    # Adiciona o texto com sombra na imagem
+    sombra_offset = 2
+    for x_offset, y_offset in [(sombra_offset, sombra_offset), (-sombra_offset, sombra_offset), (sombra_offset, -sombra_offset), (-sombra_offset, -sombra_offset)]:
+        draw.text((margem + x_offset, altura - fundo_altura + margem + y_offset), texto, fill="gray", font=font)
+
+    draw.text((margem, altura - fundo_altura + margem), texto, fill="black", font=font)
+
+    # Redimensiona a imagem para adequar às redes sociais (ex: largura máxima de 1200px)
+    largura_nova = 1200
+    proporcao = largura_nova / largura
+    nova_altura = int(altura * proporcao)
+    imagem = imagem.resize((largura_nova, nova_altura), Image.ANTIALIAS)
 
     # Converte para JPEG
     imagem_convertida = Image.new("RGB", imagem.size, (255, 255, 255))
@@ -133,7 +143,7 @@ def run():
 
             # Gera a imagem com o texto sobre o produto
             imagem_com_texto = criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual, desconto)
-            st.image(imagem_com_texto, caption=f"Oferta de {nome_produto}", use_container_width=True, width=400)
+            st.image(imagem_com_texto, caption=f"Oferta de {nome_produto}", use_container_width=False, width=600)
 
             # Exibe o texto do post na interface
             st.text_area("Texto do Post para Compartilhar", post_texto, height=200)
