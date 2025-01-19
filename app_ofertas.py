@@ -3,9 +3,11 @@ from PIL import Image, ImageDraw, ImageFont
 import requests
 from io import BytesIO
 
-# Lendo o arquivo CSS e aplicando os estilos
-with open("styles.css") as f:
-    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+try:
+    with open("styles.css") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+except FileNotFoundError:
+    st.warning("O arquivo 'styles.css' não foi encontrado. Estilos personalizados não serão aplicados.")
 
 # Configuração da página
 title = "Gerador de Conteúdo de Ofertas"
