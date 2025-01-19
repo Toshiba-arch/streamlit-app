@@ -23,11 +23,16 @@ def calcular_desconto(preco_original, preco_atual):
 
 # Função para criar imagem com texto
 def criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual, desconto):
+    """
+    Baixa a imagem do produto de uma URL e adiciona texto sobre o desconto e preço.
+    Retorna a imagem modificada.
+    """
+    # Baixa a imagem a partir da URL fornecida
     response = requests.get(imagem_url)
     imagem = Image.open(BytesIO(response.content)).convert("RGBA")
     draw = ImageDraw.Draw(imagem)
 
-    # Fontes padrão caso Arial não esteja disponível
+    # Define a fonte para o texto (usa fonte padrão se "arial.ttf" não estiver disponível)
     try:
         font = ImageFont.truetype("arial.ttf", size=36)
         font_bold = ImageFont.truetype("arialbd.ttf", size=40)
@@ -35,24 +40,33 @@ def criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual
         font = ImageFont.load_default()
         font_bold = font
 
-    # Texto sobre o produto
+    # Monta o texto com informações do produto
     texto_nome = f"{nome_produto}"
     texto_preco = f"De €{preco_original:.2f} por €{preco_atual:.2f}"
     texto_desconto = f"-{desconto}%"
     largura, altura = imagem.size
 
-    # Margens e posições
+    # Define posições e margens
     margem = 20
     y_texto = margem
 
-    # Adiciona textos à imagem
+    # Calcula o tamanho do texto para ajustar dinamicamente usando textbbox
+    nome_bbox = draw.textbbox((0, 0), texto_nome, font=font_bold)
+    preco_bbox = draw.textbbox((0, 0), texto_preco, font=font)
+    desconto_bbox = draw.textbbox((0, 0), texto_desconto, font=font)
+
+    # Adiciona o nome do produto (em negrito)
     draw.text((margem, y_texto), texto_nome, fill="white", font=font_bold, stroke_width=2, stroke_fill="black")
-    y_texto += font_bold.getsize(texto_nome)[1] + 10
+    y_texto += nome_bbox[3] - nome_bbox[1] + 10  # Altura do texto + espaçamento
+
+    # Adiciona o preço atual (em verde)
     draw.text((margem, y_texto), texto_preco, fill="green", font=font, stroke_width=2, stroke_fill="black")
-    y_texto += font.getsize(texto_preco)[1] + 10
+    y_texto += preco_bbox[3] - preco_bbox[1] + 10
+
+    # Adiciona o desconto (em vermelho)
     draw.text((margem, y_texto), texto_desconto, fill="red", font=font, stroke_width=2, stroke_fill="black")
 
-    # Ajusta o tamanho da imagem para redes sociais
+    # Redimensiona a imagem para adequar às redes sociais (ex: largura máxima de 800px)
     largura_nova = 800
     proporcao = largura_nova / largura
     nova_altura = int(altura * proporcao)
