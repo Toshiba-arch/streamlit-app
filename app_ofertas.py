@@ -13,10 +13,6 @@ if os.path.exists("styles.css"):
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 else:
     st.warning("O arquivo 'styles.css' não foi encontrado. Estilos personalizados não serão aplicados.")
-    
-# Configuração da página
-title = "Gerador de Posts com link de referencia"
-st.set_page_config(page_title=title, layout="wide")
 
 # Função para calcular o desconto
 def calcular_desconto(preco_original, preco_atual):
