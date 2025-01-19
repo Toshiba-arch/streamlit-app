@@ -155,7 +155,7 @@ def run():
             st.text_area("Texto do Post para Compartilhar", post_texto, height=200)
 
             # Botão para baixar a imagem gerada
-            buffer = BytesIO()Q
+            buffer = BytesIO()
             imagem_com_texto.save(buffer, format="JPEG")
             st.download_button(
                 label="Baixar Imagem com Texto",
