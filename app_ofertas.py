@@ -3,16 +3,13 @@ from PIL import Image, ImageDraw, ImageFont
 import requests
 from io import BytesIO
 
-# Configuração da página - Deve ser o primeiro comando Streamlit
+# Lendo o arquivo CSS e aplicando os estilos
+with open("styles.css") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+# Configuração da página
 title = "Gerador de Conteúdo de Ofertas"
 st.set_page_config(page_title=title, layout="wide")
-
-# Lendo o arquivo CSS e aplicando os estilos
-try:
-    with open("styles.css") as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-except FileNotFoundError:
-    st.warning("O arquivo 'styles.css' não foi encontrado. Estilos personalizados não serão aplicados.")
 
 # Função para calcular o desconto
 def calcular_desconto(preco_original, preco_atual):
@@ -54,13 +51,18 @@ def criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual
     margem = 20
     y_texto = margem
 
+    # Calcula o tamanho do texto para ajustar dinamicamente
+    nome_bbox = draw.textbbox((0, 0), texto_nome, font=font_bold)
+    preco_bbox = draw.textbbox((0, 0), texto_preco, font=font)
+    desconto_bbox = draw.textbbox((0, 0), texto_desconto, font=font)
+
     # Adiciona o nome do produto (em negrito)
     draw.text((margem, y_texto), texto_nome, fill="white", font=font_bold, stroke_width=2, stroke_fill="black")
-    y_texto += font_bold.getsize(texto_nome)[1] + 10
+    y_texto += nome_bbox[3] - nome_bbox[1] + 10  # Altura do texto + espaçamento
 
     # Adiciona o preço atual (em verde)
     draw.text((margem, y_texto), texto_preco, fill="green", font=font, stroke_width=2, stroke_fill="black")
-    y_texto += font.getsize(texto_preco)[1] + 10
+    y_texto += preco_bbox[3] - preco_bbox[1] + 10
 
     # Adiciona o desconto (em vermelho)
     draw.text((margem, y_texto), texto_desconto, fill="red", font=font, stroke_width=2, stroke_fill="black")
