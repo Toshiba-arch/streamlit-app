@@ -2,15 +2,20 @@ import streamlit as st
 from PIL import Image, ImageDraw, ImageFont
 import requests
 from io import BytesIO
+import os
 
-try:
+# Configuração da página (este comando deve ser o primeiro no script!)
+st.set_page_config(page_title="Gerador de Conteúdo de Ofertas", layout="wide")
+
+# Lendo o arquivo CSS e aplicando os estilos, se existir
+if os.path.exists("styles.css"):
     with open("styles.css") as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-except FileNotFoundError:
+else:
     st.warning("O arquivo 'styles.css' não foi encontrado. Estilos personalizados não serão aplicados.")
-
+    
 # Configuração da página
-title = "Gerador de Conteúdo de Ofertas"
+title = "Gerador de Posts com link de referencia"
 st.set_page_config(page_title=title, layout="wide")
 
 # Função para calcular o desconto
