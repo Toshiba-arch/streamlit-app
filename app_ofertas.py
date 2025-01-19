@@ -3,6 +3,10 @@ from PIL import Image, ImageDraw, ImageFont
 import requests
 from io import BytesIO
 
+# Lendo o arquivo CSS e aplicando os estilos
+with open("styles.css") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
 # Configuração da página
 title = "Gerador de Conteúdo de Ofertas"
 st.set_page_config(page_title=title, layout="wide")
