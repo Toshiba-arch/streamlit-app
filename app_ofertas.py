@@ -28,7 +28,7 @@ def criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual
     response = requests.get(imagem_url)
     imagem = Image.open(BytesIO(response.content)).convert("RGBA")
     draw = ImageDraw.Draw(imagem)
-    
+
     # Define a fonte para o texto (usa fonte padrão se "arial.ttf" não estiver disponível)
     try:
         font = ImageFont.truetype("arial.ttf", size=24)
@@ -41,14 +41,17 @@ def criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual
     margem = 10
 
     # Cria um fundo semitransparente para destacar o texto
-    fundo_altura = int(altura * 0.25)
-    overlay = Image.new("RGBA", (largura, fundo_altura), (0, 0, 0, 128))
+    fundo_altura = int(altura * 0.15)
+    overlay = Image.new("RGBA", (largura, fundo_altura), (0, 0, 0, 180))
     imagem.paste(overlay, (0, altura - fundo_altura), overlay)
 
     # Adiciona o texto na imagem
     draw.text((margem, altura - fundo_altura + margem), texto, fill="white", font=font)
 
-    return imagem
+    # Converte para JPEG
+    imagem_convertida = Image.new("RGB", imagem.size, (255, 255, 255))
+    imagem_convertida.paste(imagem, mask=imagem.split()[3])
+    return imagem_convertida
 
 # Função para gerar o texto do post
 def gerar_post(produto, link_referencia, tags):
@@ -130,17 +133,19 @@ def run():
 
             # Gera a imagem com o texto sobre o produto
             imagem_com_texto = criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual, desconto)
-            st.image(imagem_com_texto, caption=f"Oferta de {nome_produto}", use_container_width=True)
+            st.image(imagem_com_texto, caption=f"Oferta de {nome_produto}", use_container_width=True, width=400)
 
             # Exibe o texto do post na interface
             st.text_area("Texto do Post para Compartilhar", post_texto, height=200)
 
             # Botão para baixar a imagem gerada
+            buffer = BytesIO()
+            imagem_com_texto.save(buffer, format="JPEG")
             st.download_button(
                 label="Baixar Imagem com Texto",
-                data=BytesIO(imagem_com_texto.tobytes()),
-                file_name="oferta.png",
-                mime="image/png"
+                data=buffer.getvalue(),
+                file_name="oferta.jpg",
+                mime="image/jpeg"
             )
 
 # Executar a aplicação
