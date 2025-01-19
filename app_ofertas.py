@@ -31,24 +31,35 @@ def criar_imagem_com_texto(imagem_url, nome_produto, preco_original, preco_atual
 
     # Define a fonte para o texto (usa fonte padrão se "arial.ttf" não estiver disponível)
     try:
-        font = ImageFont.truetype("arial.ttf", size=24)
+        font = ImageFont.truetype("arial.ttf", size=36)
+        font_bold = ImageFont.truetype("arialbd.ttf", size=40)
     except IOError:
         font = ImageFont.load_default()
+        font_bold = font
 
     # Monta o texto com informações do produto
-    texto = f"{nome_produto}\nDe €{preco_original:.2f} por €{preco_atual:.2f} (-{desconto}%)"
+    texto_nome = f"{nome_produto}"
+    texto_preco = f"De €{preco_original:.2f} por €{preco_atual:.2f}"
+    texto_desconto = f"-{desconto}%"
     largura, altura = imagem.size
 
-    # Adiciona o texto com sombra na imagem
-    sombra_offset = 2
-    margem = 10
-    for x_offset, y_offset in [(sombra_offset, sombra_offset), (-sombra_offset, sombra_offset), (sombra_offset, -sombra_offset), (-sombra_offset, -sombra_offset)]:
-        draw.text((margem + x_offset, margem + y_offset), texto, fill="gray", font=font)
+    # Define posições e margens
+    margem = 20
+    y_texto = margem
 
-    draw.text((margem, margem), texto, fill="white", font=font)
+    # Adiciona o nome do produto (em negrito)
+    draw.text((margem, y_texto), texto_nome, fill="white", font=font_bold, stroke_width=2, stroke_fill="black")
+    y_texto += font_bold.getsize(texto_nome)[1] + 10
 
-    # Redimensiona a imagem para adequar às redes sociais (ex: largura máxima de 1200px)
-    largura_nova = 1200
+    # Adiciona o preço atual (em verde)
+    draw.text((margem, y_texto), texto_preco, fill="green", font=font, stroke_width=2, stroke_fill="black")
+    y_texto += font.getsize(texto_preco)[1] + 10
+
+    # Adiciona o desconto (em vermelho)
+    draw.text((margem, y_texto), texto_desconto, fill="red", font=font, stroke_width=2, stroke_fill="black")
+
+    # Redimensiona a imagem para adequar às redes sociais (ex: largura máxima de 800px)
+    largura_nova = 800
     proporcao = largura_nova / largura
     nova_altura = int(altura * proporcao)
     imagem = imagem.resize((largura_nova, nova_altura), Image.LANCZOS)
@@ -144,7 +155,7 @@ def run():
             st.text_area("Texto do Post para Compartilhar", post_texto, height=200)
 
             # Botão para baixar a imagem gerada
-            buffer = BytesIO()
+            buffer = BytesIO()Q
             imagem_com_texto.save(buffer, format="JPEG")
             st.download_button(
                 label="Baixar Imagem com Texto",
