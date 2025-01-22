@@ -52,7 +52,7 @@ def gerar_post(produto, link_referencia, tags):
 # Função para estilizar a imagem
 def estilizar_imagem(imagem_url, preco_atual):
     """
-    Adiciona um fundo com cor aleatória, margens, e sobrepõe um retângulo com o preço final.
+    Adiciona um fundo com cor aleatória, margens maiores, e sobrepõe um retângulo com o preço final no canto inferior esquerdo.
     """
     # Cores de fundo predefinidas
     cores_fundo = ["#FFD700", "#87CEEB", "#FFA500", "#90EE90", "#D2B48C", "#ADD8E6"]
@@ -63,7 +63,7 @@ def estilizar_imagem(imagem_url, preco_atual):
     imagem = Image.open(BytesIO(response.content)).convert("RGBA")
 
     # Define o tamanho das margens
-    margem = 10
+    margem = 30  # Margens maiores
     largura, altura = imagem.size
 
     # Cria uma nova imagem com fundo colorido
@@ -74,24 +74,30 @@ def estilizar_imagem(imagem_url, preco_atual):
     # Adiciona a imagem original sobre o fundo
     nova_imagem.paste(imagem, (margem, margem), imagem)
 
-    # Adiciona o retângulo com o preço no canto inferior direito
+    # Adiciona o retângulo com o preço no canto inferior esquerdo
     draw = ImageDraw.Draw(nova_imagem)
-    fonte = ImageFont.load_default()
+    fonte = ImageFont.truetype("arial.ttf", 24)  # Fonte ajustada para visibilidade
     texto_preco = f"€{preco_atual:.2f}"
     tamanho_texto = draw.textbbox((0, 0), texto_preco, font=fonte)  # Obtém a caixa de texto
     largura_texto = tamanho_texto[2] - tamanho_texto[0]
     altura_texto = tamanho_texto[3] - tamanho_texto[1]
-    padding = 5
+    padding = 10
 
     # Define posição e tamanho do retângulo
-    x1 = nova_largura - largura_texto - 2 * padding
+    x1 = margem
     y1 = nova_altura - altura_texto - 2 * padding
-    x2 = nova_largura
-    y2 = nova_altura
+    x2 = margem + largura_texto + 2 * padding
+    y2 = nova_altura - margem
 
     # Desenha o retângulo e adiciona o texto
     draw.rectangle([x1, y1, x2, y2], fill="black")
-    draw.text((x1 + padding, y1 + padding), texto_preco, fill="white", font=fonte)
+    draw.text(
+        (x1 + padding, y1 + padding),
+        texto_preco,
+        fill="white",
+        font=fonte,
+        align="center"
+    )
 
     return nova_imagem
 
