@@ -78,12 +78,14 @@ def estilizar_imagem(imagem_url, preco_atual):
     draw = ImageDraw.Draw(nova_imagem)
     fonte = ImageFont.load_default()
     texto_preco = f"€{preco_atual:.2f}"
-    tamanho_texto = draw.textsize(texto_preco, font=fonte)
+    tamanho_texto = draw.textbbox((0, 0), texto_preco, font=fonte)  # Obtém a caixa de texto
+    largura_texto = tamanho_texto[2] - tamanho_texto[0]
+    altura_texto = tamanho_texto[3] - tamanho_texto[1]
     padding = 5
 
     # Define posição e tamanho do retângulo
-    x1 = nova_largura - tamanho_texto[0] - 2 * padding
-    y1 = nova_altura - tamanho_texto[1] - 2 * padding
+    x1 = nova_largura - largura_texto - 2 * padding
+    y1 = nova_altura - altura_texto - 2 * padding
     x2 = nova_largura
     y2 = nova_altura
 
