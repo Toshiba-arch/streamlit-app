@@ -1,7 +1,8 @@
 import streamlit as st
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 import requests
 from io import BytesIO
+import random
 
 # Configuração da página
 title = "Gerador de Conteúdo de Ofertas"
@@ -47,6 +48,50 @@ def gerar_post(produto, link_referencia, tags):
         post_texto += "\n" + " ".join([f"#{tag}" for tag in tags])
 
     return post_texto
+
+# Função para estilizar a imagem
+def estilizar_imagem(imagem_url, preco_atual):
+    """
+    Adiciona um fundo com cor aleatória, margens, e sobrepõe um retângulo com o preço final.
+    """
+    # Cores de fundo predefinidas
+    cores_fundo = ["#FFD700", "#87CEEB", "#FFA500", "#90EE90", "#D2B48C", "#ADD8E6"]
+    cor_fundo = random.choice(cores_fundo)
+
+    # Carrega a imagem do produto
+    response = requests.get(imagem_url)
+    imagem = Image.open(BytesIO(response.content)).convert("RGBA")
+
+    # Define o tamanho das margens
+    margem = 10
+    largura, altura = imagem.size
+
+    # Cria uma nova imagem com fundo colorido
+    nova_largura = largura + 2 * margem
+    nova_altura = altura + 2 * margem
+    nova_imagem = Image.new("RGBA", (nova_largura, nova_altura), cor_fundo)
+
+    # Adiciona a imagem original sobre o fundo
+    nova_imagem.paste(imagem, (margem, margem), imagem)
+
+    # Adiciona o retângulo com o preço no canto inferior direito
+    draw = ImageDraw.Draw(nova_imagem)
+    fonte = ImageFont.load_default()
+    texto_preco = f"€{preco_atual:.2f}"
+    tamanho_texto = draw.textsize(texto_preco, font=fonte)
+    padding = 5
+
+    # Define posição e tamanho do retângulo
+    x1 = nova_largura - tamanho_texto[0] - 2 * padding
+    y1 = nova_altura - tamanho_texto[1] - 2 * padding
+    x2 = nova_largura
+    y2 = nova_altura
+
+    # Desenha o retângulo e adiciona o texto
+    draw.rectangle([x1, y1, x2, y2], fill="black")
+    draw.text((x1 + padding, y1 + padding), texto_preco, fill="white", font=fonte)
+
+    return nova_imagem
 
 # Função principal da aplicação
 def run():
@@ -96,14 +141,13 @@ def run():
             # Gera o texto do post
             post_texto = gerar_post(produto, link_referencia, tags)
 
-            # Exibe a imagem do produto
-            response = requests.get(imagem_url)
-            imagem = Image.open(BytesIO(response.content))
-            st.image(imagem, caption=f"Imagem de {nome_produto}", use_container_width=False, width=600)
+            # Estiliza a imagem do produto
+            imagem_estilizada = estilizar_imagem(imagem_url, preco_atual)
+            st.image(imagem_estilizada, caption=f"Imagem de {nome_produto}", use_container_width=False, width=600)
 
             # Adiciona opção para download da imagem
             img_buffer = BytesIO()
-            imagem.save(img_buffer, format="PNG")
+            imagem_estilizada.save(img_buffer, format="PNG")
             img_buffer.seek(0)
             st.download_button(
                 label="Baixar Imagem",
