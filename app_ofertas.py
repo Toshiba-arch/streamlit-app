@@ -63,7 +63,7 @@ def estilizar_imagem(imagem_url, preco_atual):
     imagem = Image.open(BytesIO(response.content)).convert("RGBA")
 
     # Define o tamanho das margens
-    margem = 20
+    margem = 50
     largura, altura = imagem.size
 
     # Cria uma nova imagem com fundo colorido
