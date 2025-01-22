@@ -25,11 +25,11 @@ def gerar_post(produto, link_referencia, tags):
     
     post_texto = f"📢 **Oferta Imperdível!** 📢\n"
     post_texto += f"🔹 **{nome}**\n"
-    post_texto += f"💰 De **€{preco_original:.2f}** por apenas **€{preco_atual:.2f}**!\n"
-    post_texto += f"📉 Economize **{desconto}%**!\n"
+    post_texto += f"💰 Antes **€{preco_original:.2f}** AGORA **€{preco_atual:.2f}**!\n"
+    post_texto += f"📉 Poupa já **{desconto}%**!\n"
     if cupom:
         post_texto += f"💥 Use o código de cupom: **{cupom}**\n"
-    post_texto += f"👉 [Compre agora]({link_referencia})\n"
+    post_texto += f"👉 [Compra agora]({link_referencia})\n"
     if tags:
         post_texto += "\n" + " ".join([f"#{tag}" for tag in tags])
     return post_texto
