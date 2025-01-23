@@ -81,8 +81,9 @@ def run():
 
     if tem_desconto == 'Sim':
         desconto_percentual = st.number_input("Porcentagem de Desconto (%)", min_value=0.0, step=0.01, format="%.2f")
-        preco_atual = st.number_input("Preço Atual (€)", min_value=0.0, step=0.01, format="%.2f")
-        preco_original = preco_atual / (1 - desconto_percentual / 100)
+        preco_original = st.number_input("Preço Original (€)", min_value=0.0, step=0.01, format="%.2f")
+        # Calcula o preço com o desconto percentual
+        preco_atual = preco_original * (1 - desconto_percentual / 100)
     else:
         preco_original = st.number_input("Preço Original (€)", min_value=0.0, step=0.01, format="%.2f")
         preco_atual = st.number_input("Preço Atual (€)", min_value=0.0, step=0.01, format="%.2f")
@@ -98,13 +99,10 @@ def run():
 
     if st.button("Gerar Post"):
         if nome_produto and link_referencia and preco_atual and imagem_url:
-            # Calcula o preço com o desconto percentual
-            preco_com_desconto = preco_original * (1 - desconto / 100)
-
             produto = {
                 "nome": nome_produto,
                 "preco_original": preco_original,
-                "preco_atual": preco_com_desconto,  # Preço final com desconto
+                "preco_atual": preco_atual,  # Preço final com desconto
                 "desconto": desconto,
                 "imagem": imagem_url,
                 "cupom": cupom  # Cupom será incluído no post, mas não afeta o preço
@@ -118,7 +116,7 @@ def run():
                 post_texto += f"\n💥 **Usar o código do cupom no checkout**: {cupom}"
 
             # Exibe a imagem estilizada
-            imagem_estilizada = estilizar_imagem(imagem_url, preco_com_desconto)
+            imagem_estilizada = estilizar_imagem(imagem_url, preco_atual)
             st.image(imagem_estilizada, caption=f"Imagem de {nome_produto}", use_container_width=False, width=600)
 
             # Permite o download da imagem estilizada
