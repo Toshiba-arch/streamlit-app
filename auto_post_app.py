@@ -1,5 +1,5 @@
+from requests_html import HTMLSession
 import streamlit as st
-import requests
 from bs4 import BeautifulSoup
 from time import sleep
 
@@ -39,14 +39,12 @@ def auto_post_app():
     if url:
         with st.spinner('Carregando...'):
             try:
-                # Cabeçalho para emular um navegador e evitar bloqueio
-                headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-                }
+                # Iniciar a sessão do requests_html
+                session = HTMLSession()
+                response = session.get(url)
 
-                # Tentativa de obter o conteúdo da página
-                response = requests.get(url, headers=headers)
-                response.raise_for_status()  # Levanta uma exceção se o status code não for 200
+                # Esperar o conteúdo carregar (caso haja algum JavaScript)
+                response.html.render()
 
                 soup = BeautifulSoup(response.content, 'html.parser')
 
@@ -128,5 +126,5 @@ def auto_post_app():
                     st.download_button("Baixar Post (.md)", data=post_md, file_name="post_automatico.md")
                 else:
                     st.error("Não foi possível localizar os dados da página.")
-            except requests.exceptions.RequestException as e:
+            except Exception as e:
                 st.error(f"Erro ao processar o link: {e}")
