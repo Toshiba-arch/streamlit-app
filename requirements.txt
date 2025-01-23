@@ -2,3 +2,5 @@ streamlit
 requests
 pillow
 certifi
+beautifulsoup4
+
