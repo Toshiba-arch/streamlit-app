@@ -2,7 +2,8 @@ import streamlit as st
 import random
 
 # Definir a configuração da página
-st.set_page_config(page_title="Gerador de Números do Euromilhões", layout="wide")
+title = "Gerador de Números do Euromilhões"
+#st.set_page_config(page_title="Gerador de Números do Euromilhões", layout="wide")
 
 # Função que gera os números do Euromilhões aleatoriamente
 def gerar_numeros_aleatorios():
