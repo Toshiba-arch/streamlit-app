@@ -5,8 +5,7 @@ from io import BytesIO
 import random
 
 # Configuração da página
-title = "Gerador de Conteúdo de Ofertas"
-st.set_page_config(page_title=title, layout="wide")
+st.set_page_config(page_title = "Gerador de Conteúdo de Ofertas", layout="wide")
 
 # Função para calcular o desconto
 def calcular_desconto(preco_original, preco_atual):
