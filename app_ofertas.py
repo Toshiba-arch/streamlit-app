@@ -98,19 +98,30 @@ def run():
 
     if st.button("Gerar Post"):
         if nome_produto and link_referencia and preco_atual and imagem_url:
+            # Calcula o preço com o desconto percentual
+            preco_com_desconto = preco_original * (1 - desconto / 100)
+
             produto = {
                 "nome": nome_produto,
                 "preco_original": preco_original,
-                "preco_atual": preco_atual,
+                "preco_atual": preco_com_desconto,  # Preço final com desconto
                 "desconto": desconto,
                 "imagem": imagem_url,
-                "cupom": cupom
+                "cupom": cupom  # Cupom será incluído no post, mas não afeta o preço
             }
 
+            # Gera o texto do post
             post_texto = gerar_post(produto, link_referencia, tags)
-            imagem_estilizada = estilizar_imagem(imagem_url, preco_atual)
+
+            # Se houver um cupom, adiciona a mensagem no post
+            if cupom:
+                post_texto += f"\n💥 **Usar o código do cupom no checkout**: {cupom}"
+
+            # Exibe a imagem estilizada
+            imagem_estilizada = estilizar_imagem(imagem_url, preco_com_desconto)
             st.image(imagem_estilizada, caption=f"Imagem de {nome_produto}", use_container_width=False, width=600)
 
+            # Permite o download da imagem estilizada
             img_buffer = BytesIO()
             imagem_estilizada.save(img_buffer, format="PNG")
             img_buffer.seek(0)
@@ -121,6 +132,7 @@ def run():
                 mime="image/png"
             )
 
+            # Exibe o texto do post
             st.text_area("Texto do Post para Compartilhar", post_texto, height=200)
 
 if __name__ == "__main__":
