@@ -4,6 +4,7 @@ import requests
 from io import BytesIO
 import random
 
+
 # Definir o título antes de usá-lo
 title = "Consultor de Promoções"
 
@@ -34,40 +35,75 @@ def gerar_post(produto, link_referencia, tags):
     return post_texto
 
 # Função para estilizar a imagem
-def estilizar_imagem(imagem_url, preco_atual):
+def estilizar_imagem(imagem_url, preco_atual, cor_fundo_caixa="#000000", cor_texto="white", tamanho_texto=150, padding=100, texto_caixa=None):
+    """
+    Estiliza a imagem com uma caixa no canto inferior direito contendo o preço, podendo configurar a cor, texto e tamanho da caixa.
+    
+    Parâmetros:
+    - imagem_url: URL da imagem do produto
+    - preco_atual: Preço atual do produto
+    - cor_fundo_caixa: Cor do fundo da caixa (padrão: #000000)
+    - cor_texto: Cor do texto (padrão: branco)
+    - tamanho_texto: Tamanho do texto (padrão: 150)
+    - padding: Espaçamento entre o texto e as bordas da caixa (padrão: 100)
+    - texto_caixa: Texto que será exibido na caixa (padrão: preço do produto, caso não seja fornecido)
+    
+    Retorna:
+    - nova_imagem: A imagem estilizada
+    """
+    
+    # Escolher uma cor de fundo aleatória (se a cor do fundo não for especificada)
     cores_fundo = ["#FFD700", "#87CEEB", "#FFA500", "#90EE90", "#D2B48C", "#ADD8E6"]
     cor_fundo = random.choice(cores_fundo)
 
+    # Baixar a imagem do produto
     response = requests.get(imagem_url)
     imagem = Image.open(BytesIO(response.content)).convert("RGBA")
 
+    # Margem para o fundo
     margem = 50
     largura, altura = imagem.size
     nova_largura = largura + 2 * margem
     nova_altura = altura + 2 * margem
+    
+    # Criar uma nova imagem com fundo colorido
     nova_imagem = Image.new("RGBA", (nova_largura, nova_altura), cor_fundo)
 
-    nova_imagem.paste(imagem, (margem, margem), imagem)
+    # Centralizar a imagem original no fundo
+    pos_x = margem
+    pos_y = margem
+    nova_imagem.paste(imagem, (pos_x, pos_y), imagem)
 
+    # Desenhar a caixa no canto inferior direito
     draw = ImageDraw.Draw(nova_imagem)
-    try:
-        fonte = ImageFont.truetype("arial.ttf", 30)  # Tentar uma fonte mais robusta
-    except IOError:
-        fonte = ImageFont.load_default()  # Se falhar, usar a fonte padrão
     
-    texto_preco = f"€{preco_atual:.2f}"
-    tamanho_texto = draw.textbbox((0, 0), texto_preco, font=fonte)
+    try:
+        # Tentativa de carregar uma fonte comum
+        fonte = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", tamanho_texto)
+    except IOError:
+        # Caso a fonte DejaVu não seja encontrada, usa a fonte padrão
+        fonte = ImageFont.load_default()
+
+    # Texto da caixa, se não for fornecido, usa o preço atual
+    if texto_caixa is None:
+        texto_caixa = f"€{preco_atual:.2f}"
+   
+    # Tamanho do texto
+    tamanho_texto = draw.textbbox((0, 0), texto_caixa, font=fonte)
     largura_texto = tamanho_texto[2] - tamanho_texto[0]
     altura_texto = tamanho_texto[3] - tamanho_texto[1]
-    padding = 10
 
-    x1 = nova_largura - largura_texto - 2 * padding - margem
-    y1 = nova_altura - altura_texto - 2 * padding - margem
+    # Posições para desenhar a caixa no canto inferior direito
+    x1 = nova_largura - largura_texto - padding - margem
+    y1 = nova_altura - altura_texto - padding - margem
     x2 = nova_largura - margem
     y2 = nova_altura - margem
 
-    draw.rectangle([x1, y1, x2, y2], fill="black")
-    draw.text((x1 + padding, y1 + padding), texto_preco, fill="white", font=fonte)
+    # Desenhar a caixa com a cor configurada
+    draw.rectangle([x1, y1, x2, y2], fill=cor_fundo_caixa)
+
+    # Desenhar o texto dentro da caixa
+    draw.text((x1 + padding, y1 + padding), texto_caixa, fill=cor_texto, font=fonte)
 
     return nova_imagem
 
