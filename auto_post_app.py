@@ -1,7 +1,6 @@
-from requests_html import HTMLSession
 import streamlit as st
+import requests
 from bs4 import BeautifulSoup
-from time import sleep
 
 # Função para gerar o texto do post
 def gerar_post(produto, link_referencia, tags):
@@ -11,7 +10,6 @@ def gerar_post(produto, link_referencia, tags):
     desconto = produto['desconto']
     cupom = produto['cupom']
     
-    # Garantir que os preços sejam números
     try:
         preco_original = float(preco_original.replace('€', '').replace(',', '.')) if preco_original else 0
         preco_atual = float(preco_atual.replace('€', '').replace(',', '.')) if preco_atual else 0
@@ -39,12 +37,18 @@ def auto_post_app():
     if url:
         with st.spinner('Carregando...'):
             try:
-                # Iniciar a sessão do requests_html
-                session = HTMLSession()
-                response = session.get(url)
+                # Cabeçalho realista para evitar bloqueios
+                headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                    "Accept-Language": "en-US,en;q=0.9,pt;q=0.8",
+                    "Accept-Encoding": "gzip, deflate, br",
+                    "Connection": "keep-alive",
+                    "Upgrade-Insecure-Requests": "1"
+                }
 
-                # Esperar o conteúdo carregar (caso haja algum JavaScript)
-                response.html.render()
+                # Tentativa de obter o conteúdo da página
+                response = requests.get(url, headers=headers)
+                response.raise_for_status()  # Levanta uma exceção se o status code não for 200
 
                 soup = BeautifulSoup(response.content, 'html.parser')
 
@@ -126,5 +130,5 @@ def auto_post_app():
                     st.download_button("Baixar Post (.md)", data=post_md, file_name="post_automatico.md")
                 else:
                     st.error("Não foi possível localizar os dados da página.")
-            except Exception as e:
+            except requests.exceptions.RequestException as e:
                 st.error(f"Erro ao processar o link: {e}")
