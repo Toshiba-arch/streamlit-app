@@ -4,8 +4,8 @@ import requests
 from io import BytesIO
 import random
 
-# Configuração da página
-st.set_page_config(page_title="Gerador de Conteúdo de Ofertas", layout="wide")
+# Definir o título antes de usá-lo
+title = "Consultor de Promoções"
 
 # Função para calcular o desconto
 def calcular_desconto(preco_original, preco_atual):
@@ -20,10 +20,14 @@ def gerar_post(produto, link_referencia, tags):
     preco_original = produto['preco_original']
     preco_atual = produto['preco_atual']
     desconto = produto['desconto']
+    cupom = produto['cupom']
+    
     post_texto = f"📢 **Oferta Imperdível!** 📢\n"
     post_texto += f"🔹 **{nome}**\n"
     post_texto += f"💰 Antes **€{preco_original:.2f}** AGORA **€{preco_atual:.2f}**!\n"
     post_texto += f"📉 Poupa já **{desconto}%**!\n"
+    if cupom:
+        post_texto += f"💥 Use o código de cupom: **{cupom}**\n"
     post_texto += f"👉 [Compra agora]({link_referencia})\n"
     if tags:
         post_texto += "\n" + " ".join([f"#{tag}" for tag in tags])
@@ -69,7 +73,7 @@ def estilizar_imagem(imagem_url, preco_atual):
 
 # Função principal da aplicação
 def run():
-    st.title(title)
+    st.title(title)  # Agora não gera erro
 
     nome_produto = st.text_input("Nome do Produto")
     tem_desconto = st.radio("O produto tem desconto?", ('Sim', 'Não'))
