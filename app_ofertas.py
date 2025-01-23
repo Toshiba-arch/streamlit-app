@@ -73,7 +73,7 @@ def estilizar_imagem(imagem_url, preco_atual):
 
 # Função principal da aplicação
 def run():
-    st.title(title)  # Agora não gera erro
+    st.title(title) 
 
     nome_produto = st.text_input("Nome do Produto")
     tem_desconto = st.radio("O produto tem desconto?", ('Sim', 'Não'))
@@ -111,8 +111,8 @@ def run():
             post_texto = gerar_post(produto, link_referencia, tags)
 
             # Se houver um cupom, adiciona a mensagem no lugar correto
-            if cupom:
-                post_texto += f"\n💥 **Usar o código do cupom no checkout**: {cupom}"
+            #if cupom:
+            #    post_texto += f"\n💥 **Usar o código do cupom no checkout**: {cupom}"
 
             # Exibe a imagem estilizada
             imagem_estilizada = estilizar_imagem(imagem_url, preco_atual)
