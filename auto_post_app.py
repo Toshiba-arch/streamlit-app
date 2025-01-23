@@ -48,9 +48,6 @@ def auto_post_app():
                 response = requests.get(url, headers=headers)
                 response.raise_for_status()  # Levanta uma exceção se o status code não for 200
 
-                # Verificar o conteúdo retornado para depurar
-                # print(response.text)  # Descomente para ver o HTML da página
-
                 soup = BeautifulSoup(response.content, 'html.parser')
 
                 # Procurar pela div dp-container onde estão os dados
@@ -75,6 +72,10 @@ def auto_post_app():
                     # Captura a URL da imagem
                     image_tag = dp_container.find('img', {'id': 'landingImage'})
                     image_url = image_tag['src'] if image_tag and 'src' in image_tag.attrs else ""
+
+                    # Corrigir a URL da imagem para ser absoluta (https://...)
+                    if image_url and not image_url.startswith("http"):
+                        image_url = "https:" + image_url
 
                     # Captura o cupom, se disponível
                     coupon = "Sem cupom disponível"
