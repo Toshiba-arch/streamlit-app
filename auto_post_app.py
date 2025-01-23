@@ -5,13 +5,17 @@ from bs4 import BeautifulSoup
 # Função para calcular o desconto em percentagem
 def calcular_desconto(preco_original, preco_atual):
     try:
-        # Garantir que os preços são floats
+        # Verificar se o preço original é zero
+        if preco_original == 0:
+            return 0  # Retorna 0% de desconto se o preço original for 0
+
+        # Caso contrário, calcular o desconto normalmente
         preco_original = float(preco_original)
         preco_atual = float(preco_atual)
         desconto = ((preco_original - preco_atual) / preco_original) * 100
         return round(desconto, 2)
-    except (ValueError, TypeError):
-        return 0  # Caso ocorra um erro no cálculo, retorna 0%
+    except (ValueError, TypeError, ZeroDivisionError):
+        return 0  # Retorna 0% caso haja qualquer erro
 
 # Função para gerar o texto do post
 def gerar_post(produto, link_referencia, tags):
