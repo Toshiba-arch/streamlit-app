@@ -1,7 +1,9 @@
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
+from time import sleep
 
+# Função para gerar o texto do post
 def gerar_post(produto, link_referencia, tags):
     nome = produto['nome']
     preco_original = produto['preco_original']
@@ -29,39 +31,42 @@ def auto_post_app():
     if url:
         with st.spinner('Carregando...'):
             try:
-                # Extração dos dados do link
-                response = requests.get(url)
-                response.raise_for_status()
+                # Cabeçalho para emular um navegador e evitar bloqueio
+                headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+                }
+
+                # Tentativa de obter o conteúdo da página
+                response = requests.get(url, headers=headers)
+                response.raise_for_status()  # Levanta uma exceção se o status code não for 200
                 soup = BeautifulSoup(response.content, 'html.parser')
 
-                # Capturar título do produto
+                # Extração dos dados do link
                 title = soup.title.string if soup.title else "Sem título disponível"
-
-                # Capturar descrição
                 description = ""
                 desc_tag = soup.find("meta", attrs={"name": "description"})
                 if desc_tag and "content" in desc_tag.attrs:
                     description = desc_tag.attrs["content"]
 
-                # Capturar preço
+                # Captura o preço (se disponível)
                 price = "Preço não disponível"
                 price_tag = soup.find("meta", property="product:price:amount")
                 if price_tag and "content" in price_tag.attrs:
                     price = f"€ {price_tag.attrs['content']}"
 
-                # Capturar desconto
+                # Captura o desconto
                 discount = "Sem desconto"
                 discount_tag = soup.find("meta", property="product:discount:amount")
                 if discount_tag and "content" in discount_tag.attrs:
                     discount = f"Desconto: {discount_tag.attrs['content']}%"
 
-                # Capturar cupom ou instrução para desconto
+                # Captura o cupom
                 coupon = "Sem cupom disponível"
                 coupon_tag = soup.find("meta", property="product:discount:code")
                 if coupon_tag and "content" in coupon_tag.attrs:
                     coupon = f"Cupom: {coupon_tag.attrs['content']}"
 
-                # Exibição dos elementos extraídos com opção de edição
+                # Exibição dos dados extraídos
                 st.write("#### Personalize os elementos do post:")
                 title = st.text_input("Título (ex: Nome do Produto):", value=title, key="auto_title")
                 description = st.text_area("Descrição (detalhes do produto):", value=description, key="auto_description", height=100)
@@ -69,7 +74,7 @@ def auto_post_app():
                 discount = st.text_input("Desconto (ex: 20%):", value=discount, key="auto_discount")
                 coupon = st.text_input("Cupom (ex: CÓDIGO20):", value=coupon, key="auto_coupon")
 
-                # URL da imagem fornecida pelo usuário
+                # Campo para URL de imagem
                 image_url = st.text_input("Insira a URL da imagem desejada:", "")
                 if image_url:
                     try:
@@ -81,10 +86,10 @@ def auto_post_app():
                     except requests.exceptions.RequestException as e:
                         st.error(f"Erro ao carregar a imagem: {e}")
 
-                # Campos para tags
+                # Tags
                 tags = st.text_input("Tags (separadas por vírgula):", "")
 
-                # Construção do post final
+                # Gerar conteúdo do post
                 produto = {
                     'nome': title,
                     'preco_original': price,
@@ -97,7 +102,7 @@ def auto_post_app():
                 st.write("### Pré-visualização do Post:")
                 st.text_area("Texto do Post para copiar e colar:", value=post_texto, height=200)
 
-                # Botões para download do post final
+                # Botões para download
                 st.download_button("Baixar Post (.txt)", data=post_texto, file_name="post_automatico.txt")
                 
                 # Exportação para Markdown
@@ -113,5 +118,6 @@ def auto_post_app():
                     post_md += f"![Imagem do Produto]({image_url})\n"
                 st.download_button("Baixar Post (.md)", data=post_md, file_name="post_automatico.md")
 
-            except Exception as e:
+            except requests.exceptions.RequestException as e:
                 st.error(f"Erro ao processar o link: {e}")
+                sleep(2)  # Tenta novamente após 2 segundos
