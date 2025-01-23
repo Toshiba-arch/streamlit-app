@@ -111,7 +111,7 @@ def run():
             # Gera o texto do post
             post_texto = gerar_post(produto, link_referencia, tags)
 
-            # Se houver um cupom, adiciona a mensagem no post
+            # Se houver um cupom, adiciona a mensagem no lugar correto
             if cupom:
                 post_texto += f"\n💥 **Usar o código do cupom no checkout**: {cupom}"
 
