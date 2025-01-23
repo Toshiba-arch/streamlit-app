@@ -123,7 +123,7 @@ def auto_post_app():
                         'nome': title,
                         'preco_original': price,
                         'preco_atual': price_discount,
-                        'desconto': desconto.replace('%', ''),
+                        'desconto': desconto,  # Valor de desconto já é string com '%'
                         'cupom': coupon if coupon != "Sem cupom disponível" else ""
                     }
                     post_texto = gerar_post(produto, url, tags.split(",") if tags else [])
