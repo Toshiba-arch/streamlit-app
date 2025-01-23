@@ -2,6 +2,24 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 
+def gerar_post(produto, link_referencia, tags):
+    nome = produto['nome']
+    preco_original = produto['preco_original']
+    preco_atual = produto['preco_atual']
+    desconto = produto['desconto']
+    cupom = produto['cupom']
+    
+    post_texto = f"📢 **Oferta Imperdível!** 📢\n"
+    post_texto += f"🔹 **{nome}**\n"
+    post_texto += f"💰 Antes **€{preco_original:.2f}** AGORA **€{preco_atual:.2f}**!\n"
+    post_texto += f"📉 Poupa já **{desconto}%**!\n"
+    if cupom:
+        post_texto += f"💥 Use o código de cupom no checkout: **{cupom}**\n"
+    post_texto += f"👉 [Compra agora]({link_referencia})\n"
+    if tags:
+        post_texto += "\n" + " ".join([f"#{tag}" for tag in tags])
+    return post_texto
+
 def auto_post_app():
     st.write("### Gerador Automático de Posts")
 
@@ -25,17 +43,11 @@ def auto_post_app():
                 if desc_tag and "content" in desc_tag.attrs:
                     description = desc_tag.attrs["content"]
 
-                # Capturar imagem do produto (preview)
-                image_url = ""
-                image_tag = soup.find("meta", property="og:image")
-                if image_tag and "content" in image_tag.attrs:
-                    image_url = image_tag.attrs["content"]
-
                 # Capturar preço
                 price = "Preço não disponível"
                 price_tag = soup.find("meta", property="product:price:amount")
                 if price_tag and "content" in price_tag.attrs:
-                    price = f"R$ {price_tag.attrs['content']}"
+                    price = f"€ {price_tag.attrs['content']}"
 
                 # Capturar desconto
                 discount = "Sem desconto"
@@ -53,41 +65,33 @@ def auto_post_app():
                 st.write("#### Personalize os elementos do post:")
                 title = st.text_input("Título (ex: Nome do Produto):", value=title, key="auto_title")
                 description = st.text_area("Descrição (detalhes do produto):", value=description, key="auto_description", height=100)
-                price = st.text_input("Preço (ex: R$ 199,99):", value=price, key="auto_price")
+                price = st.text_input("Preço (ex: €199,99):", value=price, key="auto_price")
                 discount = st.text_input("Desconto (ex: 20%):", value=discount, key="auto_discount")
                 coupon = st.text_input("Cupom (ex: CÓDIGO20):", value=coupon, key="auto_coupon")
 
-                # Ajuste de imagem
+                # URL da imagem fornecida pelo usuário
+                image_url = st.text_input("Insira a URL da imagem desejada:", "")
                 if image_url:
-                    st.write("#### Imagem do produto:")
-                    st.image(image_url, caption="Imagem extraída do link")
-                    use_image = st.checkbox("Usar esta imagem no post", value=True)
-                    if use_image:
-                        image_width = st.slider("Ajuste a largura da imagem:", min_value=100, max_value=800, value=400)
-                        image_height = st.slider("Ajuste a altura da imagem:", min_value=100, max_value=600, value=300)
-                        st.image(image_url, caption="Imagem ajustada", width=image_width, height=image_height)
-                else:
-                    st.write("Nenhuma imagem encontrada.")
-                    use_image = False
+                    st.image(image_url, caption="Imagem inserida pelo usuário", use_column_width=True)
+
+                # Campos para tags
+                tags = st.text_input("Tags (separadas por vírgula):", "")
 
                 # Construção do post final
-                st.write("### Post Final:")
-                post_content = (
-                    f"**{title}**\n\n"
-                    f"{description}\n\n"
-                    f"Preço: {price}\n"
-                    f"{discount}\n"
-                    f"{coupon}\n"
-                    f"Aproveite esta oferta clicando no link: {url}"
-                )
+                produto = {
+                    'nome': title,
+                    'preco_original': price,
+                    'preco_atual': price,
+                    'desconto': discount.replace("Desconto: ", "").replace("%", "") if discount != "Sem desconto" else "0",
+                    'cupom': coupon if coupon != "Sem cupom disponível" else ""
+                }
+                post_texto = gerar_post(produto, url, tags.split(",") if tags else [])
 
-                if use_image and image_url:
-                    post_content += f"\n\n![Imagem do Produto]({image_url})"
-
-                st.text_area("Pré-visualização do Post:", value=post_content, height=300)
+                st.write("### Pré-visualização do Post:")
+                st.text_area("Texto do Post para copiar e colar:", value=post_texto, height=200)
 
                 # Botões para download do post final
-                st.download_button("Baixar Post (.txt)", data=post_content, file_name="post_automatico.txt")
+                st.download_button("Baixar Post (.txt)", data=post_texto, file_name="post_automatico.txt")
                 
                 # Exportação para Markdown
                 post_md = (
@@ -98,7 +102,7 @@ def auto_post_app():
                     f"**Cupom:** {coupon}\n\n"
                     f"**Clique aqui para aproveitar a oferta:** {url}\n\n"
                 )
-                if use_image and image_url:
+                if image_url:
                     post_md += f"![Imagem do Produto]({image_url})\n"
                 st.download_button("Baixar Post (.md)", data=post_md, file_name="post_automatico.md")
 
