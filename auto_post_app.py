@@ -72,7 +72,14 @@ def auto_post_app():
                 # URL da imagem fornecida pelo usuário
                 image_url = st.text_input("Insira a URL da imagem desejada:", "")
                 if image_url:
-                    st.image(image_url, caption="Imagem inserida pelo usuário", use_column_width=True)
+                    try:
+                        response = requests.get(image_url)
+                        if response.status_code == 200:
+                            st.image(image_url, caption="Imagem inserida pelo usuário", use_column_width=True)
+                        else:
+                            st.error("Erro ao carregar a imagem. Verifique a URL.")
+                    except requests.exceptions.RequestException as e:
+                        st.error(f"Erro ao carregar a imagem: {e}")
 
                 # Campos para tags
                 tags = st.text_input("Tags (separadas por vírgula):", "")
