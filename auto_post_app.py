@@ -47,6 +47,10 @@ def auto_post_app():
                 # Tentativa de obter o conteúdo da página
                 response = requests.get(url, headers=headers)
                 response.raise_for_status()  # Levanta uma exceção se o status code não for 200
+
+                # Verificar o conteúdo retornado para depurar
+                # print(response.text)  # Descomente para ver o HTML da página
+
                 soup = BeautifulSoup(response.content, 'html.parser')
 
                 # Procurar pela div dp-container onde estão os dados
