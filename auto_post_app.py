@@ -2,6 +2,16 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 
+# Função para calcular o desconto em percentagem
+def calcular_desconto(preco_original, preco_atual):
+    try:
+        preco_original = float(preco_original.replace('€', '').replace(',', '.'))
+        preco_atual = float(preco_atual.replace('€', '').replace(',', '.'))
+        desconto = ((preco_original - preco_atual) / preco_original) * 100
+        return round(desconto, 2)
+    except (ValueError, TypeError):
+        return 0  # Caso ocorra um erro no cálculo, retorna 0%
+
 # Função para gerar o texto do post
 def gerar_post(produto, link_referencia, tags):
     nome = produto['nome']
@@ -10,12 +20,6 @@ def gerar_post(produto, link_referencia, tags):
     desconto = produto['desconto']
     cupom = produto['cupom']
     
-    try:
-        preco_original = float(preco_original.replace('€', '').replace(',', '.')) if preco_original else 0
-        preco_atual = float(preco_atual.replace('€', '').replace(',', '.')) if preco_atual else 0
-    except ValueError:
-        preco_original = preco_atual = 0  # Caso não seja possível converter, atribuímos 0 como padrão
-
     post_texto = f"📢 **Oferta Imperdível!** 📢\n"
     post_texto += f"🔹 **{nome}**\n"
     post_texto += f"💰 Antes **€{preco_original:.2f}** AGORA **€{preco_atual:.2f}**!\n"
@@ -65,11 +69,12 @@ def auto_post_app():
                     price = dp_container.find('span', {'id': 'priceblock_ourprice'}) or dp_container.find('span', {'id': 'priceblock_dealprice'})
                     price = price.text.strip() if price else "Preço não disponível"
                     
-                    # Captura o desconto, caso exista
-                    discount = "Sem desconto"
-                    discount_tag = dp_container.find('span', {'class': 'a-declarative'})
-                    if discount_tag:
-                        discount = discount_tag.text.strip()
+                    # Captura o preço com desconto (se disponível)
+                    price_discount = dp_container.find('span', {'class': 'priceBlockSavingsString'})
+                    price_discount = price_discount.text.strip() if price_discount else price
+                    
+                    # Cálculo do desconto
+                    desconto = calcular_desconto(price, price_discount)
 
                     # Captura a URL da imagem
                     image_tag = dp_container.find('img', {'id': 'landingImage'})
@@ -88,7 +93,8 @@ def auto_post_app():
                     # Extração de informações adicionais dentro da classe "centerColAlign"
                     center_col = soup.find('div', {'class': 'centerColAlign'})
                     if center_col:
-                        additional_info = center_col.text.strip()
+                        # Compactação da informação, removendo elementos excessivos
+                        additional_info = ' '.join([text.strip() for text in center_col.stripped_strings])
                     else:
                         additional_info = "Sem informações adicionais."
 
@@ -97,7 +103,8 @@ def auto_post_app():
                     title = st.text_input("Título (ex: Nome do Produto):", value=title, key="auto_title")
                     description = st.text_area("Descrição (detalhes do produto):", value=description, key="auto_description", height=100)
                     price = st.text_input("Preço (ex: €199,99):", value=price, key="auto_price")
-                    discount = st.text_input("Desconto (ex: 20%):", value=discount, key="auto_discount")
+                    price_discount = st.text_input("Preço com desconto (ex: €129,99):", value=price_discount, key="auto_discount_price")
+                    desconto = st.text_input("Desconto (ex: 30%):", value=f"{desconto}%", key="auto_discount")
                     coupon = st.text_input("Cupom (ex: CÓDIGO20):", value=coupon, key="auto_coupon")
                     additional_info = st.text_area("Informações adicionais", value=additional_info, key="auto_additional_info", height=100)
 
@@ -115,8 +122,8 @@ def auto_post_app():
                     produto = {
                         'nome': title,
                         'preco_original': price,
-                        'preco_atual': price,
-                        'desconto': discount.replace("Desconto: ", "").replace("%", "") if discount != "Sem desconto" else "0",
+                        'preco_atual': price_discount,
+                        'desconto': desconto.replace('%', ''),
                         'cupom': coupon if coupon != "Sem cupom disponível" else ""
                     }
                     post_texto = gerar_post(produto, url, tags.split(",") if tags else [])
@@ -132,7 +139,7 @@ def auto_post_app():
                         f"# {title}\n\n"
                         f"{description}\n\n"
                         f"**Preço:** {price}\n"
-                        f"**Desconto:** {discount}\n"
+                        f"**Desconto:** {desconto}%\n"
                         f"**Cupom:** {coupon}\n\n"
                         f"**Clique aqui para aproveitar a oferta:** {url}\n\n"
                     )
