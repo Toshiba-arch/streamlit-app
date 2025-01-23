@@ -93,8 +93,8 @@ def auto_post_app():
                     # Extração de informações adicionais dentro da classe "centerColAlign"
                     center_col = soup.find('div', {'class': 'centerColAlign'})
                     if center_col:
-                        # Compactação da informação, removendo elementos excessivos
-                        additional_info = ' '.join([text.strip() for text in center_col.stripped_strings])
+                        # Compactação da informação, removendo elementos excessivos e formatando para melhor legibilidade
+                        additional_info = ' | '.join([text.strip() for text in center_col.stripped_strings if text.strip()])
                     else:
                         additional_info = "Sem informações adicionais."
 
