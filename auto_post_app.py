@@ -19,7 +19,15 @@ def gerar_post(produto, link_referencia, tags):
     preco_atual = produto['preco_atual']
     desconto = produto['desconto']
     cupom = produto['cupom']
-    
+
+    # Convertendo os preços para float antes de formatar
+    try:
+        preco_original = float(preco_original.replace('€', '').replace(',', '.'))
+        preco_atual = float(preco_atual.replace('€', '').replace(',', '.'))
+    except ValueError:
+        preco_original = 0
+        preco_atual = 0
+
     post_texto = f"📢 **Oferta Imperdível!** 📢\n"
     post_texto += f"🔹 **{nome}**\n"
     post_texto += f"💰 Antes **€{preco_original:.2f}** AGORA **€{preco_atual:.2f}**!\n"
