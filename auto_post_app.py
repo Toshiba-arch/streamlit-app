@@ -119,7 +119,6 @@ def auto_post_app():
                     description = st.text_area("Descrição (detalhes do produto):", value=description, key="auto_description", height=100)
                     price = st.text_input("Preço (ex: €199,99):", value=price, key="auto_price")
                     price_discount = st.text_input("Preço com desconto (ex: €129,99):", value=price_discount, key="auto_discount_price")
-                    desconto = st.text_input("Desconto (ex: 30%):", value=f"{desconto}%", key="auto_discount")
                     coupon = st.text_input("Cupom (ex: CÓDIGO20):", value=coupon, key="auto_coupon")
                     additional_info = st.text_area("Informações adicionais", value=additional_info, key="auto_additional_info", height=100)
 
@@ -138,7 +137,6 @@ def auto_post_app():
                         'nome': title,
                         'preco_original': price,
                         'preco_atual': price_discount,
-                        'desconto': desconto,  # Valor de desconto já é string com '%'
                         'cupom': coupon if coupon != "Sem cupom disponível" else ""
                     }
                     post_texto = gerar_post(produto, url, tags.split(",") if tags else [])
