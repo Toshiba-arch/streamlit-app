@@ -1,3 +1,4 @@
+"""
 import streamlit as st
 import random
 
@@ -79,3 +80,4 @@ elif opcao == "Gerador de Números do Euromilhões":
         st.write(f"**Números:** {', '.join(map(str, numeros))}")
         st.write(f"**Estrelas:** {', '.join(map(str, estrelas))}")
         st.info("Boa sorte! 🍀")
+"""
