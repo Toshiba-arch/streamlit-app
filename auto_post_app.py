@@ -92,7 +92,7 @@ def auto_post_app():
 
                     # Campo para URL de imagem
                     if image_url:
-                        st.image(image_url, caption="Imagem extraída da Amazon", use_column_width=True)
+                        st.image(image_url, caption="Imagem extraída da Amazon", use_container_width=True)
 
                     # Tags
                     tags = st.text_input("Tags (separadas por vírgula):", "")
