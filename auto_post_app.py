@@ -85,6 +85,13 @@ def auto_post_app():
                     if coupon_tag:
                         coupon = coupon_tag.text.strip()
 
+                    # Extração de informações adicionais dentro da classe "centerColAlign"
+                    center_col = soup.find('div', {'class': 'centerColAlign'})
+                    if center_col:
+                        additional_info = center_col.text.strip()
+                    else:
+                        additional_info = "Sem informações adicionais."
+
                     # Exibição dos dados extraídos
                     st.write("#### Personalize os elementos do post:")
                     title = st.text_input("Título (ex: Nome do Produto):", value=title, key="auto_title")
@@ -92,10 +99,14 @@ def auto_post_app():
                     price = st.text_input("Preço (ex: €199,99):", value=price, key="auto_price")
                     discount = st.text_input("Desconto (ex: 20%):", value=discount, key="auto_discount")
                     coupon = st.text_input("Cupom (ex: CÓDIGO20):", value=coupon, key="auto_coupon")
+                    additional_info = st.text_area("Informações adicionais", value=additional_info, key="auto_additional_info", height=100)
 
                     # Campo para URL de imagem
                     if image_url:
                         st.image(image_url, caption="Imagem extraída da Amazon", use_container_width=True)
+
+                        # Botão para download da imagem
+                        st.download_button("Baixar Imagem", data=requests.get(image_url).content, file_name="imagem_produto.jpg", mime="image/jpeg")
 
                     # Tags
                     tags = st.text_input("Tags (separadas por vírgula):", "")
