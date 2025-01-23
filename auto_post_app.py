@@ -20,6 +20,14 @@ def gerar_post(produto, link_referencia, tags):
     preco_atual = produto['preco_atual']
     cupom = produto['cupom']
 
+    # Verificar se os preços são numéricos e convertê-los para float
+    try:
+        preco_original = float(preco_original)
+        preco_atual = float(preco_atual)
+    except ValueError:
+        preco_original = 0.0
+        preco_atual = 0.0
+
     # Cálculo automático do desconto
     desconto = calcular_desconto(preco_original, preco_atual)
 
