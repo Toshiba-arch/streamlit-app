@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 
 # Configuração da página
-st.set_page_config(page_title = "Verificador de Matriculas", layout="wide")
+st.set_page_config(page_title="Verificador de Matriculas", layout="wide")
 
 # Função para consultar o veículo pela matrícula
 def obter_informacoes_veiculo(matricula):
