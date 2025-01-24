@@ -4,7 +4,7 @@ from openai import OpenAI
 def run():
     # Título e descrição da aplicação
     st.title("💬 Chatbot com GPT e Mais Funcionalidades")
-    st.write("Este é um chatbot simples alimentado pelo modelo GPT-4. Além disso, você pode gerar posts automáticos, analisar imagens, gerar imagens, transcrever áudio, converter texto em fala e mais!")
+    st.write("Este é um chatbot simples alimentado pelo modelo GPT-4. Além disso, você pode gerar posts automáticos, analisar imagens, gerar imagens, transcrever áudio, converter texto em fala, transcrever fala para texto e mais!")
 
     # Obter a API Key dos secrets
     openai_api_key = st.secrets.get("openai_api_key")
@@ -23,7 +23,7 @@ def run():
     st.write("Escolha uma funcionalidade:")
     menu = st.selectbox(
         "Escolha a funcionalidade",
-        ("Chatbot", "Geração de Imagens", "Análise de Imagens", "Análise de Áudio", "Texto para Fala", "Gerar Haiku", "Baixar Histórico")
+        ("Chatbot", "Geração de Imagens", "Análise de Imagens", "Análise de Áudio", "Texto para Fala", "Fala para Texto", "Gerar Haiku", "Baixar Histórico")
     )
 
     # Função do Chatbot
@@ -116,6 +116,25 @@ def run():
                 st.audio(audio_url, format="audio/mp3")
             except Exception as e:
                 st.error(f"Erro ao gerar fala: {e}")
+
+    # Função de Fala para Texto (Speech-to-Text)
+    elif menu == "Fala para Texto":
+        st.write("### Conversão de Fala para Texto")
+        audio_file = st.file_uploader("Carregue um arquivo de áudio para transcrição (MP3, WAV, M4A):", type=["mp3", "wav", "m4a"])
+        if audio_file:
+            st.audio(audio_file, format="audio/wav")
+            if st.button("Transcrever Fala para Texto"):
+                try:
+                    # Chamada à API da OpenAI para transcrever fala para texto
+                    transcription_response = client.audio.transcribe(
+                        file=audio_file,
+                        model="whisper-1"
+                    )
+                    transcription_text = transcription_response['text']
+                    st.write("**Texto Transcrito:**")
+                    st.write(transcription_text)
+                except Exception as e:
+                    st.error(f"Erro ao transcrever a fala: {e}")
 
     # Função de Gerador de Haiku
     elif menu == "Gerar Haiku":
