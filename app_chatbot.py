@@ -52,7 +52,7 @@ def run():
 
 #        print(completion.choices[0].message);
 
-   Exibir a resposta gerada e salvar no session state
+   #Exibir a resposta gerada e salvar no session state
         with st.chat_message("assistant"):
             response = st.write_stream(stream)
         st.session_state.messages.append({"role": "assistant", "content": response})
