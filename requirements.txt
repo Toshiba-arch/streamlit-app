@@ -3,4 +3,4 @@ requests
 pillow
 certifi
 beautifulsoup4
-
+openai
