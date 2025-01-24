@@ -4,7 +4,7 @@ from openai import OpenAI
 def run():
     # Título e descrição da aplicação
     st.title("💬 Chatbot com GPT e Mais Funcionalidades")
-    st.write("Este é um chatbot simples alimentado pelo modelo GPT-4. Além disso, você pode gerar posts automáticos, analisar imagens e mais!")
+    st.write("Este é um chatbot simples alimentado pelo modelo GPT-4. Além disso, você pode analisar imagens, gerar haikus e baixar o histórico do chat.")
 
     # Obter a API Key dos secrets
     openai_api_key = st.secrets.get("openai_api_key")
@@ -22,7 +22,7 @@ def run():
     # Menu de navegação (sidebar)
     menu = st.sidebar.selectbox(
         "Escolha a funcionalidade",
-        ("Chatbot", "Geração de Posts", "Análise de Imagens", "Gerar Haiku", "Baixar Histórico")
+        ("Chatbot", "Análise de Imagens", "Gerar Haiku", "Baixar Histórico")
     )
 
     # Função do Chatbot
@@ -56,14 +56,6 @@ def run():
             st.session_state.messages = []
             st.info("Histórico de mensagens limpo!")
 
-    # Função de Geração de Post
-    elif menu == "Geração de Posts":
-        st.write("### Geração Automática de Posts")
-        link = st.text_input("Insira o link para gerar o post:")
-        if link:
-            st.write(f"Post gerado para o link: {link}")
-            # Adicione a lógica para gerar o post com base no link e na URL da imagem.
-
     # Função de Análise de Imagens
     elif menu == "Análise de Imagens":
         st.write("### Análise de Imagens com GPT")
@@ -94,4 +86,3 @@ def run():
             mime="text/plain"
         ):
             st.success("Histórico baixado com sucesso!")
-
