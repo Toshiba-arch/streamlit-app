@@ -20,7 +20,6 @@ def run():
         st.session_state.messages = []
 
     # Seleção de funcionalidades
-    st.write("Escolha uma funcionalidade:")
     menu = st.selectbox(
         "Escolha a funcionalidade",
         ("Chatbot", "Geração de Imagens", "Análise de Imagens", "Análise de Áudio", "Texto para Fala", "Fala para Texto", "Gerar Haiku", "Baixar Histórico")
