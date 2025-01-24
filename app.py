@@ -1,3 +1,4 @@
+"""
 import streamlit as st
 from app_euromilhoes import run as run_euromilhoes
 from app_ofertas import run as run_ofertas
