@@ -39,7 +39,7 @@ def run():
         # Gerar resposta usando a API
         stream = client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=[{"role": m["role"], "content": m["Content"]} for m in st.session_state.messages],
+            messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages],
             stream=True,
         )
 #        completion = client.chat.completions.create(
