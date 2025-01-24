@@ -4,7 +4,7 @@ from openai import OpenAI
 def run():
     # Título e descrição da aplicação
     st.title("💬 Chatbot com GPT e Mais Funcionalidades")
-    st.write("Este é um chatbot simples alimentado pelo modelo GPT-4. Além disso, você pode gerar posts automáticos, analisar imagens, gerar imagens, transcrever áudio e mais!")
+    st.write("Este é um chatbot simples alimentado pelo modelo GPT-4. Além disso, você pode gerar posts automáticos, analisar imagens, gerar imagens, transcrever áudio, converter texto em fala e mais!")
 
     # Obter a API Key dos secrets
     openai_api_key = st.secrets.get("openai_api_key")
@@ -23,7 +23,7 @@ def run():
     st.write("Escolha uma funcionalidade:")
     menu = st.selectbox(
         "Escolha a funcionalidade",
-        ("Chatbot", "Geração de Imagens", "Análise de Imagens", "Análise de Áudio", "Gerar Haiku", "Baixar Histórico")
+        ("Chatbot", "Geração de Imagens", "Análise de Imagens", "Análise de Áudio", "Texto para Fala", "Gerar Haiku", "Baixar Histórico")
     )
 
     # Função do Chatbot
@@ -100,6 +100,22 @@ def run():
                     st.write(transcription_text)
                 except Exception as e:
                     st.error(f"Erro ao transcrever o áudio: {e}")
+
+    # Função de Texto para Fala (Text-to-Speech)
+    elif menu == "Texto para Fala":
+        st.write("### Conversão de Texto para Fala")
+        text_to_convert = st.text_area("Digite o texto para conversão em fala:")
+        if st.button("Gerar Fala") and text_to_convert:
+            try:
+                # Chamada à API da OpenAI para gerar áudio a partir do texto
+                audio_response = client.audio.create(
+                    model="text-to-speech-1",
+                    input=text_to_convert
+                )
+                audio_url = audio_response['data'][0]['url']
+                st.audio(audio_url, format="audio/mp3")
+            except Exception as e:
+                st.error(f"Erro ao gerar fala: {e}")
 
     # Função de Gerador de Haiku
     elif menu == "Gerar Haiku":
