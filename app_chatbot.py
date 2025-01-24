@@ -20,6 +20,7 @@ def show_app_title():
 def show_feature_description(feature):
     descriptions = {
         "Chatbot": "O chatbot permite que você converse com um modelo GPT para obter respostas inteligentes sobre diversos temas.",
+        "Chatbot com Reasoning": "Esse chatbot fornece respostas com raciocínio detalhado, explicando o processo de pensamento por trás da resposta.",
         "Análise de Imagens": "Você pode carregar uma URL de imagem para análise do conteúdo presente nela.",
         "Gerar Haiku": "Crie haikus personalizados sobre temas específicos com a ajuda da IA.",
         "Baixar Histórico": "Permite baixar o histórico de mensagens do chat como um arquivo de texto.",
@@ -54,6 +55,43 @@ def show_chatbot(client):
                 messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
             )
             response = completion.choices[0].message.content
+            with st.chat_message("assistant"):
+                st.markdown(response)
+            st.session_state.messages.append({"role": "assistant", "content": response})
+
+    if st.button("🧹 Limpar histórico"):
+        st.session_state.messages = []
+        st.info("Histórico de mensagens limpo!")
+
+# Função para exibir o Chatbot com Reasoning
+def show_chatbot_with_reasoning(client):
+    st.write("### 💬 Chatbot com GPT (Raciocínio Detalhado)")
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+        
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    prompt = st.chat_input("Digite sua mensagem:")
+    if prompt:
+        if len(prompt) > 500:
+            st.warning("Sua mensagem é muito longa. Por favor, seja mais breve!")
+        else:
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.markdown(prompt)
+
+            # Solicita ao modelo para fornecer raciocínio detalhado
+            reasoning_prompt = f"Explique detalhadamente a solução para: {prompt}"
+
+            completion = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
+            )
+            response = completion.choices[0].message.content
+
+            # Exibir a resposta com raciocínio
             with st.chat_message("assistant"):
                 st.markdown(response)
             st.session_state.messages.append({"role": "assistant", "content": response})
@@ -153,7 +191,7 @@ def run():
     # Menu de funcionalidades
     feature = st.selectbox(
         "Escolha a funcionalidade:",
-        ("Chatbot", "Análise de Imagens", "Gerar Haiku", "Baixar Histórico", 
+        ("Chatbot", "Chatbot com Reasoning", "Análise de Imagens", "Gerar Haiku", "Baixar Histórico", 
          "Texto para Imagem", "Áudio para Texto", "Texto para Fala", "Fala para Texto", "Embeddings")
     )
     
@@ -163,6 +201,8 @@ def run():
     # Exibir a funcionalidade selecionada
     if feature == "Chatbot":
         show_chatbot(client)
+    elif feature == "Chatbot com Reasoning":
+        show_chatbot_with_reasoning(client)
     elif feature == "Análise de Imagens":
         show_image_analysis(client)
     elif feature == "Gerar Haiku":
