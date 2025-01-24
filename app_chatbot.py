@@ -41,7 +41,7 @@ def run():
             #model="gpt-3.5-turbo",
             #messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages],
             #stream=True,
-        )
+        #)
         completion = client.chat.completions.create(
             model="gpt-4o-mini",
             store=True,
