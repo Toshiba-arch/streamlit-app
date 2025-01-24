@@ -42,6 +42,15 @@ def run():
             messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages],
             stream=True,
         )
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            store=True,
+            messages=[
+                {"role": "user", "content": "write a haiku about ai"}
+            ]
+        )    
+
+        print(completion.choices[0].message);
 
         # Exibir a resposta gerada e salvar no session state
         with st.chat_message("assistant"):
