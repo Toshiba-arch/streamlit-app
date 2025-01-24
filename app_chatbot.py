@@ -37,22 +37,22 @@ def run():
             st.markdown(prompt)
 
         # Gerar resposta usando a API
-        #stream = client.chat.completions.create(
-            #model="gpt-3.5-turbo",
-            #messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages],
-            #stream=True,
-        #)
-        completion = client.chat.completions.create(
+        stream = client.chat.completions.create(
             model="gpt-4o-mini",
-            store=True,
-            messages=[
-                {"role": "user", "content": "write a haiku about ai"}
-            ]
-        )    
+            messages=[{"role": m["role"], "content": m["write a haiku about ai"]} for m in st.session_state.messages],
+            stream=True,
+        )
+#        completion = client.chat.completions.create(
+#           model="gpt-4o-mini",
+#            store=True,
+#           messages=[
+#                {"role": "user", "content": "write a haiku about ai"}
+#            ]
+#        )    
 
-        print(completion.choices[0].message);
+#        print(completion.choices[0].message);
 
-        # Exibir a resposta gerada e salvar no session state
-        #with st.chat_message("assistant"):
-            #response = st.write_stream(stream)
-        #st.session_state.messages.append({"role": "assistant", "content": response})
+   Exibir a resposta gerada e salvar no session state
+        with st.chat_message("assistant"):
+            response = st.write_stream(stream)
+        st.session_state.messages.append({"role": "assistant", "content": response})
