@@ -4,7 +4,7 @@ from openai import OpenAI
 def run():
     # Título e descrição da aplicação
     st.title("💬 Chatbot com GPT e Mais Funcionalidades")
-    st.write("Este é um chatbot simples alimentado pelo modelo GPT-4. Além disso, você pode analisar imagens, gerar haikus e baixar o histórico do chat.")
+    st.write("Este é um chatbot simples alimentado pelo modelo GPT-4. Além disso, você pode gerar posts automáticos, analisar imagens, gerar imagens e mais!")
 
     # Obter a API Key dos secrets
     openai_api_key = st.secrets.get("openai_api_key")
@@ -19,10 +19,11 @@ def run():
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # Seleção de funcionalidades no topo do layout
+    # Seleção de funcionalidades
+    st.write("Escolha uma funcionalidade:")
     menu = st.selectbox(
         "Escolha a funcionalidade",
-        ("Chatbot", "Análise de Imagens", "Gerar Haiku", "Baixar Histórico")
+        ("Chatbot", "Geração de Imagens", "Análise de Imagens", "Gerar Haiku", "Baixar Histórico")
     )
 
     # Função do Chatbot
@@ -56,6 +57,23 @@ def run():
             st.session_state.messages = []
             st.info("Histórico de mensagens limpo!")
 
+    # Função de Geração de Imagens
+    elif menu == "Geração de Imagens":
+        st.write("### Geração de Imagens com DALL·E")
+        image_description = st.text_input("Descreva a imagem que você deseja gerar:")
+        if st.button("Gerar Imagem") and image_description:
+            try:
+                # Chamada à API da OpenAI para gerar a imagem com base na descrição fornecida
+                image_response = client.images.create(
+                    prompt=image_description,
+                    n=1,  # Número de imagens a serem geradas
+                    size="1024x1024"  # Tamanho da imagem gerada
+                )
+                image_url = image_response['data'][0]['url']
+                st.image(image_url, caption="Imagem gerada", use_column_width=True)
+            except Exception as e:
+                st.error(f"Erro ao gerar imagem: {e}")
+            
     # Função de Análise de Imagens
     elif menu == "Análise de Imagens":
         st.write("### Análise de Imagens com GPT")
