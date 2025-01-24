@@ -4,11 +4,6 @@ from openai import OpenAI
 def run():
     # Show title and description.
     st.title("💬 Chatbot")
-   #st.write(
-        #"This is a simple chatbot that uses OpenAI's GPT-3.5 model to generate responses. "
-        #"To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
-        #"You can also learn how to build this app step by step by [following our tutorial](https://docs.streamlit.io/develop/tutorials/llms/build-conversational-apps)."
-   #)
 
     # Obter a API Key dos secrets
     openai_api_key = st.secrets.get("openai_api_key")
@@ -36,23 +31,27 @@ def run():
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # Gerar resposta usando a API
+        # Gerar resposta usando a API com streaming
         stream = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4o-mini",  # Modelo especificado
             messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages],
             stream=True,
         )
-#        completion = client.chat.completions.create(
-#           model="gpt-4o-mini",
-#            store=True,
-#           messages=[
-#                {"role": "user", "content": "write a haiku about ai"}
-#            ]
-#        )    
 
-#        print(completion.choices[0].message);
-
-   #Exibir a resposta gerada e salvar no session state
+        # Exibir a resposta gerada e salvar no session state
         with st.chat_message("assistant"):
             response = st.write_stream(stream)
         st.session_state.messages.append({"role": "assistant", "content": response})
+
+    # Gerar e exibir um Haiku fixo como exemplo
+    completion = client.chat.completions.create(
+        model="gpt-4o-mini",  # Modelo especificado
+        messages=[
+            {"role": "user", "content": "Write a haiku about AI"}
+        ]
+    )
+
+    # Exibir o Haiku gerado
+    haiku = completion.choices[0].message["content"]
+    st.write("### Haiku gerado:")
+    st.markdown(haiku)
