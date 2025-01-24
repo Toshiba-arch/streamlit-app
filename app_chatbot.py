@@ -23,7 +23,6 @@ def show_feature_description(feature):
         "Chatbot com Reasoning": "Esse chatbot fornece respostas com raciocínio detalhado, explicando o processo de pensamento por trás da resposta.",
         "Análise de Imagens": "Você pode carregar uma URL de imagem para análise do conteúdo presente nela.",
         "Gerar Haiku": "Crie haikus personalizados sobre temas específicos com a ajuda da IA.",
-        "Baixar Histórico": "Permite baixar o histórico de mensagens do chat como um arquivo de texto.",
         "Texto para Imagem": "Você pode gerar imagens a partir de descrições de texto, utilizando a API de imagens da OpenAI.",
         "Áudio para Texto": "Essa funcionalidade converte arquivos de áudio em texto, usando a API da OpenAI.",
         "Texto para Fala": "Gere áudio falado a partir de texto, criando falas realistas com a OpenAI.",
@@ -122,14 +121,16 @@ def show_haiku_generation(client):
         haiku = haiku_completion.choices[0].message.content
         st.markdown(f"**Haiku:**\n\n{haiku}")
 
-# Função para Baixar o Histórico
+# Função para baixar o Histórico
 def download_chat_history():
-    if st.download_button(
-        "💾 Baixar histórico do chat",
-        data="\n".join([f"{msg['role'].capitalize()}: {msg['content']}" for msg in st.session_state.messages]),
-        file_name="chat_history.txt",
-        mime="text/plain"
-    ):
+    if st.button("💾 Baixar Histórico do Chat"):
+        chat_history = "\n".join([f"{msg['role'].capitalize()}: {msg['content']}" for msg in st.session_state.messages])
+        st.download_button(
+            "Baixar Histórico",
+            data=chat_history,
+            file_name="chat_history.txt",
+            mime="text/plain"
+        )
         st.success("Histórico baixado com sucesso!")
 
 # Função para gerar imagem a partir de texto
@@ -191,8 +192,8 @@ def run():
     # Menu de funcionalidades
     feature = st.selectbox(
         "Escolha a funcionalidade:",
-        ("Chatbot", "Chatbot com Reasoning", "Análise de Imagens", "Gerar Haiku", "Baixar Histórico", 
-         "Texto para Imagem", "Áudio para Texto", "Texto para Fala", "Fala para Texto", "Embeddings")
+        ("Chatbot", "Chatbot com Reasoning", "Análise de Imagens", "Gerar Haiku", "Texto para Imagem", 
+         "Áudio para Texto", "Texto para Fala", "Fala para Texto", "Embeddings")
     )
     
     # Exibir a descrição
@@ -207,8 +208,6 @@ def run():
         show_image_analysis(client)
     elif feature == "Gerar Haiku":
         show_haiku_generation(client)
-    elif feature == "Baixar Histórico":
-        download_chat_history()
     elif feature == "Texto para Imagem":
         show_text_to_image(client)
     elif feature == "Áudio para Texto":
@@ -219,6 +218,9 @@ def run():
         show_speech_to_text(client)
     elif feature == "Embeddings":
         show_embeddings(client)
+
+    # Adicionando o botão de download de histórico
+    download_chat_history()
 
 # Rodar a aplicação
 if __name__ == "__main__":
