@@ -19,8 +19,8 @@ def run():
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # Menu de navegação (sidebar)
-    menu = st.sidebar.selectbox(
+    # Seleção de funcionalidades no topo do layout
+    menu = st.selectbox(
         "Escolha a funcionalidade",
         ("Chatbot", "Análise de Imagens", "Gerar Haiku", "Baixar Histórico")
     )
