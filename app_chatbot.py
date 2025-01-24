@@ -4,7 +4,7 @@ from openai import OpenAI
 def run():
     # Título e descrição da aplicação
     st.title("💬 Chatbot com GPT e Mais Funcionalidades")
-    st.write("Este é um chatbot simples alimentado pelo modelo GPT-4. Além disso, você pode gerar posts automáticos, analisar imagens, gerar imagens e mais!")
+    st.write("Este é um chatbot simples alimentado pelo modelo GPT-4. Além disso, você pode gerar posts automáticos, analisar imagens, gerar imagens, transcrever áudio e mais!")
 
     # Obter a API Key dos secrets
     openai_api_key = st.secrets.get("openai_api_key")
@@ -23,7 +23,7 @@ def run():
     st.write("Escolha uma funcionalidade:")
     menu = st.selectbox(
         "Escolha a funcionalidade",
-        ("Chatbot", "Geração de Imagens", "Análise de Imagens", "Gerar Haiku", "Baixar Histórico")
+        ("Chatbot", "Geração de Imagens", "Análise de Imagens", "Análise de Áudio", "Gerar Haiku", "Baixar Histórico")
     )
 
     # Função do Chatbot
@@ -81,6 +81,25 @@ def run():
         if image_url:
             st.image(image_url, caption="Imagem carregada")
             st.write("Aqui você pode adicionar a lógica para analisar a imagem.")
+
+    # Função de Análise de Áudio
+    elif menu == "Análise de Áudio":
+        st.write("### Análise de Áudio com Whisper")
+        audio_file = st.file_uploader("Carregue um arquivo de áudio", type=["mp3", "wav", "m4a"])
+        if audio_file:
+            st.audio(audio_file, format="audio/wav")
+            if st.button("Transcrever Áudio"):
+                try:
+                    # Enviar o arquivo de áudio para a API Whisper para transcrição
+                    transcription_response = client.audio.transcribe(
+                        file=audio_file,
+                        model="whisper-1"
+                    )
+                    transcription_text = transcription_response['text']
+                    st.write("**Transcrição do Áudio:**")
+                    st.write(transcription_text)
+                except Exception as e:
+                    st.error(f"Erro ao transcrever o áudio: {e}")
 
     # Função de Gerador de Haiku
     elif menu == "Gerar Haiku":
