@@ -62,6 +62,17 @@ def show_chatbot(client):
         st.session_state.messages = []
         st.info("Histórico de mensagens limpo!")
 
+    # Aqui aparece o botão de baixar histórico
+    if st.button("💾 Baixar Histórico do Chat"):
+        chat_history = "\n".join([f"{msg['role'].capitalize()}: {msg['content']}" for msg in st.session_state.messages])
+        st.download_button(
+            "Baixar Histórico",
+            data=chat_history,
+            file_name="chat_history.txt",
+            mime="text/plain"
+        )
+        st.success("Histórico baixado com sucesso!")
+
 # Função para exibir o Chatbot com Reasoning
 def show_chatbot_with_reasoning(client):
     st.write("### 💬 Chatbot com GPT (Raciocínio Detalhado)")
@@ -98,6 +109,17 @@ def show_chatbot_with_reasoning(client):
     if st.button("🧹 Limpar histórico"):
         st.session_state.messages = []
         st.info("Histórico de mensagens limpo!")
+
+    # Aqui aparece o botão de baixar histórico
+    if st.button("💾 Baixar Histórico do Chat"):
+        chat_history = "\n".join([f"{msg['role'].capitalize()}: {msg['content']}" for msg in st.session_state.messages])
+        st.download_button(
+            "Baixar Histórico",
+            data=chat_history,
+            file_name="chat_history.txt",
+            mime="text/plain"
+        )
+        st.success("Histórico baixado com sucesso!")
 
 # Função para exibir a Análise de Imagens
 def show_image_analysis(client):
@@ -218,9 +240,6 @@ def run():
         show_speech_to_text(client)
     elif feature == "Embeddings":
         show_embeddings(client)
-
-    # Adicionando o botão de download de histórico
-    download_chat_history()
 
 # Rodar a aplicação
 if __name__ == "__main__":
