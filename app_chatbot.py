@@ -31,20 +31,32 @@ def run():
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # Gerar resposta usando a API com streaming
-        stream = client.chat.completions.create(
+        # Gerar resposta usando a API sem streaming
+        completion = client.chat.completions.create(
             model="gpt-4o-mini",  # Modelo especificado
-            messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages],
-            stream=True,
+            messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
         )
+
+        # Extrair a resposta gerada
+        response = completion.choices[0].message["content"]
 
         # Exibir a resposta gerada e salvar no session state
         with st.chat_message("assistant"):
-            response = st.write_stream(stream)
+            st.markdown(response)
         st.session_state.messages.append({"role": "assistant", "content": response})
 
+        # Código com streaming comentado para fácil reativação
+        # stream = client.chat.completions.create(
+        #     model="gpt-4o-mini",  # Modelo especificado
+        #     messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages],
+        #     stream=True,
+        # )
+        # with st.chat_message("assistant"):
+        #     response = st.write_stream(stream)
+        # st.session_state.messages.append({"role": "assistant", "content": response})
+
     # Gerar e exibir um Haiku fixo como exemplo
-    completion = client.chat.completions.create(
+    haiku_completion = client.chat.completions.create(
         model="gpt-4o-mini",  # Modelo especificado
         messages=[
             {"role": "user", "content": "Write a haiku about AI"}
@@ -52,6 +64,6 @@ def run():
     )
 
     # Exibir o Haiku gerado
-    haiku = completion.choices[0].message["content"]
+    haiku = haiku_completion.choices[0].message["content"]
     st.write("### Haiku gerado:")
     st.markdown(haiku)
