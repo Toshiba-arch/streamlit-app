@@ -1,5 +1,4 @@
 import streamlit as st
-from openai import OpenAI
 import openai
 import time
 
@@ -115,15 +114,15 @@ def show_structured_output_chatbot(client):
         st.session_state.messages = []
         st.info("Histórico de mensagens limpo!")
 
-# Função para gerar uma resposta estruturada
+# Função para gerar uma resposta estruturada usando o Structured Outputs
 def get_structured_response(prompt):
     response = openai.Completion.create(
         model="gpt-4",
-        prompt=f"Estruture a resposta da seguinte forma: {{'informação': '{prompt}'}}",
-        max_tokens=150,
+        prompt=f"Responda ao seguinte pedido de forma estruturada como um objeto JSON, com os campos: 'resposta', 'explicação', e 'exemplos'.\nPedido: {prompt}",
+        max_tokens=200,
         temperature=0.7
     )
-    return response['choices'][0]['text'].strip()
+    return response.choices[0].text.strip()
 
 # Função para exibir o Chatbot com Saídas Previsíveis
 def show_predicted_output_chatbot(client):
@@ -250,4 +249,3 @@ def run():
 # Rodar a aplicação
 if __name__ == "__main__":
     run()
-
