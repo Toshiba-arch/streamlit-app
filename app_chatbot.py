@@ -19,10 +19,10 @@ def show_app_title():
 # Função para exibir a descrição de cada funcionalidade
 def show_feature_description(feature):
     descriptions = {
-        "Chatbot": "O chatbot permite que você converse com um modelo GPT para obter respostas inteligentes sobre diversos temas.",
+        "Chatbot Padrão": "O chatbot permite que você converse com um modelo GPT para obter respostas inteligentes sobre diversos temas.",
+        "Chatbot com Raciocínio": "Este chatbot utiliza um modelo avançado da OpenAI com habilidades de raciocínio para resolver problemas mais complexos e oferecer soluções detalhadas.",
         "Análise de Imagens": "Você pode carregar uma URL de imagem para análise do conteúdo presente nela.",
         "Gerar Haiku": "Crie haikus personalizados sobre temas específicos com a ajuda da IA.",
-        "Baixar Histórico": "Permite baixar o histórico de mensagens do chat como um arquivo de texto.",
         "Texto para Imagem": "Você pode gerar imagens a partir de descrições de texto, utilizando a API de imagens da OpenAI.",
         "Áudio para Texto": "Essa funcionalidade converte arquivos de áudio em texto, usando a API da OpenAI.",
         "Texto para Fala": "Gere áudio falado a partir de texto, criando falas realistas com a OpenAI.",
@@ -31,7 +31,7 @@ def show_feature_description(feature):
     }
     st.expander(f"🔍 Sobre {feature}", expanded=True).markdown(descriptions.get(feature, "Sem descrição disponível"))
 
-# Função para exibir o Chatbot
+# Função para exibir o Chatbot Padrão
 def show_chatbot(client):
     st.write("### 💬 Chatbot com GPT")
     if "messages" not in st.session_state:
@@ -58,9 +58,65 @@ def show_chatbot(client):
                 st.markdown(response)
             st.session_state.messages.append({"role": "assistant", "content": response})
 
-    if st.button("🧹 Limpar histórico"):
-        st.session_state.messages = []
-        st.info("Histórico de mensagens limpo!")
+    # Botões de limpar histórico e baixar histórico
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("🧹 Limpar histórico"):
+            st.session_state.messages = []
+            st.info("Histórico de mensagens limpo!")
+    with col2:
+        if st.download_button(
+            "💾 Baixar histórico do chat",
+            data="\n".join([f"{msg['role'].capitalize()}: {msg['content']}" for msg in st.session_state.messages]),
+            file_name="chat_history.txt",
+            mime="text/plain"
+        ):
+            st.success("Histórico baixado com sucesso!")
+
+# Função para exibir o Chatbot com Raciocínio
+def show_reasoning_chatbot(client):
+    st.write("### 💬 Chatbot com Raciocínio (GPT-4 com Reasoning)")
+    if "reasoning_messages" not in st.session_state:
+        st.session_state.reasoning_messages = []
+        
+    for message in st.session_state.reasoning_messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    prompt = st.chat_input("Digite sua mensagem para raciocínio:")
+    if prompt:
+        if len(prompt) > 500:
+            st.warning("Sua mensagem é muito longa. Por favor, seja mais breve!")
+        else:
+            st.session_state.reasoning_messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.markdown(prompt)
+            
+            # Usar o modelo com raciocínio (Reasoning)
+            reasoning_prompt = f"Para resolver este problema, siga um raciocínio passo a passo: {prompt}"
+            completion = client.chat.completions.create(
+                model="gpt-4",  # Usando modelo com raciocínio avançado
+                messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.reasoning_messages]
+            )
+            response = completion.choices[0].message.content
+            with st.chat_message("assistant"):
+                st.markdown(response)
+            st.session_state.reasoning_messages.append({"role": "assistant", "content": response})
+
+    # Botões de limpar histórico e baixar histórico
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("🧹 Limpar histórico"):
+            st.session_state.reasoning_messages = []
+            st.info("Histórico de mensagens limpo!")
+    with col2:
+        if st.download_button(
+            "💾 Baixar histórico do chat",
+            data="\n".join([f"{msg['role'].capitalize()}: {msg['content']}" for msg in st.session_state.reasoning_messages]),
+            file_name="reasoning_chat_history.txt",
+            mime="text/plain"
+        ):
+            st.success("Histórico baixado com sucesso!")
 
 # Função para exibir a Análise de Imagens
 def show_image_analysis(client):
@@ -83,16 +139,6 @@ def show_haiku_generation(client):
         )
         haiku = haiku_completion.choices[0].message.content
         st.markdown(f"**Haiku:**\n\n{haiku}")
-
-# Função para Baixar o Histórico
-def download_chat_history():
-    if st.download_button(
-        "💾 Baixar histórico do chat",
-        data="\n".join([f"{msg['role'].capitalize()}: {msg['content']}" for msg in st.session_state.messages]),
-        file_name="chat_history.txt",
-        mime="text/plain"
-    ):
-        st.success("Histórico baixado com sucesso!")
 
 # Função para gerar imagem a partir de texto
 def show_text_to_image(client):
@@ -153,22 +199,21 @@ def run():
     # Menu de funcionalidades
     feature = st.selectbox(
         "Escolha a funcionalidade:",
-        ("Chatbot", "Análise de Imagens", "Gerar Haiku", "Baixar Histórico", 
-         "Texto para Imagem", "Áudio para Texto", "Texto para Fala", "Fala para Texto", "Embeddings")
+        ("Chatbot Padrão", "Chatbot com Raciocínio", "Análise de Imagens", "Gerar Haiku", "Texto para Imagem", "Áudio para Texto", "Texto para Fala", "Fala para Texto", "Embeddings")
     )
     
     # Exibir a descrição
     show_feature_description(feature)
 
     # Exibir a funcionalidade selecionada
-    if feature == "Chatbot":
+    if feature == "Chatbot Padrão":
         show_chatbot(client)
+    elif feature == "Chatbot com Raciocínio":
+        show_reasoning_chatbot(client)
     elif feature == "Análise de Imagens":
         show_image_analysis(client)
     elif feature == "Gerar Haiku":
         show_haiku_generation(client)
-    elif feature == "Baixar Histórico":
-        download_chat_history()
     elif feature == "Texto para Imagem":
         show_text_to_image(client)
     elif feature == "Áudio para Texto":
