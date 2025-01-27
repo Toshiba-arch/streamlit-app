@@ -13,9 +13,9 @@ opcao = st.selectbox(
     "Selecione a funcionalidade",
     [
         "Gerador de Números do Euromilhões",
-        "Consultor de Promoções",
+        "Criação de Posts de Vendas - Basico",
         "Consulta de Marca do Carro pela Matrícula",
-        "Gerador Automático de Posts",
+        "Criação de Posts de Vendas",
         "Chatbot Interativo"  # Adicionando a nova funcionalidade
     ]
 )
