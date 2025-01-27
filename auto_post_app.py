@@ -4,6 +4,14 @@ from bs4 import BeautifulSoup
 from PIL import Image, ImageDraw, ImageFont
 import io
 
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36",
+    "Accept-Language": "pt-PT,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1"
+}
+
 # Função para calcular o desconto em percentagem
 def calcular_desconto(preco_original, preco_atual):
     try:
