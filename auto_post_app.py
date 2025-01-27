@@ -9,8 +9,6 @@ def calcular_desconto(preco_original, preco_atual):
     try:
         if preco_original == 0:
             return 0
-        preco_original = float(preco_original)
-        preco_atual = float(preco_atual)
         desconto = ((preco_original - preco_atual) / preco_original) * 100
         return round(desconto, 2)
     except (ValueError, TypeError, ZeroDivisionError):
@@ -21,24 +19,6 @@ def gerar_post(produto, link_referencia, tags):
     preco_original = produto['preco_original']
     preco_atual = produto['preco_atual']
     cupom = produto['cupom']
-
-    # Garantir que os preços sejam flutuantes, aplicando replace apenas se for string
-    try:
-        if isinstance(preco_original, str):
-            preco_original = float(preco_original.replace("€", "").replace(",", "."))
-        else:
-            preco_original = float(preco_original)
-    except ValueError:
-        preco_original = 0.0
-
-    try:
-        if isinstance(preco_atual, str):
-            preco_atual = float(preco_atual.replace("€", "").replace(",", "."))
-        else:
-            preco_atual = float(preco_atual)
-    except ValueError:
-        preco_atual = preco_original
-
     desconto = calcular_desconto(preco_original, preco_atual)
 
     post_texto = f"📢 **Oferta Imperdível!** 📢\n"
@@ -67,22 +47,23 @@ def redimensionar_imagem(imagem_url, largura, altura):
 def auto_post_app():
     st.title("Gerador Automático de Posts")
 
-    # Variáveis locais
-    produto_carregado = False
-    url = ""
-    title = ""
-    preco_original = 0.0
-    preco_atual = 0.0
-    cupom = ""
-    tags = ["promoção", ""]
-    imagem_resized = None  # Inicializa a variável imagem_resized antes de usá-la
+    # Inicialização do estado da sessão
+    if "produto" not in st.session_state:
+        st.session_state.produto = {
+            "nome": "",
+            "preco_original": 0.0,
+            "preco_atual": 0.0,
+            "cupom": "",
+            "imagem_url": "",
+        }
+    if "produto_validado" not in st.session_state:
+        st.session_state.produto_validado = False
 
-    # Formulário de link de referência
-    url_input = st.text_input("Insira o link de referência para gerar o post automaticamente:", value=url)
-
-    # Formulário de preenchimento só após inserir o link
-    if url_input:
-        with st.spinner('Carregando o produto...'):
+    # Entrada para o link de referência
+    url_input = st.text_input("Insira o link de referência para gerar o post automaticamente:")
+    
+    if st.button("Validar Link"):
+        with st.spinner("Validando o link e carregando os dados do produto..."):
             try:
                 headers = {
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
@@ -93,69 +74,72 @@ def auto_post_app():
                 soup = BeautifulSoup(response.content, 'html.parser')
 
                 # Extração de informações do produto
-                title = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else ""
-                preco_original = soup.find('span', {'id': 'priceblock_ourprice'}).text.strip() if soup.find('span', {'id': 'priceblock_ourprice'}) else ""
+                nome = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else "Produto Desconhecido"
+                preco_original = soup.find('span', {'id': 'priceblock_ourprice'}).text.strip() if soup.find('span', {'id': 'priceblock_ourprice'}) else "0.00"
                 preco_atual = soup.find('span', {'id': 'priceblock_dealprice'}).text.strip() if soup.find('span', {'id': 'priceblock_dealprice'}) else preco_original
                 imagem_div = soup.find('div', {'class': 'imgTagWrapper'})
+                imagem_url = imagem_div.find('img')['src'] if imagem_div and imagem_div.find('img') else ""
 
-                # Se imagem for encontrada, pega o URL
-                if imagem_div:
-                    imagem_url = imagem_div.find('img')['src'] if imagem_div.find('img') else ""
-                    imagem_resized = redimensionar_imagem(imagem_url, 1200, 628)  # Redimensiona a imagem
-
-                produto_carregado = True  # Marca que o produto foi carregado
-
+                # Atualiza os dados do produto no estado
+                st.session_state.produto = {
+                    "nome": nome,
+                    "preco_original": float(preco_original.replace("€", "").replace(",", ".")) if preco_original else 0.0,
+                    "preco_atual": float(preco_atual.replace("€", "").replace(",", ".")) if preco_atual else 0.0,
+                    "cupom": "",
+                    "imagem_url": imagem_url,
+                }
+                st.session_state.produto_validado = True
+                st.success("Produto validado com sucesso!")
             except requests.exceptions.RequestException as e:
                 st.error(f"Erro ao processar o link: {e}")
 
-    # Formulário de preços, cupom e tags
-    if produto_carregado:
-        # Garantir que os valores de preço sejam números válidos
-        preco_original_input = st.number_input("Preço original (€):", value=float(preco_original) if preco_original else 0.0, step=0.01)
-        preco_atual_input = st.number_input("Preço atual (€):", value=float(preco_atual) if preco_atual else 0.0, step=0.01)
+    # Formulário para inserir os detalhes e gerar o post
+    if st.session_state.produto_validado:
+        produto = st.session_state.produto
 
-        # Exibe o cupom se existir
-        cupom_input = st.text_input("Código de cupom (opcional):", value=cupom)
+        # Inputs para ajustes manuais
+        preco_original = st.number_input("Preço original (€):", value=produto['preco_original'], step=0.01)
+        preco_atual = st.number_input("Preço atual (€):", value=produto['preco_atual'], step=0.01)
+        cupom = st.text_input("Código de cupom (opcional):", value=produto['cupom'])
+        tags_input = st.text_area("Tags (separadas por vírgula):", value="promoção, oferta")
 
-        # Exibe e permite a adição de tags
-        tags_input = st.text_area("Tags (separadas por vírgula):", value=", ".join(tags))
-        tags = [tag.strip() for tag in tags_input.split(",")]
-
-        cupom = cupom_input
-
-        # Exibição da imagem
-        if imagem_resized:
-            st.image(imagem_resized, caption="Pré-visualização da Imagem", use_container_width=True)
+        # Atualiza o estado com os valores manuais
+        produto['preco_original'] = preco_original
+        produto['preco_atual'] = preco_atual
+        produto['cupom'] = cupom
 
         # Botão para gerar o post
         if st.button("Gerar Post"):
-            produto = {
-                'nome': title,
-                'preco_original': preco_original_input,
-                'preco_atual': preco_atual_input,
-                'cupom': cupom
-            }
+            tags = [tag.strip() for tag in tags_input.split(",")]
             post_texto = gerar_post(produto, url_input, tags)
+            
+            # Exibe o post
             st.write("### Pré-visualização do Post:")
             st.text_area("Texto do Post:", post_texto, height=200)
+
+            # Botão para download do post
             st.download_button("Baixar Post (.txt)", data=post_texto, file_name="post_gerado.txt")
 
-            if imagem_resized:
-                buffer = io.BytesIO()
-                imagem_resized.save(buffer, format="PNG")
-                st.download_button("Baixar Imagem", data=buffer.getvalue(), file_name="imagem_produto.png", mime="image/png")
-            else:
-                st.error("Não foi possível carregar a imagem para este produto.")
+            # Exibe a imagem redimensionada
+            if produto['imagem_url']:
+                imagem_resized = redimensionar_imagem(produto['imagem_url'], 1200, 628)
+                if imagem_resized:
+                    st.image(imagem_resized, caption="Pré-visualização da Imagem", use_container_width=True)
+                    buffer = io.BytesIO()
+                    imagem_resized.save(buffer, format="PNG")
+                    st.download_button("Baixar Imagem", data=buffer.getvalue(), file_name="imagem_produto.png", mime="image/png")
+                else:
+                    st.error("Não foi possível carregar a imagem para este produto.")
 
             # Links para compartilhamento
             facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={url_input}"
             st.markdown(f"[Compartilhar no Facebook]({facebook_url})")
 
-            x_text = urllib.parse.quote_plus(f"{title} - {url_input}")
+            x_text = urllib.parse.quote_plus(f"{produto['nome']} - {url_input}")
             x_url = f"https://twitter.com/intent/tweet?url={url_input}&text={x_text}"
             st.markdown(f"[Compartilhar no X]({x_url})")
 
-            whatsapp_text = urllib.parse.quote_plus(f"{title} - {url_input}")
+            whatsapp_text = urllib.parse.quote_plus(f"{produto['nome']} - {url_input}")
             whatsapp_url = f"https://wa.me/?text={whatsapp_text}"
             st.markdown(f"[Compartilhar no WhatsApp]({whatsapp_url})")
 
