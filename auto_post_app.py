@@ -24,22 +24,12 @@ def gerar_post(produto, link_referencia, tags):
 
     # Garantir que os preços sejam flutuantes
     try:
-        # Verificar se preco_original é uma string válida
-        if preco_original and isinstance(preco_original, str):
-            preco_original = preco_original.replace("€", "").replace(",", ".")
-            preco_original = float(preco_original)
-        else:
-            preco_original = 0.0
+        preco_original = float(preco_original.replace("€", "").replace(",", "."))
     except ValueError:
         preco_original = 0.0
 
     try:
-        # Verificar se preco_atual é uma string válida
-        if preco_atual and isinstance(preco_atual, str):
-            preco_atual = preco_atual.replace("€", "").replace(",", ".")
-            preco_atual = float(preco_atual)
-        else:
-            preco_atual = preco_original  # Definir o preço atual como o original, caso não exista
+        preco_atual = float(preco_atual.replace("€", "").replace(",", "."))
     except ValueError:
         preco_atual = preco_original
 
@@ -58,28 +48,40 @@ def gerar_post(produto, link_referencia, tags):
     return post_texto
 
 def redimensionar_imagem(imagem_url, largura, altura):
-    imagem_resized = None  # Inicializa a variável imagem_resized
     try:
         response = requests.get(imagem_url)
         response.raise_for_status()
         imagem = Image.open(io.BytesIO(response.content))
-        imagem_resized = imagem.resize((largura, altura))
+        imagem = imagem.resize((largura, altura))
+        return imagem
     except Exception as e:
         st.error(f"Erro ao carregar a imagem: {e}")
-    return imagem_resized
+        return None
 
 def auto_post_app():
     st.title("Gerador Automático de Posts")
 
-    # Inicializa o atributo 'produto_carregado' se não existir
+    # Inicializa as variáveis de sessão
     if 'produto_carregado' not in st.session_state:
-        st.session_state.produto_carregado = False  # Definir como False inicialmente
+        st.session_state.produto_carregado = False
+    if 'url' not in st.session_state:
+        st.session_state.url = ""
+    if 'title' not in st.session_state:
+        st.session_state.title = ""
+    if 'preco_original' not in st.session_state:
+        st.session_state.preco_original = 0.0
+    if 'preco_atual' not in st.session_state:
+        st.session_state.preco_atual = 0.0
+    if 'cupom' not in st.session_state:
+        st.session_state.cupom = ""
+    if 'tags' not in st.session_state:
+        st.session_state.tags = ["promoção", ""]
 
-    # Restante do código
     url = st.text_input("Insira o link de referência para gerar o post automaticamente:", value=st.session_state.url)
 
     imagem_resized = None  # Inicializa a variável imagem_resized antes de usá-la
 
+    # Formulário de preenchimento só após inserir o link
     if url:
         with st.spinner('Carregando o produto...'):
             try:
@@ -114,34 +116,33 @@ def auto_post_app():
                 }
                 st.session_state.produto_carregado = True  # Marca que o produto foi carregado
 
-                # Restante do código...
-                
             except requests.exceptions.RequestException as e:
                 st.error(f"Erro ao processar o link: {e}")
 
-    # Exibir formulário de preenchimento manual após o link ser inserido
+    # Formulário de preços e cupom
     if st.session_state.produto_carregado:
-        # Garantir que os valores sejam válidos (floats)
-        preco_original_input = st.number_input("Preço original (€):", value=float(st.session_state.preco_original) if st.session_state.preco_original else 0.0, step=0.01)
-        preco_atual_input = st.number_input("Preço atual (€):", value=float(st.session_state.preco_atual) if st.session_state.preco_atual else 0.0, step=0.01)
+        preco_original_input = st.number_input("Preço original (€):", value=st.session_state.preco_original, step=0.01)
+        preco_atual_input = st.number_input("Preço atual (€):", value=st.session_state.preco_atual, step=0.01)
 
-        # Exibição do campo de cupom (opcional)
-        cupom_input = st.text_input("Código do cupom (deixe vazio se não houver):", value=st.session_state.cupom)
-        st.session_state.cupom = cupom_input if cupom_input else None
+        # Exibe o cupom se existir
+        cupom_input = st.text_input("Código de cupom (opcional):", value=st.session_state.cupom)
 
-        # Calcular o desconto baseado nos preços inseridos
-        desconto = calcular_desconto(preco_original_input, preco_atual_input)
-        st.write(f"📉 Poupa já **{desconto}%**!")
+        st.session_state.cupom = cupom_input
+
+        # Exibição da imagem
+        if imagem_resized:
+            st.image(imagem_resized, caption="Pré-visualização da Imagem", use_container_width=True)
 
         # Botão para gerar o post
         if st.button("Gerar Post"):
+            st.session_state.preco_original = preco_original_input
+            st.session_state.preco_atual = preco_atual_input
             produto = {
                 'nome': st.session_state.title,
                 'preco_original': preco_original_input,
                 'preco_atual': preco_atual_input,
                 'cupom': st.session_state.cupom
             }
-
             post_texto = gerar_post(produto, url, ["promoção", st.session_state.title.replace(" ", "").lower()])
             st.write("### Pré-visualização do Post:")
             st.text_area("Texto do Post:", post_texto, height=200)
@@ -154,17 +155,15 @@ def auto_post_app():
             else:
                 st.error("Não foi possível carregar a imagem para este produto.")
 
-            # Link para o Facebook
+            # Links para compartilhamento
             facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={url}"
             st.markdown(f"[Compartilhar no Facebook]({facebook_url})")
 
-            # Link para o X (Twitter)
-            x_text = urllib.parse.quote_plus(f"{st.session_state.title} - {url}")  # Codifica o título e o URL para o X
+            x_text = urllib.parse.quote_plus(f"{st.session_state.title} - {url}")
             x_url = f"https://twitter.com/intent/tweet?url={url}&text={x_text}"
             st.markdown(f"[Compartilhar no X]({x_url})")
 
-            # Link para o WhatsApp
-            whatsapp_text = urllib.parse.quote_plus(f"{st.session_state.title} - {url}")  # Codifica o título e o URL para o WhatsApp
+            whatsapp_text = urllib.parse.quote_plus(f"{st.session_state.title} - {url}")
             whatsapp_url = f"https://wa.me/?text={whatsapp_text}"
             st.markdown(f"[Compartilhar no WhatsApp]({whatsapp_url})")
 
