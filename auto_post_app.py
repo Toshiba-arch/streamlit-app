@@ -74,16 +74,15 @@ def auto_post_app():
 
                 # Extração de informações do produto
                 title = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else ""
-                preco_original = soup.find('span', {'id': 'priceblock_ourprice'}).text.strip().replace("€", "").replace(",", ".") if soup.find('span', {'id': 'priceblock_ourprice'}) else ""
-                preco_atual = soup.find('span', {'id': 'priceblock_dealprice'}).text.strip().replace("€", "").replace(",", ".") if soup.find('span', {'id': 'priceblock_dealprice'}) else preco_original
+                preco_original = soup.find('span', {'id': 'priceblock_ourprice'}).text.strip() if soup.find('span', {'id': 'priceblock_ourprice'}) else ""
+                preco_atual = soup.find('span', {'id': 'priceblock_dealprice'}).text.strip() if soup.find('span', {'id': 'priceblock_dealprice'}) else preco_original
                 imagem_url = soup.find('img', {'id': 'imgBlkFront'})['src'] if soup.find('img', {'id': 'imgBlkFront'}) else ""
-                cupom = "PROMO2023"  # Este pode ser um campo manual, mas por enquanto estou configurando um valor fixo
-                tags = ["promoção", title.replace(" ", "").lower()]  # Tags sugeridas
+                cupom = "PROMO2023"
+                tags = ["promoção", title.replace(" ", "").lower()]  # Tags genéricas e o nome do produto
 
-                # Preenchendo campos de input
                 title = st.text_input("Título do produto:", title)
-                preco_original = st.text_input("Preço original (€):", preco_original)
-                preco_atual = st.text_input("Preço atual (€):", preco_atual)
+                preco_original = st.number_input("Preço original (€):", value=float(preco_original.replace("€", "").replace(",", ".")) if preco_original else 0.0, step=0.01)
+                preco_atual = st.number_input("Preço atual (€):", value=float(preco_atual.replace("€", "").replace(",", ".")) if preco_atual else preco_original, step=0.01)
                 cupom = st.text_input("Cupom:", cupom)
                 tags = st.text_input("Tags (separadas por vírgula):", ",".join(tags)).split(",")
                 estilo_post = st.radio("Estilo do post:", ["emoji", "formal"], index=0)
@@ -95,9 +94,19 @@ def auto_post_app():
                     'cupom': cupom
                 }
 
-                # Carregando a imagem automaticamente
+                # Imagem
+                imagem_resized = None
                 if imagem_url:
                     imagem_resized = redimensionar_imagem(imagem_url, 1200, 628)
+
+                # Início da criação do post
+                if st.button("Gerar Post"):
+                    post_texto = gerar_post(produto, url, tags, estilo=estilo_post)
+                    st.write("### Pré-visualização do Post:")
+                    st.text_area("Texto do Post:", post_texto, height=200)
+                    st.download_button("Baixar Post (.txt)", data=post_texto, file_name="post_gerado.txt")
+
+                    # Exibir imagem redimensionada
                     if imagem_resized:
                         st.image(imagem_resized, caption="Pré-visualização da Imagem", use_container_width=True)
                         buffer = io.BytesIO()
@@ -105,19 +114,10 @@ def auto_post_app():
                         st.download_button("Baixar Imagem", data=buffer.getvalue(), file_name="imagem_produto.png", mime="image/png")
                     else:
                         st.error("Não foi possível carregar a imagem para este produto.")
-                else:
-                    st.error("Imagem não encontrada.")
 
-                # Gerar post
-                if st.button("Gerar Post"):
-                    post_texto = gerar_post(produto, url, tags, estilo=estilo_post)
-                    st.write("### Pré-visualização do Post:")
-                    st.text_area("Texto do Post:", post_texto, height=200)
-                    st.download_button("Baixar Post (.txt)", data=post_texto, file_name="post_gerado.txt")
-
-                # Compartilhar no Facebook
-                facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={url}"
-                st.markdown(f"[Compartilhar no Facebook]({facebook_url})")
+                    # Link para o Facebook
+                    facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={url}"
+                    st.markdown(f"[Compartilhar no Facebook]({facebook_url})")
 
             except requests.exceptions.RequestException as e:
                 st.error(f"Erro ao processar o link: {e}")
