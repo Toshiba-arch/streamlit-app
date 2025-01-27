@@ -85,6 +85,7 @@ def auto_post_app():
                 response.raise_for_status()  # Levanta um erro para status 4xx ou 5xx
                 soup = BeautifulSoup(response.content, 'html.parser')
 
+                # Extração de informações do produto
                 title = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else "Produto Genérico"
                 preco_original = 100.0
                 preco_atual = 75.0
@@ -126,3 +127,7 @@ def auto_post_app():
 
             except requests.exceptions.RequestException as e:
                 st.error(f"Erro ao processar o link: {e}")
+
+# Executando a aplicação
+if __name__ == "__main__":
+    auto_post_app()
