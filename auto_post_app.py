@@ -115,9 +115,9 @@ def auto_post_app():
 
     # Exibir formulário de preenchimento manual após o link ser inserido
     if st.session_state.produto_carregado:
-        # Preço original e preço atual
-        preco_original_input = st.number_input("Preço original (€):", value=st.session_state.preco_original, step=0.01)
-        preco_atual_input = st.number_input("Preço atual (€):", value=st.session_state.preco_atual, step=0.01)
+        # Garantir que os valores sejam válidos (floats)
+        preco_original_input = st.number_input("Preço original (€):", value=float(st.session_state.preco_original) if st.session_state.preco_original else 0.0, step=0.01)
+        preco_atual_input = st.number_input("Preço atual (€):", value=float(st.session_state.preco_atual) if st.session_state.preco_atual else 0.0, step=0.01)
 
         # Exibição do campo de cupom (opcional)
         cupom_input = st.text_input("Código do cupom (deixe vazio se não houver):", value=st.session_state.cupom)
