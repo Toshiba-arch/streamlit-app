@@ -47,14 +47,19 @@ def gerar_post(produto, link_referencia, tags, estilo="emoji"):
 
 def redimensionar_imagem(imagem_url, largura, altura):
     try:
-        response = requests.get(imagem_url)
-        response.raise_for_status()
+        response = requests.get(imagem_url, timeout=10)  # Timeout ajustado para 10 segundos
+        response.raise_for_status()  # Levanta um erro para status 4xx ou 5xx
         imagem = Image.open(io.BytesIO(response.content))
         imagem = imagem.resize((largura, altura))
         return imagem
     except Exception as e:
         st.error(f"Erro ao carregar a imagem: {e}")
-        return None
+        # Fallback para uma imagem padrão se o link não for válido
+        imagem_fallback_url = "https://via.placeholder.com/1200x628.png?text=Imagem+Produto+Indisponível"
+        response = requests.get(imagem_fallback_url)
+        imagem = Image.open(io.BytesIO(response.content))
+        imagem = imagem.resize((largura, altura))
+        return imagem
 
 def sobrepor_texto_na_imagem(imagem, texto):
     try:
