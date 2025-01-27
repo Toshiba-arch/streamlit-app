@@ -22,14 +22,20 @@ def gerar_post(produto, link_referencia, tags):
     preco_atual = produto['preco_atual']
     cupom = produto['cupom']
 
-    # Garantir que os preços sejam flutuantes
+    # Garantir que os preços sejam flutuantes, aplicando replace apenas se for string
     try:
-        preco_original = float(preco_original.replace("€", "").replace(",", "."))
+        if isinstance(preco_original, str):
+            preco_original = float(preco_original.replace("€", "").replace(",", "."))
+        else:
+            preco_original = float(preco_original)
     except ValueError:
         preco_original = 0.0
 
     try:
-        preco_atual = float(preco_atual.replace("€", "").replace(",", "."))
+        if isinstance(preco_atual, str):
+            preco_atual = float(preco_atual.replace("€", "").replace(",", "."))
+        else:
+            preco_atual = float(preco_atual)
     except ValueError:
         preco_atual = preco_original
 
