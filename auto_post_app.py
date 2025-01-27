@@ -4,13 +4,33 @@ from bs4 import BeautifulSoup
 from PIL import Image, ImageDraw, ImageFont
 import io
 
-headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36",
-    "Accept-Language": "pt-PT,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Connection": "keep-alive",
-    "Upgrade-Insecure-Requests": "1"
-}
+if url:
+    with st.spinner('Carregando...'):
+        try:
+            # Melhorando os cabeçalhos
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36",
+                "Accept-Language": "pt-PT,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+                "Accept-Encoding": "gzip, deflate, br",
+                "Connection": "keep-alive",
+                "Upgrade-Insecure-Requests": "1"
+            }
+
+            # Limpeza da URL
+            url_base = url.split('?')[0]
+
+            response = requests.get(url_base, headers=headers)
+            response.raise_for_status()
+
+            soup = BeautifulSoup(response.content, 'html.parser')
+
+            # Resto do processamento...
+            st.success("Dados carregados com sucesso!")
+
+        except requests.exceptions.HTTPError as http_err:
+            st.error(f"Erro HTTP: {http_err}")
+        except requests.exceptions.RequestException as req_err:
+            st.error(f"Erro de conexão: {req_err}")
 
 # Função para calcular o desconto em percentagem
 def calcular_desconto(preco_original, preco_atual):
