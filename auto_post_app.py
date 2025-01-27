@@ -106,8 +106,8 @@ def auto_post_app():
 
                 # Preenchendo os campos do produto
                 st.session_state.title = title
-                st.session_state.preco_original = preco_original
-                st.session_state.preco_atual = preco_atual
+                st.session_state.preco_original = preco_original if preco_original else 0.0  # Garantir que preço_original tenha valor válido
+                st.session_state.preco_atual = preco_atual if preco_atual else 0.0  # Garantir que preço_atual tenha valor válido
                 produto = {
                     'nome': title,
                     'preco_original': preco_original,
@@ -121,8 +121,9 @@ def auto_post_app():
 
     # Formulário de preços e cupom
     if st.session_state.produto_carregado:
-        preco_original_input = st.number_input("Preço original (€):", value=float(st.session_state.preco_original), step=0.01)
-        preco_atual_input = st.number_input("Preço atual (€):", value=float(st.session_state.preco_atual), step=0.01)
+        # Garantir que os valores de preço sejam números válidos
+        preco_original_input = st.number_input("Preço original (€):", value=float(st.session_state.preco_original) if st.session_state.preco_original else 0.0, step=0.01)
+        preco_atual_input = st.number_input("Preço atual (€):", value=float(st.session_state.preco_atual) if st.session_state.preco_atual else 0.0, step=0.01)
 
         # Exibe o cupom se existir
         cupom_input = st.text_input("Código de cupom (opcional):", value=st.session_state.cupom)
