@@ -43,3 +43,4 @@ def run():
 
     # Link para os resultados oficiais do Euromilhões
     st.markdown("[Clique aqui para ver os resultados oficiais do Euromilhões](https://www.jogossantacasa.pt/web/SCCartazResult/euroMilhoes)")
+    st.markdown("[Clique aqui para ver as estatisticas dos numeros mais sorteados do Euromilhões](https://www.jogossantacasa.pt/web/SCEstatisticas/)")
