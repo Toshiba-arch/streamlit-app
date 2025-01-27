@@ -94,8 +94,20 @@ def auto_post_app():
 
                 # Exibindo o preço e a imagem
                 st.text_input("Título do produto:", value=title)
-                st.number_input("Preço original (€):", value=float(preco_original.replace("€", "").replace(",", ".")) if preco_original else 0.0, step=0.01)
-                st.number_input("Preço atual (€):", value=float(preco_atual.replace("€", "").replace(",", ".")) if preco_atual else preco_original, step=0.01)
+
+                # Garantir que o preço seja um número válido
+                try:
+                    preco_original_valido = float(preco_original.replace("€", "").replace(",", "."))
+                except ValueError:
+                    preco_original_valido = 0.0
+
+                try:
+                    preco_atual_valido = float(preco_atual.replace("€", "").replace(",", "."))
+                except ValueError:
+                    preco_atual_valido = preco_original_valido
+
+                st.number_input("Preço original (€):", value=preco_original_valido, step=0.01)
+                st.number_input("Preço atual (€):", value=preco_atual_valido, step=0.01)
 
                 # Exibição da imagem
                 if imagem_url:
