@@ -74,6 +74,8 @@ def auto_post_app():
 
     url = st.text_input("Insira o link de referência para gerar o post automaticamente:")
 
+    imagem_url_input = st.text_input("Ou insira o link direto da imagem (opcional):")
+
     if url:
         with st.spinner('Carregando o produto...'):
             try:
@@ -89,7 +91,7 @@ def auto_post_app():
                 title = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else "Produto Genérico"
                 preco_original = 100.0
                 preco_atual = 75.0
-                imagem_url = "URL_DIRETO_IMAGEM_AQUI"  # Substitua com um link direto de imagem
+                imagem_url = imagem_url_input or soup.find('img', {'id': 'imgBlkFront'})['src'] if soup.find('img', {'id': 'imgBlkFront'}) else None
                 cupom = "PROMO2023"
                 tags = ["promoção", title.replace(" ", "").lower()]  # Tags genéricas e o nome do produto
 
@@ -114,13 +116,16 @@ def auto_post_app():
                     st.download_button("Baixar Post (.txt)", data=post_texto, file_name="post_gerado.txt")
 
                 st.write("### Imagem do Produto:")
-                imagem_resized = redimensionar_imagem(imagem_url, 1200, 628)
-                if imagem_resized:
-                    imagem_final = sobrepor_texto_na_imagem(imagem_resized, f"{calcular_desconto(preco_original, preco_atual)}% OFF")
-                    st.image(imagem_final, caption="Pré-visualização da Imagem", use_container_width=True)
-                    buffer = io.BytesIO()
-                    imagem_final.save(buffer, format="PNG")
-                    st.download_button("Baixar Imagem", data=buffer.getvalue(), file_name="imagem_produto.png", mime="image/png")
+                if imagem_url:
+                    imagem_resized = redimensionar_imagem(imagem_url, 1200, 628)
+                    if imagem_resized:
+                        imagem_final = sobrepor_texto_na_imagem(imagem_resized, f"{calcular_desconto(preco_original, preco_atual)}% OFF")
+                        st.image(imagem_final, caption="Pré-visualização da Imagem", use_container_width=True)
+                        buffer = io.BytesIO()
+                        imagem_final.save(buffer, format="PNG")
+                        st.download_button("Baixar Imagem", data=buffer.getvalue(), file_name="imagem_produto.png", mime="image/png")
+                else:
+                    st.error("Não foi possível encontrar a imagem para este produto.")
 
                 st.write("### Compartilhar:")
                 st.button("Compartilhar no Facebook (Simulado)")
