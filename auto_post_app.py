@@ -61,6 +61,9 @@ def auto_post_app():
 
     url = st.text_input("Insira o link de referência para gerar o post automaticamente:")
 
+    # Input para link da imagem direto
+    imagem_manual = st.text_input("Ou insira o link direto da imagem:")
+
     if url:
         with st.spinner('Carregando o produto...'):
             try:
@@ -94,9 +97,11 @@ def auto_post_app():
                     'cupom': cupom
                 }
 
-                # Imagem
+                # Se a imagem não foi encontrada no link de afiliado, usa a imagem manual fornecida
                 imagem_resized = None
-                if imagem_url:
+                if imagem_manual:
+                    imagem_resized = redimensionar_imagem(imagem_manual, 1200, 628)
+                elif imagem_url:
                     imagem_resized = redimensionar_imagem(imagem_url, 1200, 628)
 
                 # Início da criação do post
