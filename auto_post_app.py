@@ -5,6 +5,64 @@ from PIL import Image
 import io
 import urllib.parse
 
+def expandir_link(url_encurtado):
+    try:
+        response = requests.head(url_encurtado, allow_redirects=True)
+        return response.url
+    except requests.exceptions.RequestException as e:
+        print(f"Erro ao expandir o link: {e}")
+        return None
+
+def extrair_dados_produto(url):
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            "Accept-Language": "en-US,en;q=0.9,pt;q=0.8",
+        }
+        response = requests.get(url, headers=headers, timeout=15)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        # Extração de dados do produto
+        nome = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else "Produto Desconhecido"
+        preco_original = soup.find('span', {'id': 'priceblock_ourprice'}).text.strip() if soup.find('span', {'id': 'priceblock_ourprice'}) else "0.00"
+        preco_atual = soup.find('span', {'id': 'priceblock_dealprice'}).text.strip() if soup.find('span', {'id': 'priceblock_dealprice'}) else preco_original
+        imagem_div = soup.find('div', {'class': 'imgTagWrapper'})
+        imagem_url = imagem_div.find('img')['src'] if imagem_div and imagem_div.find('img') else ""
+
+        return {
+            "nome": nome,
+            "preco_original": preco_original,
+            "preco_atual": preco_atual,
+            "imagem_url": imagem_url,
+        }
+    except requests.exceptions.RequestException as e:
+        print(f"Erro ao acessar a página do produto: {e}")
+        return None
+    except Exception as e:
+        print(f"Erro ao processar os dados: {e}")
+        return None
+
+# Link encurtado
+link_encurtado = "https://amzn.to/3Eog6jJ"
+
+# Expandir o link
+link_expandido = expandir_link(link_encurtado)
+if link_expandido:
+    print(f"Link expandido: {link_expandido}")
+    # Extrair dados do produto
+    dados_produto = extrair_dados_produto(link_expandido)
+    if dados_produto:
+        print("Dados extraídos:")
+        print(f"Nome: {dados_produto['nome']}")
+        print(f"Preço Original: {dados_produto['preco_original']}")
+        print(f"Preço Atual: {dados_produto['preco_atual']}")
+        print(f"URL da Imagem: {dados_produto['imagem_url']}")
+    else:
+        print("Não foi possível extrair os dados do produto.")
+else:
+    print("Não foi possível expandir o link.")
+
 # Funções auxiliares
 def calcular_desconto(preco_original, preco_atual):
     try:
