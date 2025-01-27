@@ -69,6 +69,22 @@ def sobrepor_texto_na_imagem(imagem, texto):
         st.error(f"Erro ao sobrepor texto na imagem: {e}")
         return imagem
 
+def obter_dados_produto(url):
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            "Accept-Language": "en-US,en;q=0.9,pt;q=0.8",
+        }
+        response = requests.get(url, headers=headers, timeout=15)  # Timeout aumentado
+        response.raise_for_status()  # Levanta um erro para status 4xx ou 5xx
+        return response.content
+    except requests.exceptions.RequestException as e:
+        st.error(f"Erro ao processar o link: {e}")
+        if e.response:
+            st.error(f"Código de status: {e.response.status_code}")
+            st.error(f"Texto do erro: {e.response.text}")
+        return None
+
 def auto_post_app():
     st.title("Gerador Automático de Posts")
 
@@ -77,53 +93,50 @@ def auto_post_app():
     if url:
         with st.spinner('Carregando o produto...'):
             try:
-                headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-                    "Accept-Language": "en-US,en;q=0.9,pt;q=0.8",
-                }
-                response = requests.get(url, headers=headers, timeout=15)  # Timeout aumentado
-                response.raise_for_status()  # Levanta um erro para status 4xx ou 5xx
-                soup = BeautifulSoup(response.content, 'html.parser')
+                produto_dados = obter_dados_produto(url)
+                
+                if produto_dados:
+                    soup = BeautifulSoup(produto_dados, 'html.parser')
 
-                # Extração de informações do produto
-                title = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else "Produto Genérico"
-                preco_original = 100.0
-                preco_atual = 75.0
-                imagem_url = "https://via.placeholder.com/1200x628.png?text=Imagem+Produto"
-                cupom = "PROMO2023"
-                tags = ["desconto", "promoção"]
+                    # Extração de informações do produto
+                    title = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else "Produto Genérico"
+                    preco_original = 100.0
+                    preco_atual = 75.0
+                    imagem_url = "https://via.placeholder.com/1200x628.png?text=Imagem+Produto"
+                    cupom = "PROMO2023"
+                    tags = ["desconto", "promoção"]
 
-                title = st.text_input("Título do produto:", title)
-                preco_original = st.number_input("Preço original (€):", value=preco_original, step=0.01)
-                preco_atual = st.number_input("Preço atual (€):", value=preco_atual, step=0.01)
-                cupom = st.text_input("Cupom:", cupom)
-                tags = st.text_input("Tags (separadas por vírgula):", ",".join(tags)).split(",")
-                estilo_post = st.radio("Estilo do post:", ["emoji", "formal"], index=0)
+                    title = st.text_input("Título do produto:", title)
+                    preco_original = st.number_input("Preço original (€):", value=preco_original, step=0.01)
+                    preco_atual = st.number_input("Preço atual (€):", value=preco_atual, step=0.01)
+                    cupom = st.text_input("Cupom:", cupom)
+                    tags = st.text_input("Tags (separadas por vírgula):", ",".join(tags)).split(",")
+                    estilo_post = st.radio("Estilo do post:", ["emoji", "formal"], index=0)
 
-                produto = {
-                    'nome': title,
-                    'preco_original': preco_original,
-                    'preco_atual': preco_atual,
-                    'cupom': cupom
-                }
+                    produto = {
+                        'nome': title,
+                        'preco_original': preco_original,
+                        'preco_atual': preco_atual,
+                        'cupom': cupom
+                    }
 
-                if st.button("Gerar Post"):
-                    post_texto = gerar_post(produto, url, tags, estilo=estilo_post)
-                    st.write("### Pré-visualização do Post:")
-                    st.text_area("Texto do Post:", post_texto, height=200)
-                    st.download_button("Baixar Post (.txt)", data=post_texto, file_name="post_gerado.txt")
+                    if st.button("Gerar Post"):
+                        post_texto = gerar_post(produto, url, tags, estilo=estilo_post)
+                        st.write("### Pré-visualização do Post:")
+                        st.text_area("Texto do Post:", post_texto, height=200)
+                        st.download_button("Baixar Post (.txt)", data=post_texto, file_name="post_gerado.txt")
 
-                st.write("### Imagem do Produto:")
-                imagem_resized = redimensionar_imagem(imagem_url, 1200, 628)
-                if imagem_resized:
-                    imagem_final = sobrepor_texto_na_imagem(imagem_resized, f"{calcular_desconto(preco_original, preco_atual)}% OFF")
-                    st.image(imagem_final, caption="Pré-visualização da Imagem", use_column_width=True)
-                    buffer = io.BytesIO()
-                    imagem_final.save(buffer, format="PNG")
-                    st.download_button("Baixar Imagem", data=buffer.getvalue(), file_name="imagem_produto.png", mime="image/png")
+                    st.write("### Imagem do Produto:")
+                    imagem_resized = redimensionar_imagem(imagem_url, 1200, 628)
+                    if imagem_resized:
+                        imagem_final = sobrepor_texto_na_imagem(imagem_resized, f"{calcular_desconto(preco_original, preco_atual)}% OFF")
+                        st.image(imagem_final, caption="Pré-visualização da Imagem", use_column_width=True)
+                        buffer = io.BytesIO()
+                        imagem_final.save(buffer, format="PNG")
+                        st.download_button("Baixar Imagem", data=buffer.getvalue(), file_name="imagem_produto.png", mime="image/png")
 
-                st.write("### Compartilhar:")
-                st.button("Compartilhar no Facebook (Simulado)")
+                    st.write("### Compartilhar:")
+                    st.button("Compartilhar no Facebook (Simulado)")
 
             except requests.exceptions.RequestException as e:
                 st.error(f"Erro ao processar o link: {e}")
