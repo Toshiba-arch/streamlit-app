@@ -61,35 +61,28 @@ def redimensionar_imagem(imagem_url, largura, altura):
 def auto_post_app():
     st.title("Gerador Automático de Posts")
 
-    # Inicializa as variáveis de sessão com valores numéricos válidos
-    if 'produto_carregado' not in st.session_state:
-        st.session_state.produto_carregado = False
-    if 'url' not in st.session_state:
-        st.session_state.url = ""
-    if 'title' not in st.session_state:
-        st.session_state.title = ""
-    if 'preco_original' not in st.session_state:
-        st.session_state.preco_original = 0.0  # Garantir valor numérico válido
-    if 'preco_atual' not in st.session_state:
-        st.session_state.preco_atual = 0.0  # Garantir valor numérico válido
-    if 'cupom' not in st.session_state:
-        st.session_state.cupom = ""
-    if 'tags' not in st.session_state:
-        st.session_state.tags = ["promoção", ""]
-
-    url = st.text_input("Insira o link de referência para gerar o post automaticamente:", value=st.session_state.url)
-
+    # Variáveis locais
+    produto_carregado = False
+    url = ""
+    title = ""
+    preco_original = 0.0
+    preco_atual = 0.0
+    cupom = ""
+    tags = ["promoção", ""]
     imagem_resized = None  # Inicializa a variável imagem_resized antes de usá-la
 
+    # Formulário de link de referência
+    url_input = st.text_input("Insira o link de referência para gerar o post automaticamente:", value=url)
+
     # Formulário de preenchimento só após inserir o link
-    if url:
+    if url_input:
         with st.spinner('Carregando o produto...'):
             try:
                 headers = {
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
                     "Accept-Language": "en-US,en;q=0.9,pt;q=0.8",
                 }
-                response = requests.get(url, headers=headers, timeout=15)
+                response = requests.get(url_input, headers=headers, timeout=15)
                 response.raise_for_status()
                 soup = BeautifulSoup(response.content, 'html.parser')
 
@@ -104,31 +97,25 @@ def auto_post_app():
                     imagem_url = imagem_div.find('img')['src'] if imagem_div.find('img') else ""
                     imagem_resized = redimensionar_imagem(imagem_url, 1200, 628)  # Redimensiona a imagem
 
-                # Preenchendo os campos do produto
-                st.session_state.title = title
-                st.session_state.preco_original = preco_original if preco_original else 0.0  # Garantir que preço_original tenha valor válido
-                st.session_state.preco_atual = preco_atual if preco_atual else 0.0  # Garantir que preço_atual tenha valor válido
-                produto = {
-                    'nome': title,
-                    'preco_original': preco_original,
-                    'preco_atual': preco_atual,
-                    'cupom': st.session_state.cupom
-                }
-                st.session_state.produto_carregado = True  # Marca que o produto foi carregado
+                produto_carregado = True  # Marca que o produto foi carregado
 
             except requests.exceptions.RequestException as e:
                 st.error(f"Erro ao processar o link: {e}")
 
-    # Formulário de preços e cupom
-    if st.session_state.produto_carregado:
+    # Formulário de preços, cupom e tags
+    if produto_carregado:
         # Garantir que os valores de preço sejam números válidos
-        preco_original_input = st.number_input("Preço original (€):", value=float(st.session_state.preco_original) if st.session_state.preco_original else 0.0, step=0.01)
-        preco_atual_input = st.number_input("Preço atual (€):", value=float(st.session_state.preco_atual) if st.session_state.preco_atual else 0.0, step=0.01)
+        preco_original_input = st.number_input("Preço original (€):", value=float(preco_original) if preco_original else 0.0, step=0.01)
+        preco_atual_input = st.number_input("Preço atual (€):", value=float(preco_atual) if preco_atual else 0.0, step=0.01)
 
         # Exibe o cupom se existir
-        cupom_input = st.text_input("Código de cupom (opcional):", value=st.session_state.cupom)
+        cupom_input = st.text_input("Código de cupom (opcional):", value=cupom)
 
-        st.session_state.cupom = cupom_input
+        # Exibe e permite a adição de tags
+        tags_input = st.text_area("Tags (separadas por vírgula):", value=", ".join(tags))
+        tags = [tag.strip() for tag in tags_input.split(",")]
+
+        cupom = cupom_input
 
         # Exibição da imagem
         if imagem_resized:
@@ -136,15 +123,13 @@ def auto_post_app():
 
         # Botão para gerar o post
         if st.button("Gerar Post"):
-            st.session_state.preco_original = preco_original_input
-            st.session_state.preco_atual = preco_atual_input
             produto = {
-                'nome': st.session_state.title,
+                'nome': title,
                 'preco_original': preco_original_input,
                 'preco_atual': preco_atual_input,
-                'cupom': st.session_state.cupom
+                'cupom': cupom
             }
-            post_texto = gerar_post(produto, url, ["promoção", st.session_state.title.replace(" ", "").lower()])
+            post_texto = gerar_post(produto, url_input, tags)
             st.write("### Pré-visualização do Post:")
             st.text_area("Texto do Post:", post_texto, height=200)
             st.download_button("Baixar Post (.txt)", data=post_texto, file_name="post_gerado.txt")
@@ -157,14 +142,14 @@ def auto_post_app():
                 st.error("Não foi possível carregar a imagem para este produto.")
 
             # Links para compartilhamento
-            facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={url}"
+            facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={url_input}"
             st.markdown(f"[Compartilhar no Facebook]({facebook_url})")
 
-            x_text = urllib.parse.quote_plus(f"{st.session_state.title} - {url}")
-            x_url = f"https://twitter.com/intent/tweet?url={url}&text={x_text}"
+            x_text = urllib.parse.quote_plus(f"{title} - {url_input}")
+            x_url = f"https://twitter.com/intent/tweet?url={url_input}&text={x_text}"
             st.markdown(f"[Compartilhar no X]({x_url})")
 
-            whatsapp_text = urllib.parse.quote_plus(f"{st.session_state.title} - {url}")
+            whatsapp_text = urllib.parse.quote_plus(f"{title} - {url_input}")
             whatsapp_url = f"https://wa.me/?text={whatsapp_text}"
             st.markdown(f"[Compartilhar no WhatsApp]({whatsapp_url})")
 
