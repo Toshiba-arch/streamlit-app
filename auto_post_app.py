@@ -43,6 +43,20 @@ def redimensionar_imagem(imagem_url, largura, altura):
     except Exception as e:
         st.error(f"Erro ao carregar a imagem: {e}")
         return None
+        
+# Exibe a imagem redimensionada
+if produto['imagem_url']:
+    st.write("URL da Imagem Extraído:", produto['imagem_url'])  # Verificar URL extraído
+    imagem_resized = redimensionar_imagem(produto['imagem_url'], 1200, 628)
+    if imagem_resized:
+        st.image(imagem_resized, caption="Pré-visualização da Imagem", use_container_width=True)
+        buffer = io.BytesIO()
+        imagem_resized.save(buffer, format="PNG")
+        st.download_button("Baixar Imagem", data=buffer.getvalue(), file_name="imagem_produto.png", mime="image/png")
+    else:
+        st.error("Não foi possível redimensionar a imagem. Verifique o URL ou formato da imagem.")
+else:
+    st.error("URL da imagem não encontrado. Verifique se o site contém a tag ou div esperada.")
 
 def auto_post_app():
     st.title("Gerador Automático de Posts")
