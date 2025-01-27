@@ -22,6 +22,9 @@ def gerar_post(produto, link_referencia, tags, estilo="emoji"):
     cupom = produto['cupom']
     desconto = calcular_desconto(preco_original, preco_atual)
 
+    # Tags padrão
+    tags_default = ["#amazon", "#dailypromo", "#promotion", f"#{nome.replace(' ', '').lower()}"]
+
     if estilo == "emoji":
         post_texto = f"📢 **Oferta Imperdível!** 📢\n"
         post_texto += f"🔹 **{nome}**\n"
@@ -31,7 +34,7 @@ def gerar_post(produto, link_referencia, tags, estilo="emoji"):
             post_texto += f"💥 Use o código de cupom no checkout: **{cupom}**\n"
         post_texto += f"👉 [Compra agora]({link_referencia})\n"
         if tags:
-            post_texto += "\n" + " ".join([f"#{tag}" for tag in tags])
+            post_texto += "\n" + " ".join(tags_default + tags)
     else:
         post_texto = f"**Oferta Imperdível!**\n"
         post_texto += f"Produto: **{nome}**\n"
@@ -41,32 +44,27 @@ def gerar_post(produto, link_referencia, tags, estilo="emoji"):
             post_texto += f"Cupom: {cupom}\n"
         post_texto += f"Link: [Clique aqui para comprar]({link_referencia})\n"
         if tags:
-            post_texto += "\nTags: " + ", ".join(tags)
+            post_texto += "\nTags: " + ", ".join(tags_default + tags)
 
     return post_texto
 
 def redimensionar_imagem(imagem_url, largura, altura):
     try:
-        response = requests.get(imagem_url, timeout=10)  # Timeout ajustado para 10 segundos
-        response.raise_for_status()  # Levanta um erro para status 4xx ou 5xx
+        response = requests.get(imagem_url)
+        response.raise_for_status()
         imagem = Image.open(io.BytesIO(response.content))
         imagem = imagem.resize((largura, altura))
         return imagem
     except Exception as e:
         st.error(f"Erro ao carregar a imagem: {e}")
-        # Fallback para uma imagem padrão se o link não for válido
-        imagem_fallback_url = "https://via.placeholder.com/1200x628.png?text=Imagem+Produto+Indisponível"
-        response = requests.get(imagem_fallback_url)
-        imagem = Image.open(io.BytesIO(response.content))
-        imagem = imagem.resize((largura, altura))
-        return imagem
+        return None
 
 def sobrepor_texto_na_imagem(imagem, texto):
     try:
         draw = ImageDraw.Draw(imagem)
         fonte = ImageFont.load_default()
         largura, altura = imagem.size
-        texto_largura, texto_altura = draw.textsize(texto, font=fonte)
+        texto_largura, texto_altura = draw.textbbox((0, 0), texto, font=fonte)[2:]
         posicao = ((largura - texto_largura) // 2, altura - texto_altura - 20)
         draw.text(posicao, texto, (255, 255, 255), font=fonte)
         return imagem
@@ -86,23 +84,23 @@ def auto_post_app():
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
                     "Accept-Language": "en-US,en;q=0.9,pt;q=0.8",
                 }
-                response = requests.get(url, headers=headers, timeout=15)
+                response = requests.get(url, headers=headers, timeout=15)  # Timeout aumentado
                 response.raise_for_status()  # Levanta um erro para status 4xx ou 5xx
                 soup = BeautifulSoup(response.content, 'html.parser')
 
-                # Extração simplificada de informações do produto
+                # Extração de informações essenciais
                 title = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else "Produto Genérico"
-                preco_original = soup.find('span', {'id': 'priceblock_ourprice'}).text if soup.find('span', {'id': 'priceblock_ourprice'}) else "0.00"
-                preco_atual = preco_original
-                cupom = "PROMO2023"  # Definido manualmente aqui, ou pode ser extraído de outra forma
-                descricao = soup.find('div', {'id': 'productDescription'}).text.strip() if soup.find('div', {'id': 'productDescription'}) else "Sem descrição disponível"
-                imagem_url = soup.find('img', {'id': 'landingImage'})['src'] if soup.find('img', {'id': 'landingImage'}) else "https://via.placeholder.com/1200x628.png?text=Imagem+Produto"
-                
+                preco_original = 100.0
+                preco_atual = 75.0
+                imagem_url = "https://via.placeholder.com/1200x628.png?text=Imagem+Produto"
+                cupom = "PROMO2023"
+                tags = ["desconto", "promoção"]
+
                 title = st.text_input("Título do produto:", title)
-                preco_original = st.number_input("Preço original (€):", value=float(preco_original.replace('€', '').replace(',', '.')), step=0.01)
-                preco_atual = st.number_input("Preço atual (€):", value=float(preco_atual.replace('€', '').replace(',', '.')), step=0.01)
+                preco_original = st.number_input("Preço original (€):", value=preco_original, step=0.01)
+                preco_atual = st.number_input("Preço atual (€):", value=preco_atual, step=0.01)
                 cupom = st.text_input("Cupom:", cupom)
-                tags = st.text_input("Tags (separadas por vírgula):", "").split(",")
+                tags = st.text_input("Tags (separadas por vírgula):", ",".join(tags)).split(",")
                 estilo_post = st.radio("Estilo do post:", ["emoji", "formal"], index=0)
 
                 produto = {
