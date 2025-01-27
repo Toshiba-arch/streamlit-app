@@ -15,7 +15,7 @@ def calcular_desconto(preco_original, preco_atual):
     except (ValueError, TypeError, ZeroDivisionError):
         return 0
 
-def gerar_post(produto, link_referencia, tags, estilo="emoji"):
+def gerar_post(produto, link_referencia, tags):
     nome = produto['nome']
     preco_original = produto['preco_original']
     preco_atual = produto['preco_atual']
@@ -48,10 +48,21 @@ def redimensionar_imagem(imagem_url, largura, altura):
 def auto_post_app():
     st.title("Gerador Automático de Posts")
 
-    url = st.text_input("Insira o link de referência para gerar o post automaticamente:")
+    # Definir placeholders para os campos
+    if 'url' not in st.session_state:
+        st.session_state.url = ""
+        st.session_state.imagem_manual = ""
+        st.session_state.title = ""
+        st.session_state.preco_original = 0.0
+        st.session_state.preco_atual = 0.0
+        st.session_state.cupom = "PROMO2023"
+        st.session_state.tags = ["promoção", ""]
+    
+    url = st.text_input("Insira o link de referência para gerar o post automaticamente:", value=st.session_state.url)
 
-    # Input para link da imagem direto
-    imagem_manual = st.text_input("Ou insira o link direto da imagem (caso não seja carregada):")
+    imagem_manual = ""
+    imagem_url = ""
+    imagem_resized = None
 
     if url:
         with st.spinner('Carregando o produto...'):
@@ -66,21 +77,34 @@ def auto_post_app():
 
                 # Extração de informações do produto
                 title = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else ""
-                preco_original = soup.find('span', {'id': 'priceblock_ourprice'}).text.strip() if soup.find('span', {'id': 'priceblock_ourprice'}) else ""
-                preco_atual = soup.find('span', {'id': 'priceblock_dealprice'}).text.strip() if soup.find('span', {'id': 'priceblock_dealprice'}) else preco_original
-                imagem_url = ""
+                
+                # Extração de preço original e preço atual
+                preco_original = soup.find('span', {'id': 'priceblock_ourprice'}) or soup.find('span', {'id': 'priceblock_dealprice'})
+                preco_original = preco_original.text.strip() if preco_original else "0.0"
+                preco_atual = preco_original  # Preço atual será igual ao original se não houver um deal price
+                
                 imagem_div = soup.find('div', {'class': 'imgTagWrapper'})
                 if imagem_div:
                     imagem_url = imagem_div.find('img')['src'] if imagem_div.find('img') else ""
-                cupom = "PROMO2023"
+                
+                cupom = st.session_state.cupom
                 tags = ["promoção", title.replace(" ", "").lower()]  # Tags genéricas e o nome do produto
 
-                title = st.text_input("Título do produto:", title)
+                # Preenchendo os campos
+                title = st.text_input("Título do produto:", value=title)
                 preco_original = st.number_input("Preço original (€):", value=float(preco_original.replace("€", "").replace(",", ".")) if preco_original else 0.0, step=0.01)
                 preco_atual = st.number_input("Preço atual (€):", value=float(preco_atual.replace("€", "").replace(",", ".")) if preco_atual else preco_original, step=0.01)
-                cupom = st.text_input("Cupom:", cupom)
-                tags = st.text_input("Tags (separadas por vírgula):", ",".join(tags)).split(",")
-                
+                cupom = st.text_input("Cupom:", value=cupom)
+                tags = st.text_input("Tags (separadas por vírgula):", value=",".join(tags)).split(",")
+
+                st.session_state.url = url
+                st.session_state.imagem_manual = imagem_manual
+                st.session_state.title = title
+                st.session_state.preco_original = preco_original
+                st.session_state.preco_atual = preco_atual
+                st.session_state.cupom = cupom
+                st.session_state.tags = tags
+
                 produto = {
                     'nome': title,
                     'preco_original': preco_original,
@@ -88,12 +112,11 @@ def auto_post_app():
                     'cupom': cupom
                 }
 
-                # Se a imagem não foi encontrada no link de afiliado, usa a imagem manual fornecida
-                imagem_resized = None
-                if imagem_manual:
-                    imagem_resized = redimensionar_imagem(imagem_manual, 1200, 628)
-                elif imagem_url:
+                # Se a imagem não foi encontrada no link de afiliado, exibe a opção de link manual
+                if imagem_url:
                     imagem_resized = redimensionar_imagem(imagem_url, 1200, 628)
+                else:
+                    imagem_manual = st.text_input("Ou insira o link direto da imagem:")
 
                 # Início da criação do post
                 if st.button("Gerar Post"):
