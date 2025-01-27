@@ -71,14 +71,11 @@ def redimensionar_imagem(imagem_url, largura, altura):
 def auto_post_app():
     st.title("Gerador Automático de Posts")
 
-    if 'url' not in st.session_state:
-        st.session_state.url = ""
-        st.session_state.title = ""
-        st.session_state.preco_original = 0.0
-        st.session_state.preco_atual = 0.0
-        st.session_state.cupom = "PROMO2023"
-        st.session_state.tags = ["promoção", ""]
+    # Inicializa o atributo 'produto_carregado' se não existir
+    if 'produto_carregado' not in st.session_state:
+        st.session_state.produto_carregado = False  # Definir como False inicialmente
 
+    # Restante do código
     url = st.text_input("Insira o link de referência para gerar o post automaticamente:", value=st.session_state.url)
 
     imagem_resized = None  # Inicializa a variável imagem_resized antes de usá-la
@@ -115,40 +112,10 @@ def auto_post_app():
                     'preco_atual': preco_atual,
                     'cupom': st.session_state.cupom
                 }
+                st.session_state.produto_carregado = True  # Marca que o produto foi carregado
 
-                st.text_input("Título do produto:", value=title)
-
-                try:
-                    preco_original_valido = float(preco_original.replace("€", "").replace(",", ".")) if preco_original else 0.0
-                except ValueError:
-                    preco_original_valido = 0.0
-
-                try:
-                    preco_atual_valido = float(preco_atual.replace("€", "").replace(",", ".")) if preco_atual else preco_original_valido
-                except ValueError:
-                    preco_atual_valido = preco_original_valido
-
-                st.number_input("Preço original (€):", value=preco_original_valido, step=0.01)
-                st.number_input("Preço atual (€):", value=preco_atual_valido, step=0.01)
-
-                # Exibição da imagem, se carregada corretamente
-                if imagem_resized:
-                    st.image(imagem_resized, caption="Pré-visualização da Imagem", use_container_width=True)
-
-                # Botão para gerar o post
-                if st.button("Gerar Post"):
-                    post_texto = gerar_post(produto, url, ["promoção", title.replace(" ", "").lower()])
-                    st.write("### Pré-visualização do Post:")
-                    st.text_area("Texto do Post:", post_texto, height=200)
-                    st.download_button("Baixar Post (.txt)", data=post_texto, file_name="post_gerado.txt")
-
-                    if imagem_resized:
-                        buffer = io.BytesIO()
-                        imagem_resized.save(buffer, format="PNG")
-                        st.download_button("Baixar Imagem", data=buffer.getvalue(), file_name="imagem_produto.png", mime="image/png")
-                    else:
-                        st.error("Não foi possível carregar a imagem para este produto.")
-
+                # Restante do código...
+                
             except requests.exceptions.RequestException as e:
                 st.error(f"Erro ao processar o link: {e}")
 
