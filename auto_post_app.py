@@ -4,7 +4,6 @@ from bs4 import BeautifulSoup
 from PIL import Image, ImageDraw, ImageFont
 import io
 
-# Função para calcular o desconto em percentagem
 def calcular_desconto(preco_original, preco_atual):
     try:
         if preco_original == 0:
@@ -16,7 +15,6 @@ def calcular_desconto(preco_original, preco_atual):
     except (ValueError, TypeError, ZeroDivisionError):
         return 0
 
-# Função para gerar o texto do post
 def gerar_post(produto, link_referencia, tags, estilo="emoji"):
     nome = produto['nome']
     preco_original = produto['preco_original']
@@ -47,33 +45,33 @@ def gerar_post(produto, link_referencia, tags, estilo="emoji"):
 
     return post_texto
 
-# Função para redimensionar imagem com tratamento de erros
 def redimensionar_imagem(imagem_url, largura, altura):
     try:
-        response = requests.get(imagem_url, timeout=10)
+        response = requests.get(imagem_url)
         response.raise_for_status()
         imagem = Image.open(io.BytesIO(response.content))
         imagem = imagem.resize((largura, altura))
         return imagem
-    except requests.exceptions.RequestException:
-        st.error("Erro ao carregar a imagem do produto. Verifique a URL ou tente novamente mais tarde.")
+    except Exception as e:
+        st.error(f"Erro ao carregar a imagem: {e}")
         return None
 
-# Função para sobrepor texto na imagem
 def sobrepor_texto_na_imagem(imagem, texto):
-    draw = ImageDraw.Draw(imagem)
-    fonte = ImageFont.load_default()
-    largura, altura = imagem.size
-    texto_largura, texto_altura = draw.textsize(texto, font=fonte)
-    posicao = ((largura - texto_largura) // 2, altura - texto_altura - 20)
-    draw.text(posicao, texto, (255, 255, 255), font=fonte)
-    return imagem
+    try:
+        draw = ImageDraw.Draw(imagem)
+        fonte = ImageFont.load_default()
+        largura, altura = imagem.size
+        texto_largura, texto_altura = draw.textsize(texto, font=fonte)
+        posicao = ((largura - texto_largura) // 2, altura - texto_altura - 20)
+        draw.text(posicao, texto, (255, 255, 255), font=fonte)
+        return imagem
+    except Exception as e:
+        st.error(f"Erro ao sobrepor texto na imagem: {e}")
+        return imagem
 
-# Aplicação principal
 def auto_post_app():
     st.title("Gerador Automático de Posts")
 
-    # Input para o link de referência
     url = st.text_input("Insira o link de referência para gerar o post automaticamente:")
 
     if url:
@@ -87,15 +85,13 @@ def auto_post_app():
                 response.raise_for_status()
                 soup = BeautifulSoup(response.content, 'html.parser')
 
-                # Simulação da extração de dados
                 title = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else "Produto Genérico"
                 preco_original = 100.0
                 preco_atual = 75.0
-                imagem_url = "https://placeimg.com/1200/628/tech"  # Placeholder alternativa
+                imagem_url = "https://via.placeholder.com/1200x628.png?text=Imagem+Produto"
                 cupom = "PROMO2023"
                 tags = ["desconto", "promoção"]
 
-                # Entrada de dados
                 title = st.text_input("Título do produto:", title)
                 preco_original = st.number_input("Preço original (€):", value=preco_original, step=0.01)
                 preco_atual = st.number_input("Preço atual (€):", value=preco_atual, step=0.01)
@@ -103,20 +99,19 @@ def auto_post_app():
                 tags = st.text_input("Tags (separadas por vírgula):", ",".join(tags)).split(",")
                 estilo_post = st.radio("Estilo do post:", ["emoji", "formal"], index=0)
 
-                # Gerar e exibir texto do post
                 produto = {
                     'nome': title,
                     'preco_original': preco_original,
                     'preco_atual': preco_atual,
                     'cupom': cupom
                 }
+
                 if st.button("Gerar Post"):
                     post_texto = gerar_post(produto, url, tags, estilo=estilo_post)
                     st.write("### Pré-visualização do Post:")
                     st.text_area("Texto do Post:", post_texto, height=200)
                     st.download_button("Baixar Post (.txt)", data=post_texto, file_name="post_gerado.txt")
 
-                # Controle de imagem
                 st.write("### Imagem do Produto:")
                 imagem_resized = redimensionar_imagem(imagem_url, 1200, 628)
                 if imagem_resized:
@@ -126,13 +121,8 @@ def auto_post_app():
                     imagem_final.save(buffer, format="PNG")
                     st.download_button("Baixar Imagem", data=buffer.getvalue(), file_name="imagem_produto.png", mime="image/png")
 
-                # Integração com redes sociais (simulado)
                 st.write("### Compartilhar:")
                 st.button("Compartilhar no Facebook (Simulado)")
 
             except requests.exceptions.RequestException as e:
                 st.error(f"Erro ao processar o link: {e}")
-
-# Executa a aplicação
-if __name__ == "__main__":
-    auto_post_app()
