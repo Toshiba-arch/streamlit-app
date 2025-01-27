@@ -24,7 +24,8 @@ def gerar_post(produto, link_referencia, tags):
 
     # Garantir que os preços sejam flutuantes
     try:
-        if preco_original:
+        # Verificar se preco_original é uma string válida
+        if preco_original and isinstance(preco_original, str):
             preco_original = preco_original.replace("€", "").replace(",", ".")
             preco_original = float(preco_original)
         else:
@@ -33,7 +34,8 @@ def gerar_post(produto, link_referencia, tags):
         preco_original = 0.0
 
     try:
-        if preco_atual:
+        # Verificar se preco_atual é uma string válida
+        if preco_atual and isinstance(preco_atual, str):
             preco_atual = preco_atual.replace("€", "").replace(",", ".")
             preco_atual = float(preco_atual)
         else:
@@ -54,6 +56,7 @@ def gerar_post(produto, link_referencia, tags):
         post_texto += "\n" + " ".join([f"#{tag}" for tag in tags])
 
     return post_texto
+
 def redimensionar_imagem(imagem_url, largura, altura):
     try:
         response = requests.get(imagem_url)
