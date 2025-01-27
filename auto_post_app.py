@@ -5,6 +5,7 @@ from PIL import Image
 import io
 import urllib.parse
 
+# Funções auxiliares
 def calcular_desconto(preco_original, preco_atual):
     try:
         if preco_original == 0:
@@ -43,21 +44,8 @@ def redimensionar_imagem(imagem_url, largura, altura):
     except Exception as e:
         st.error(f"Erro ao carregar a imagem: {e}")
         return None
-        
-# Exibe a imagem redimensionada
-if produto['imagem_url']:
-    st.write("URL da Imagem Extraído:", produto['imagem_url'])  # Verificar URL extraído
-    imagem_resized = redimensionar_imagem(produto['imagem_url'], 1200, 628)
-    if imagem_resized:
-        st.image(imagem_resized, caption="Pré-visualização da Imagem", use_container_width=True)
-        buffer = io.BytesIO()
-        imagem_resized.save(buffer, format="PNG")
-        st.download_button("Baixar Imagem", data=buffer.getvalue(), file_name="imagem_produto.png", mime="image/png")
-    else:
-        st.error("Não foi possível redimensionar a imagem. Verifique o URL ou formato da imagem.")
-else:
-    st.error("URL da imagem não encontrado. Verifique se o site contém a tag ou div esperada.")
 
+# Aplicação principal
 def auto_post_app():
     st.title("Gerador Automático de Posts")
 
@@ -75,7 +63,7 @@ def auto_post_app():
 
     # Entrada para o link de referência
     url_input = st.text_input("Insira o link de referência para gerar o post automaticamente:")
-    
+
     if st.button("Validar Link"):
         with st.spinner("Validando o link e carregando os dados do produto..."):
             try:
@@ -126,7 +114,7 @@ def auto_post_app():
         if st.button("Gerar Post"):
             tags = [tag.strip() for tag in tags_input.split(",")]
             post_texto = gerar_post(produto, url_input, tags)
-            
+
             # Exibe o post
             st.write("### Pré-visualização do Post:")
             st.text_area("Texto do Post:", post_texto, height=200)
