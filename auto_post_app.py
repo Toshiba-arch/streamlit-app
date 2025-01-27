@@ -14,19 +14,15 @@ def extrair_dados_produto(url):
         response.raise_for_status()
         soup = BeautifulSoup(response.content, 'html.parser')
 
-        # Extrair o nome do produto
         nome = soup.find('span', {'id': 'productTitle'})
         nome = nome.text.strip() if nome else "Produto Desconhecido"
 
-        # Extrair o preço original
         preco_original = soup.find('span', {'class': 'priceBlockStrikePriceString'})
         preco_original = float(preco_original.text.replace("\u20ac", "").replace(",", ".").strip()) if preco_original else 0.0
 
-        # Extrair o preço atual
         preco_atual = soup.find('span', {'id': 'priceblock_ourprice'}) or soup.find('span', {'id': 'priceblock_dealprice'})
         preco_atual = float(preco_atual.text.replace("\u20ac", "").replace(",", ".").strip()) if preco_atual else preco_original
 
-        # Extrair a URL da imagem
         imagem_div = soup.find('img', {'id': 'landingImage'})
         imagem_url = imagem_div['src'] if imagem_div else ""
 
@@ -49,10 +45,10 @@ def gerar_post(produto, link_referencia, tags):
     preco_atual = produto['preco_atual']
     desconto = ((preco_original - preco_atual) / preco_original) * 100 if preco_original else 0
 
-    post_texto = f"🔥 **Oferta Imperdível!** 🔥\n"
-    post_texto += f"🎯 **{nome}**\n"
-    post_texto += f"💶 Antes **€{preco_original:.2f}** AGORA **€{preco_atual:.2f}**!\n"
-    post_texto += f"🎉 Poupe já **{desconto:.2f}%**!\n"
+    post_texto = f"💥 **Oferta Imperdível!** 💥\n"
+    post_texto += f"🔹 **{nome}**\n"
+    post_texto += f"💰 Antes **€{preco_original:.2f}** AGORA **€{preco_atual:.2f}**!\n"
+    post_texto += f"📉 Poupe já **{desconto:.2f}%**!\n"
     post_texto += f"👉 [Compre agora]({link_referencia})\n"
     if tags:
         post_texto += "\n" + " ".join([f"#{tag}" for tag in tags])
@@ -71,7 +67,7 @@ def redimensionar_imagem(imagem_url, largura, altura):
         return None
 
 def auto_post_app():
-    st.title("✨ Gerador Automático de Posts ✨")
+    st.title("Gerador Automático de Posts")
 
     url_input = st.text_input("Insira o link do produto na Amazon:")
 
@@ -80,9 +76,9 @@ def auto_post_app():
             produto = extrair_dados_produto(url_input)
             if produto:
                 st.session_state.produto = produto
-                st.success("Dados carregados com sucesso! 🎉")
+                st.success("Dados carregados com sucesso!")
             else:
-                st.error("Não foi possível extrair os dados do produto. 😞")
+                st.error("Não foi possível extrair os dados do produto.")
 
     if "produto" in st.session_state:
         produto = st.session_state.produto
@@ -113,15 +109,15 @@ def auto_post_app():
 
             # Links para compartilhamento nas redes sociais
             facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={url_input}"
-            st.markdown(f"[\ud83d\udcf2 Compartilhar no Facebook]({facebook_url})")
+            st.markdown(f"[Compartilhar no Facebook]({facebook_url})")
 
             x_text = urllib.parse.quote_plus(f"{produto['nome']} - {url_input}")
             x_url = f"https://twitter.com/intent/tweet?url={url_input}&text={x_text}"
-            st.markdown(f"[\ud83d\uddf0 Compartilhar no X]({x_url})")
+            st.markdown(f"[Compartilhar no Twitter]({x_url})")
 
             whatsapp_text = urllib.parse.quote_plus(f"{produto['nome']} - {url_input}")
             whatsapp_url = f"https://wa.me/?text={whatsapp_text}"
-            st.markdown(f"[\ud83d\udd0d Compartilhar no WhatsApp]({whatsapp_url})")
+            st.markdown(f"[Compartilhar no WhatsApp]({whatsapp_url})")
 
 if __name__ == "__main__":
     auto_post_app()
