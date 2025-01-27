@@ -61,6 +61,10 @@ def redimensionar_imagem(imagem_url, largura, altura):
 def auto_post_app():
     st.title("Gerador Automático de Posts")
 
+    # Armazenando o estado da aplicação
+    if 'produto_carregado' not in st.session_state:
+        st.session_state.produto_carregado = False
+
     if 'url' not in st.session_state:
         st.session_state.url = ""
         st.session_state.title = ""
@@ -71,8 +75,8 @@ def auto_post_app():
 
     url = st.text_input("Insira o link de referência para gerar o post automaticamente:", value=st.session_state.url)
 
-    # Se o URL for inserido, fazer o scraping
-    if url:
+    # Se o URL for inserido e o produto ainda não foi carregado, fazer o scraping
+    if url and not st.session_state.produto_carregado:
         with st.spinner('Carregando o produto...'):
             try:
                 headers = {
@@ -121,45 +125,59 @@ def auto_post_app():
                 st.number_input("Preço original (€):", value=preco_original_valido, step=0.01)
                 st.number_input("Preço atual (€):", value=preco_atual_valido, step=0.01)
 
-                # Inserção manual do cupom
-                cupom_input = st.text_input("Código do cupom (deixe vazio se não houver):", value=st.session_state.cupom)
-                produto['cupom'] = cupom_input if cupom_input else "PROMO2023"
-
                 # Exibição da imagem
                 if imagem_url:
                     imagem_resized = redimensionar_imagem(imagem_url, 1200, 628)
                     st.image(imagem_resized, caption="Pré-visualização da Imagem", use_container_width=True)
 
-                # Botão para gerar o post
-                if st.button("Gerar Post"):
-                    post_texto = gerar_post(produto, url, ["promoção", title.replace(" ", "").lower()])
-                    st.write("### Pré-visualização do Post:")
-                    st.text_area("Texto do Post:", post_texto, height=200)
-                    st.download_button("Baixar Post (.txt)", data=post_texto, file_name="post_gerado.txt")
-
-                    if imagem_resized:
-                        buffer = io.BytesIO()
-                        imagem_resized.save(buffer, format="PNG")
-                        st.download_button("Baixar Imagem", data=buffer.getvalue(), file_name="imagem_produto.png", mime="image/png")
-                    else:
-                        st.error("Não foi possível carregar a imagem para este produto.")
-
-                    # Link para o Facebook
-                    facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={url}"
-                    st.markdown(f"[Compartilhar no Facebook]({facebook_url})")
-
-                    # Link para o X (Twitter)
-                    x_text = urllib.parse.quote_plus(f"{title} - {url}")  # Codifica o título e o URL para o X
-                    x_url = f"https://twitter.com/intent/tweet?url={url}&text={x_text}"
-                    st.markdown(f"[Compartilhar no X]({x_url})")
-
-                    # Link para o WhatsApp
-                    whatsapp_text = urllib.parse.quote_plus(f"{title} - {url}")  # Codifica o título e o URL para o WhatsApp
-                    whatsapp_url = f"https://wa.me/?text={whatsapp_text}"
-                    st.markdown(f"[Compartilhar no WhatsApp]({whatsapp_url})")
+                # Marcar que o produto foi carregado
+                st.session_state.produto_carregado = True
 
             except requests.exceptions.RequestException as e:
                 st.error(f"Erro ao processar o link: {e}")
+
+    # Inserção manual do cupom
+    cupom_input = st.text_input("Código do cupom (deixe vazio se não houver):", value=st.session_state.cupom)
+    st.session_state.cupom = cupom_input if cupom_input else "PROMO2023"
+
+    # Botão para gerar o post
+    if st.button("Gerar Post"):
+        # Atualizar os preços manualmente
+        preco_original_input = st.number_input("Preço original (€):", value=st.session_state.preco_original, step=0.01)
+        preco_atual_input = st.number_input("Preço atual (€):", value=st.session_state.preco_atual, step=0.01)
+
+        produto = {
+            'nome': st.session_state.title,
+            'preco_original': preco_original_input,
+            'preco_atual': preco_atual_input,
+            'cupom': st.session_state.cupom
+        }
+
+        post_texto = gerar_post(produto, url, ["promoção", st.session_state.title.replace(" ", "").lower()])
+        st.write("### Pré-visualização do Post:")
+        st.text_area("Texto do Post:", post_texto, height=200)
+        st.download_button("Baixar Post (.txt)", data=post_texto, file_name="post_gerado.txt")
+
+        if imagem_resized:
+            buffer = io.BytesIO()
+            imagem_resized.save(buffer, format="PNG")
+            st.download_button("Baixar Imagem", data=buffer.getvalue(), file_name="imagem_produto.png", mime="image/png")
+        else:
+            st.error("Não foi possível carregar a imagem para este produto.")
+
+        # Link para o Facebook
+        facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={url}"
+        st.markdown(f"[Compartilhar no Facebook]({facebook_url})")
+
+        # Link para o X (Twitter)
+        x_text = urllib.parse.quote_plus(f"{st.session_state.title} - {url}")  # Codifica o título e o URL para o X
+        x_url = f"https://twitter.com/intent/tweet?url={url}&text={x_text}"
+        st.markdown(f"[Compartilhar no X]({x_url})")
+
+        # Link para o WhatsApp
+        whatsapp_text = urllib.parse.quote_plus(f"{st.session_state.title} - {url}")  # Codifica o título e o URL para o WhatsApp
+        whatsapp_url = f"https://wa.me/?text={whatsapp_text}"
+        st.markdown(f"[Compartilhar no WhatsApp]({whatsapp_url})")
 
 # Executando a aplicação
 if __name__ == "__main__":
