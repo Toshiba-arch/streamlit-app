@@ -15,7 +15,7 @@ def calcular_desconto(preco_original, preco_atual):
     except (ValueError, TypeError, ZeroDivisionError):
         return 0
 
-def gerar_post(produto, link_referencia, tags):
+def gerar_post(produto, link_referencia, tags, estilo="emoji"):
     nome = produto['nome']
     preco_original = produto['preco_original']
     preco_atual = produto['preco_atual']
@@ -48,21 +48,10 @@ def redimensionar_imagem(imagem_url, largura, altura):
 def auto_post_app():
     st.title("Gerador Automático de Posts")
 
-    # Definir placeholders para os campos
-    if 'url' not in st.session_state:
-        st.session_state.url = ""
-        st.session_state.imagem_manual = ""
-        st.session_state.title = ""
-        st.session_state.preco_original = 0.0
-        st.session_state.preco_atual = 0.0
-        st.session_state.cupom = "PROMO2023"
-        st.session_state.tags = ["promoção", ""]
-    
-    url = st.text_input("Insira o link de referência para gerar o post automaticamente:", value=st.session_state.url)
+    url = st.text_input("Insira o link de referência para gerar o post automaticamente:")
 
-    imagem_manual = ""
-    imagem_url = ""
-    imagem_resized = None
+    # Input para link da imagem direto
+    imagem_manual = st.text_input("Ou insira o link direto da imagem (caso não seja carregada):")
 
     if url:
         with st.spinner('Carregando o produto...'):
@@ -79,30 +68,19 @@ def auto_post_app():
                 title = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else ""
                 preco_original = soup.find('span', {'id': 'priceblock_ourprice'}).text.strip() if soup.find('span', {'id': 'priceblock_ourprice'}) else ""
                 preco_atual = soup.find('span', {'id': 'priceblock_dealprice'}).text.strip() if soup.find('span', {'id': 'priceblock_dealprice'}) else preco_original
+                imagem_url = ""
                 imagem_div = soup.find('div', {'class': 'imgTagWrapper'})
-
-                # Se imagem for encontrada na div com a classe 'imgTagWrapper', usa o link
                 if imagem_div:
                     imagem_url = imagem_div.find('img')['src'] if imagem_div.find('img') else ""
-                
-                cupom = st.session_state.cupom
+                cupom = "PROMO2023"
                 tags = ["promoção", title.replace(" ", "").lower()]  # Tags genéricas e o nome do produto
 
-                # Preenchendo os campos
-                title = st.text_input("Título do produto:", value=title)
+                title = st.text_input("Título do produto:", title)
                 preco_original = st.number_input("Preço original (€):", value=float(preco_original.replace("€", "").replace(",", ".")) if preco_original else 0.0, step=0.01)
                 preco_atual = st.number_input("Preço atual (€):", value=float(preco_atual.replace("€", "").replace(",", ".")) if preco_atual else preco_original, step=0.01)
-                cupom = st.text_input("Cupom:", value=cupom)
-                tags = st.text_input("Tags (separadas por vírgula):", value=",".join(tags)).split(",")
-
-                st.session_state.url = url
-                st.session_state.imagem_manual = imagem_manual
-                st.session_state.title = title
-                st.session_state.preco_original = preco_original
-                st.session_state.preco_atual = preco_atual
-                st.session_state.cupom = cupom
-                st.session_state.tags = tags
-
+                cupom = st.text_input("Cupom:", cupom)
+                tags = st.text_input("Tags (separadas por vírgula):", ",".join(tags)).split(",")
+                
                 produto = {
                     'nome': title,
                     'preco_original': preco_original,
@@ -110,11 +88,12 @@ def auto_post_app():
                     'cupom': cupom
                 }
 
-                # Se a imagem não foi encontrada no link de afiliado, exibe a opção de link manual
-                if imagem_url:
+                # Se a imagem não foi encontrada no link de afiliado, usa a imagem manual fornecida
+                imagem_resized = None
+                if imagem_manual:
+                    imagem_resized = redimensionar_imagem(imagem_manual, 1200, 628)
+                elif imagem_url:
                     imagem_resized = redimensionar_imagem(imagem_url, 1200, 628)
-                else:
-                    imagem_manual = st.text_input("Ou insira o link direto da imagem:")
 
                 # Início da criação do post
                 if st.button("Gerar Post"):
@@ -135,17 +114,6 @@ def auto_post_app():
                     # Link para o Facebook
                     facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={url}"
                     st.markdown(f"[Compartilhar no Facebook]({facebook_url})")
-
-                # Botão para limpar os campos
-                if st.button("Limpar Campos"):
-                    st.session_state.url = ""
-                    st.session_state.imagem_manual = ""
-                    st.session_state.title = ""
-                    st.session_state.preco_original = 0.0
-                    st.session_state.preco_atual = 0.0
-                    st.session_state.cupom = "PROMO2023"
-                    st.session_state.tags = ["promoção", ""]
-                    st.experimental_rerun()
 
             except requests.exceptions.RequestException as e:
                 st.error(f"Erro ao processar o link: {e}")
