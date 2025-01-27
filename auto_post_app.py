@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 from PIL import Image
 import io
+import urllib.parse
 
 def calcular_desconto(preco_original, preco_atual):
     try:
@@ -134,14 +135,20 @@ def auto_post_app():
                     else:
                         st.error("Não foi possível carregar a imagem para este produto.")
 
-                    # Compartilhar nas redes sociais
+
+
+                    # Link para o Facebook
                     facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={url}"
                     st.markdown(f"[Compartilhar no Facebook]({facebook_url})")
-
-                    x_url = f"https://twitter.com/intent/tweet?url={url}&text={title}"
+                    
+                    # Link para o X (anteriormente Twitter)
+                    x_text = urllib.parse.quote(f"{title} - {url}")  # Codifica o título e o URL para o X
+                    x_url = f"https://twitter.com/intent/tweet?url={url}&text={x_text}"
                     st.markdown(f"[Compartilhar no X]({x_url})")
-
-                    whatsapp_url = f"https://wa.me/?text={title} - {url}"
+                    
+                    # Link para o WhatsApp
+                    whatsapp_text = urllib.parse.quote(f"{title} - {url}")  # Codifica o título e o URL para o WhatsApp
+                    whatsapp_url = f"https://wa.me/?text={whatsapp_text}"
                     st.markdown(f"[Compartilhar no WhatsApp]({whatsapp_url})")
 
             except requests.exceptions.RequestException as e:
