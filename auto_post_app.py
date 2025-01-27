@@ -75,14 +75,14 @@ def auto_post_app():
     url = st.text_input("Insira o link de referência para gerar o post automaticamente:")
 
     if url:
-        with st.spinner('Carregando...'):
+        with st.spinner('Carregando o produto...'):
             try:
                 headers = {
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
                     "Accept-Language": "en-US,en;q=0.9,pt;q=0.8",
                 }
-                response = requests.get(url, headers=headers)
-                response.raise_for_status()
+                response = requests.get(url, headers=headers, timeout=15)  # Timeout aumentado
+                response.raise_for_status()  # Levanta um erro para status 4xx ou 5xx
                 soup = BeautifulSoup(response.content, 'html.parser')
 
                 title = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else "Produto Genérico"
