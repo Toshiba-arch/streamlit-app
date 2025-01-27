@@ -9,26 +9,25 @@ def extrair_dados_produto(url):
     try:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-            "Accept-Language": "en-US,en;q=0.9,pt;q=0.8",
         }
-        response = requests.get(url, headers=headers, timeout=15)
+        response = requests.get(url, headers=headers)
         response.raise_for_status()
         soup = BeautifulSoup(response.content, 'html.parser')
 
-        center_col = soup.find('div', {'id': 'centerCol'})
-        if not center_col:
-            return None
-
-        nome = center_col.find('span', {'id': 'productTitle'})
+        # Extrair o nome do produto
+        nome = soup.find('span', {'id': 'productTitle'})
         nome = nome.text.strip() if nome else "Produto Desconhecido"
 
-        preco_original = center_col.find('span', {'class': 'priceBlockStrikePriceString'})
+        # Extrair o preço original
+        preco_original = soup.find('span', {'class': 'priceBlockStrikePriceString'})
         preco_original = float(preco_original.text.replace("\u20ac", "").replace(",", ".").strip()) if preco_original else 0.0
 
-        preco_atual = center_col.find('span', {'id': 'priceblock_ourprice'}) or center_col.find('span', {'id': 'priceblock_dealprice'})
+        # Extrair o preço atual
+        preco_atual = soup.find('span', {'id': 'priceblock_ourprice'}) or soup.find('span', {'id': 'priceblock_dealprice'})
         preco_atual = float(preco_atual.text.replace("\u20ac", "").replace(",", ".").strip()) if preco_atual else preco_original
 
-        imagem_div = center_col.find('img', {'id': 'landingImage'})
+        # Extrair a URL da imagem
+        imagem_div = soup.find('img', {'id': 'landingImage'})
         imagem_url = imagem_div['src'] if imagem_div else ""
 
         return {
@@ -44,26 +43,17 @@ def extrair_dados_produto(url):
         st.error(f"Erro ao processar os dados do produto: {e}")
         return None
 
-def calcular_desconto(preco_original, preco_atual):
-    try:
-        if preco_original == 0:
-            return 0
-        desconto = ((preco_original - preco_atual) / preco_original) * 100
-        return round(desconto, 2)
-    except (ValueError, TypeError, ZeroDivisionError):
-        return 0
-
 def gerar_post(produto, link_referencia, tags):
     nome = produto['nome']
     preco_original = produto['preco_original']
     preco_atual = produto['preco_atual']
-    desconto = calcular_desconto(preco_original, preco_atual)
+    desconto = ((preco_original - preco_atual) / preco_original) * 100 if preco_original else 0
 
-    post_texto = f"\ud83d\udce2 **Oferta Imperdível!** \ud83d\udce2\n"
-    post_texto += f"\ud83d\udd39 **{nome}**\n"
-    post_texto += f"\ud83d\udcb0 Antes **\u20ac{preco_original:.2f}** AGORA **\u20ac{preco_atual:.2f}**!\n"
-    post_texto += f"\ud83d\udcc9 Poupe já **{desconto}%**!\n"
-    post_texto += f"\ud83d\udc49 [Compre agora]({link_referencia})\n"
+    post_texto = f"🔥 **Oferta Imperdível!** 🔥\n"
+    post_texto += f"🎯 **{nome}**\n"
+    post_texto += f"💶 Antes **€{preco_original:.2f}** AGORA **€{preco_atual:.2f}**!\n"
+    post_texto += f"🎉 Poupe já **{desconto:.2f}%**!\n"
+    post_texto += f"👉 [Compre agora]({link_referencia})\n"
     if tags:
         post_texto += "\n" + " ".join([f"#{tag}" for tag in tags])
 
@@ -81,15 +71,7 @@ def redimensionar_imagem(imagem_url, largura, altura):
         return None
 
 def auto_post_app():
-    st.title("Gerador Automático de Posts")
-
-    if "produto" not in st.session_state:
-        st.session_state.produto = {
-            "nome": "",
-            "preco_original": 0.0,
-            "preco_atual": 0.0,
-            "imagem_url": "",
-        }
+    st.title("✨ Gerador Automático de Posts ✨")
 
     url_input = st.text_input("Insira o link do produto na Amazon:")
 
@@ -98,12 +80,12 @@ def auto_post_app():
             produto = extrair_dados_produto(url_input)
             if produto:
                 st.session_state.produto = produto
-                st.success("Dados carregados com sucesso!")
+                st.success("Dados carregados com sucesso! 🎉")
             else:
-                st.error("Não foi possível extrair os dados do produto.")
+                st.error("Não foi possível extrair os dados do produto. 😞")
 
-    produto = st.session_state.produto
-    if produto["nome"]:
+    if "produto" in st.session_state:
+        produto = st.session_state.produto
         st.text_input("Nome do Produto:", value=produto['nome'], key="nome")
         preco_original = st.number_input("Preço Original (€):", value=produto['preco_original'], step=0.01)
         preco_atual = st.number_input("Preço Atual (€):", value=produto['preco_atual'], step=0.01)
@@ -129,12 +111,13 @@ def auto_post_app():
                     imagem_resized.save(buffer, format="PNG")
                     st.download_button("Baixar Imagem", data=buffer.getvalue(), file_name="imagem_produto.png", mime="image/png")
 
+            # Links para compartilhamento nas redes sociais
             facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={url_input}"
             st.markdown(f"[\ud83d\udcf2 Compartilhar no Facebook]({facebook_url})")
 
             x_text = urllib.parse.quote_plus(f"{produto['nome']} - {url_input}")
             x_url = f"https://twitter.com/intent/tweet?url={url_input}&text={x_text}"
-            st.markdown(f"[\ud83d\udd4a Compartilhar no X]({x_url})")
+            st.markdown(f"[\ud83d\uddf0 Compartilhar no X]({x_url})")
 
             whatsapp_text = urllib.parse.quote_plus(f"{produto['nome']} - {url_input}")
             whatsapp_url = f"https://wa.me/?text={whatsapp_text}"
