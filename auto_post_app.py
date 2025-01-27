@@ -79,7 +79,10 @@ def auto_post_app():
                 title = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else ""
                 preco_original = soup.find('span', {'id': 'priceblock_ourprice'}).text.strip() if soup.find('span', {'id': 'priceblock_ourprice'}) else ""
                 preco_atual = soup.find('span', {'id': 'priceblock_dealprice'}).text.strip() if soup.find('span', {'id': 'priceblock_dealprice'}) else preco_original
-                imagem_url = soup.find('img', {'id': 'imgBlkFront'})['src'] if soup.find('img', {'id': 'imgBlkFront'}) else ""
+                imagem_url = ""
+                imagem_div = soup.find('div', {'class': 'imgTagWrapper'})
+                if imagem_div:
+                    imagem_url = imagem_div.find('img')['src'] if imagem_div.find('img') else ""
                 cupom = "PROMO2023"
                 tags = ["promoção", title.replace(" ", "").lower()]  # Tags genéricas e o nome do produto
 
