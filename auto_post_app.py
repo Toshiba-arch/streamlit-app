@@ -61,7 +61,7 @@ def redimensionar_imagem(imagem_url, largura, altura):
 def auto_post_app():
     st.title("Gerador Automático de Posts")
 
-    # Inicializa as variáveis de sessão
+    # Inicializa as variáveis de sessão com valores numéricos válidos
     if 'produto_carregado' not in st.session_state:
         st.session_state.produto_carregado = False
     if 'url' not in st.session_state:
@@ -69,9 +69,9 @@ def auto_post_app():
     if 'title' not in st.session_state:
         st.session_state.title = ""
     if 'preco_original' not in st.session_state:
-        st.session_state.preco_original = 0.0
+        st.session_state.preco_original = 0.0  # Garantir valor numérico válido
     if 'preco_atual' not in st.session_state:
-        st.session_state.preco_atual = 0.0
+        st.session_state.preco_atual = 0.0  # Garantir valor numérico válido
     if 'cupom' not in st.session_state:
         st.session_state.cupom = ""
     if 'tags' not in st.session_state:
@@ -121,8 +121,8 @@ def auto_post_app():
 
     # Formulário de preços e cupom
     if st.session_state.produto_carregado:
-        preco_original_input = st.number_input("Preço original (€):", value=st.session_state.preco_original, step=0.01)
-        preco_atual_input = st.number_input("Preço atual (€):", value=st.session_state.preco_atual, step=0.01)
+        preco_original_input = st.number_input("Preço original (€):", value=float(st.session_state.preco_original), step=0.01)
+        preco_atual_input = st.number_input("Preço atual (€):", value=float(st.session_state.preco_atual), step=0.01)
 
         # Exibe o cupom se existir
         cupom_input = st.text_input("Código de cupom (opcional):", value=st.session_state.cupom)
