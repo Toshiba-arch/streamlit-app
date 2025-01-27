@@ -134,9 +134,15 @@ def auto_post_app():
                     else:
                         st.error("Não foi possível carregar a imagem para este produto.")
 
-                    # Link para o Facebook
+                    # Compartilhar nas redes sociais
                     facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={url}"
                     st.markdown(f"[Compartilhar no Facebook]({facebook_url})")
+
+                    x_url = f"https://twitter.com/intent/tweet?url={url}&text={title}"
+                    st.markdown(f"[Compartilhar no X]({x_url})")
+
+                    whatsapp_url = f"https://wa.me/?text={title} - {url}"
+                    st.markdown(f"[Compartilhar no WhatsApp]({whatsapp_url})")
 
             except requests.exceptions.RequestException as e:
                 st.error(f"Erro ao processar o link: {e}")
