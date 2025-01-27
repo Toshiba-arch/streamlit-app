@@ -100,7 +100,7 @@ def auto_post_app():
             st.download_button("Baixar Post (.txt)", data=post_texto, file_name="post_gerado.txt")
 
             if produto['imagem_url']:
-                imagem_resized = redimensionar_imagem(produto['imagem_url'], 650, 505)
+                imagem_resized = redimensionar_imagem(produto['imagem_url'], 640, 515)
                 if imagem_resized:
                     st.image(imagem_resized, caption="Pré-visualização da Imagem", use_container_width=True)
                     buffer = io.BytesIO()
