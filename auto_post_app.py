@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 import io
 
 def calcular_desconto(preco_original, preco_atual):
@@ -56,19 +56,6 @@ def redimensionar_imagem(imagem_url, largura, altura):
         st.error(f"Erro ao carregar a imagem: {e}")
         return None
 
-def sobrepor_texto_na_imagem(imagem, texto):
-    try:
-        draw = ImageDraw.Draw(imagem)
-        fonte = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", size=40)
-        largura, altura = imagem.size
-        texto_largura, texto_altura = draw.textbbox((0, 0), texto, font=fonte)[2:]
-        posicao = ((largura - texto_largura) // 2, altura - texto_altura - 20)
-        draw.text(posicao, texto, (255, 255, 255), font=fonte)
-        return imagem
-    except Exception as e:
-        st.error(f"Erro ao sobrepor texto na imagem: {e}")
-        return imagem
-
 def auto_post_app():
     st.title("Gerador Automático de Posts")
 
@@ -86,16 +73,17 @@ def auto_post_app():
                 soup = BeautifulSoup(response.content, 'html.parser')
 
                 # Extração de informações do produto
-                title = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else "Produto Genérico"
-                preco_original = 100.0
-                preco_atual = 75.0
-                imagem_url = soup.find('img', {'id': 'imgBlkFront'})['src'] if soup.find('img', {'id': 'imgBlkFront'}) else None
-                cupom = "PROMO2023"
-                tags = ["promoção", title.replace(" ", "").lower()]  # Tags genéricas e o nome do produto
+                title = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else ""
+                preco_original = soup.find('span', {'id': 'priceblock_ourprice'}).text.strip().replace("€", "").replace(",", ".") if soup.find('span', {'id': 'priceblock_ourprice'}) else ""
+                preco_atual = soup.find('span', {'id': 'priceblock_dealprice'}).text.strip().replace("€", "").replace(",", ".") if soup.find('span', {'id': 'priceblock_dealprice'}) else preco_original
+                imagem_url = soup.find('img', {'id': 'imgBlkFront'})['src'] if soup.find('img', {'id': 'imgBlkFront'}) else ""
+                cupom = "PROMO2023"  # Este pode ser um campo manual, mas por enquanto estou configurando um valor fixo
+                tags = ["promoção", title.replace(" ", "").lower()]  # Tags sugeridas
 
+                # Preenchendo campos de input
                 title = st.text_input("Título do produto:", title)
-                preco_original = st.number_input("Preço original (€):", value=preco_original, step=0.01)
-                preco_atual = st.number_input("Preço atual (€):", value=preco_atual, step=0.01)
+                preco_original = st.text_input("Preço original (€):", preco_original)
+                preco_atual = st.text_input("Preço atual (€):", preco_atual)
                 cupom = st.text_input("Cupom:", cupom)
                 tags = st.text_input("Tags (separadas por vírgula):", ",".join(tags)).split(",")
                 estilo_post = st.radio("Estilo do post:", ["emoji", "formal"], index=0)
@@ -107,34 +95,29 @@ def auto_post_app():
                     'cupom': cupom
                 }
 
-                # Início da criação do post
+                # Carregando a imagem automaticamente
+                if imagem_url:
+                    imagem_resized = redimensionar_imagem(imagem_url, 1200, 628)
+                    if imagem_resized:
+                        st.image(imagem_resized, caption="Pré-visualização da Imagem", use_container_width=True)
+                        buffer = io.BytesIO()
+                        imagem_resized.save(buffer, format="PNG")
+                        st.download_button("Baixar Imagem", data=buffer.getvalue(), file_name="imagem_produto.png", mime="image/png")
+                    else:
+                        st.error("Não foi possível carregar a imagem para este produto.")
+                else:
+                    st.error("Imagem não encontrada.")
+
+                # Gerar post
                 if st.button("Gerar Post"):
                     post_texto = gerar_post(produto, url, tags, estilo=estilo_post)
                     st.write("### Pré-visualização do Post:")
                     st.text_area("Texto do Post:", post_texto, height=200)
                     st.download_button("Baixar Post (.txt)", data=post_texto, file_name="post_gerado.txt")
 
-                    # Solicitar o link direto da imagem caso a imagem não tenha sido encontrada automaticamente
-                    imagem_url_input = st.text_input("Caso a imagem não tenha carregado corretamente, insira o link direto da imagem:")
-
-                    if imagem_url_input:
-                        imagem_resized = redimensionar_imagem(imagem_url_input, 1200, 628)
-                    elif imagem_url:
-                        imagem_resized = redimensionar_imagem(imagem_url, 1200, 628)
-                    else:
-                        imagem_resized = None
-
-                    if imagem_resized:
-                        imagem_final = sobrepor_texto_na_imagem(imagem_resized, f"{calcular_desconto(preco_original, preco_atual)}% OFF")
-                        st.image(imagem_final, caption="Pré-visualização da Imagem", use_container_width=True)
-                        buffer = io.BytesIO()
-                        imagem_final.save(buffer, format="PNG")
-                        st.download_button("Baixar Imagem", data=buffer.getvalue(), file_name="imagem_produto.png", mime="image/png")
-                    else:
-                        st.error("Não foi possível carregar a imagem para este produto.")
-
-                st.write("### Compartilhar:")
-                st.button("Compartilhar no Facebook (Simulado)")
+                # Compartilhar no Facebook
+                facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={url}"
+                st.markdown(f"[Compartilhar no Facebook]({facebook_url})")
 
             except requests.exceptions.RequestException as e:
                 st.error(f"Erro ao processar o link: {e}")
