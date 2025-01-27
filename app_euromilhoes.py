@@ -42,4 +42,4 @@ def run():
             st.write(f"Estrelas: {estrelas}")
 
     # Link para os resultados oficiais do Euromilhões
-    st.markdown("[Clique aqui para ver os resultados oficiais do Euromilhões](https://www.euro-millions.com/results)")
+    st.markdown("[Clique aqui para ver os resultados oficiais do Euromilhões](https://www.jogossantacasa.pt/web/SCCartazResult/euroMilhoes)")
