@@ -3,9 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 from PIL import Image, ImageDraw, ImageFont
 import io
-import time
 
-# Função para calcular o desconto
 def calcular_desconto(preco_original, preco_atual):
     try:
         if preco_original == 0:
@@ -17,7 +15,6 @@ def calcular_desconto(preco_original, preco_atual):
     except (ValueError, TypeError, ZeroDivisionError):
         return 0
 
-# Função para gerar o texto do post
 def gerar_post(produto, link_referencia, tags, estilo="emoji"):
     nome = produto['nome']
     preco_original = produto['preco_original']
@@ -48,7 +45,6 @@ def gerar_post(produto, link_referencia, tags, estilo="emoji"):
 
     return post_texto
 
-# Função para redimensionar a imagem
 def redimensionar_imagem(imagem_url, largura, altura):
     try:
         response = requests.get(imagem_url)
@@ -60,7 +56,6 @@ def redimensionar_imagem(imagem_url, largura, altura):
         st.error(f"Erro ao carregar a imagem: {e}")
         return None
 
-# Função para sobrepor texto na imagem
 def sobrepor_texto_na_imagem(imagem, texto):
     try:
         draw = ImageDraw.Draw(imagem)
@@ -74,7 +69,6 @@ def sobrepor_texto_na_imagem(imagem, texto):
         st.error(f"Erro ao sobrepor texto na imagem: {e}")
         return imagem
 
-# Função principal para gerar o post
 def auto_post_app():
     st.title("Gerador Automático de Posts")
 
@@ -83,44 +77,27 @@ def auto_post_app():
     if url:
         with st.spinner('Carregando o produto...'):
             try:
-                # Cabeçalhos para imitar um navegador real
                 headers = {
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
                     "Accept-Language": "en-US,en;q=0.9,pt;q=0.8",
                 }
-
-                # Tentativas de requisição (em caso de falha ou 503)
-                tentativa = 0
-                sucesso = False
-                while tentativa < 3 and not sucesso:
-                    try:
-                        response = requests.get(url, headers=headers, timeout=15)
-                        response.raise_for_status()  # Levanta erro se o status for 4xx ou 5xx
-                        sucesso = True  # Requisição bem-sucedida
-                    except requests.exceptions.RequestException as e:
-                        tentativa += 1
-                        st.warning(f"Tentativa {tentativa}: Erro {e}. Tentando novamente...")
-                        time.sleep(5)  # Aguarda 5 segundos antes de tentar novamente
-
-                if not sucesso:
-                    st.error("Ocorreu um erro ao carregar o produto. Tente novamente mais tarde.")
-                    return
-
-                # Parse do HTML com BeautifulSoup
+                response = requests.get(url, headers=headers, timeout=15)
+                response.raise_for_status()  # Levanta um erro para status 4xx ou 5xx
                 soup = BeautifulSoup(response.content, 'html.parser')
-                title = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else "Produto Genérico"
-                preco_original = 100.0
-                preco_atual = 75.0
-                imagem_url = "https://via.placeholder.com/1200x628.png?text=Imagem+Produto"
-                cupom = "PROMO2023"
-                tags = ["desconto", "promoção"]
 
-                # Inputs para customização do post
+                # Extração simplificada de informações do produto
+                title = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else "Produto Genérico"
+                preco_original = soup.find('span', {'id': 'priceblock_ourprice'}).text if soup.find('span', {'id': 'priceblock_ourprice'}) else "0.00"
+                preco_atual = preco_original
+                cupom = "PROMO2023"  # Definido manualmente aqui, ou pode ser extraído de outra forma
+                descricao = soup.find('div', {'id': 'productDescription'}).text.strip() if soup.find('div', {'id': 'productDescription'}) else "Sem descrição disponível"
+                imagem_url = soup.find('img', {'id': 'landingImage'})['src'] if soup.find('img', {'id': 'landingImage'}) else "https://via.placeholder.com/1200x628.png?text=Imagem+Produto"
+                
                 title = st.text_input("Título do produto:", title)
-                preco_original = st.number_input("Preço original (€):", value=preco_original, step=0.01)
-                preco_atual = st.number_input("Preço atual (€):", value=preco_atual, step=0.01)
+                preco_original = st.number_input("Preço original (€):", value=float(preco_original.replace('€', '').replace(',', '.')), step=0.01)
+                preco_atual = st.number_input("Preço atual (€):", value=float(preco_atual.replace('€', '').replace(',', '.')), step=0.01)
                 cupom = st.text_input("Cupom:", cupom)
-                tags = st.text_input("Tags (separadas por vírgula):", ",".join(tags)).split(",")
+                tags = st.text_input("Tags (separadas por vírgula):", "").split(",")
                 estilo_post = st.radio("Estilo do post:", ["emoji", "formal"], index=0)
 
                 produto = {
