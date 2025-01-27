@@ -55,16 +55,31 @@ def gerar_post(produto, link_referencia, tags):
 
     return post_texto
 
-def redimensionar_imagem(imagem_url, largura, altura):
+#def redimensionar_imagem(imagem_url, largura, altura):
+ #   try:
+  #      response = requests.get(imagem_url)
+   #     response.raise_for_status()
+    #    imagem = Image.open(io.BytesIO(response.content))
+     #   imagem = imagem.resize((largura, altura))
+      #  return imagem
+    #except Exception as e:
+     #   st.error(f"Erro ao carregar a imagem: {e}")
+      #  return None
+        
+def exibir_imagem(imagem_url):
     try:
         response = requests.get(imagem_url)
         response.raise_for_status()
         imagem = Image.open(io.BytesIO(response.content))
-        imagem = imagem.resize((largura, altura))
-        return imagem
+
+        # Exibe a imagem com as dimensões que você deseja, respeitando o tamanho original
+        st.image(imagem, caption="Imagem do Produto", use_container_width=True, width=370)
     except Exception as e:
         st.error(f"Erro ao carregar a imagem: {e}")
-        return None
+
+# Exemplo de uso
+imagem_url = "URL_DA_IMAGEM_AQUI"
+exibir_imagem(imagem_url)
 
 def auto_post_app():
     st.title("Gerador Automático de Posts")
