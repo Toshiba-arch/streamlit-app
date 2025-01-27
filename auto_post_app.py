@@ -68,7 +68,7 @@ def auto_post_app():
         st.session_state.preco_atual = 0.0
         st.session_state.cupom = "PROMO2023"
         st.session_state.tags = ["promoção", ""]
-    
+
     url = st.text_input("Insira o link de referência para gerar o post automaticamente:", value=st.session_state.url)
 
     # Se o URL for inserido, fazer o scraping
@@ -120,6 +120,10 @@ def auto_post_app():
 
                 st.number_input("Preço original (€):", value=preco_original_valido, step=0.01)
                 st.number_input("Preço atual (€):", value=preco_atual_valido, step=0.01)
+
+                # Inserção manual do cupom
+                cupom_input = st.text_input("Código do cupom (deixe vazio se não houver):", value=st.session_state.cupom)
+                produto['cupom'] = cupom_input if cupom_input else "PROMO2023"
 
                 # Exibição da imagem
                 if imagem_url:
