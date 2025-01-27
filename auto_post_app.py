@@ -59,11 +59,11 @@ def gerar_post(produto, link_referencia, tags):
     preco_atual = produto['preco_atual']
     desconto = calcular_desconto(preco_original, preco_atual)
 
-    post_texto = f"\ud83d\udce2 **Oferta Imperd\u00edvel!** \ud83d\udce2\n"
+    post_texto = f"\ud83d\udce2 **Oferta Imperdível!** \ud83d\udce2\n"
     post_texto += f"\ud83d\udd39 **{nome}**\n"
     post_texto += f"\ud83d\udcb0 Antes **\u20ac{preco_original:.2f}** AGORA **\u20ac{preco_atual:.2f}**!\n"
-    post_texto += f"\ud83d\udcc9 Poupa j\u00e1 **{desconto}%**!\n"
-    post_texto += f"\ud83d\udc49 [Compra agora]({link_referencia})\n"
+    post_texto += f"\ud83d\udcc9 Poupe já **{desconto}%**!\n"
+    post_texto += f"\ud83d\udc49 [Compre agora]({link_referencia})\n"
     if tags:
         post_texto += "\n" + " ".join([f"#{tag}" for tag in tags])
 
@@ -81,7 +81,7 @@ def redimensionar_imagem(imagem_url, largura, altura):
         return None
 
 def auto_post_app():
-    st.title("Gerador Autom\u00e1tico de Posts")
+    st.title("Gerador Automático de Posts")
 
     if "produto" not in st.session_state:
         st.session_state.produto = {
@@ -130,15 +130,15 @@ def auto_post_app():
                     st.download_button("Baixar Imagem", data=buffer.getvalue(), file_name="imagem_produto.png", mime="image/png")
 
             facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={url_input}"
-            st.markdown(f"[Compartilhar no Facebook]({facebook_url})")
+            st.markdown(f"[\ud83d\udcf2 Compartilhar no Facebook]({facebook_url})")
 
             x_text = urllib.parse.quote_plus(f"{produto['nome']} - {url_input}")
             x_url = f"https://twitter.com/intent/tweet?url={url_input}&text={x_text}"
-            st.markdown(f"[Compartilhar no X]({x_url})")
+            st.markdown(f"[\ud83d\udd4a Compartilhar no X]({x_url})")
 
             whatsapp_text = urllib.parse.quote_plus(f"{produto['nome']} - {url_input}")
             whatsapp_url = f"https://wa.me/?text={whatsapp_text}"
-            st.markdown(f"[Compartilhar no WhatsApp]({whatsapp_url})")
+            st.markdown(f"[\ud83d\udd0d Compartilhar no WhatsApp]({whatsapp_url})")
 
 if __name__ == "__main__":
     auto_post_app()
