@@ -59,7 +59,10 @@ def auto_post_app():
         st.session_state.tags = ["promoção", ""]
     
     url = st.text_input("Insira o link de referência para gerar o post automaticamente:", value=st.session_state.url)
-    imagem_manual = st.text_input("Ou insira o link direto da imagem:", value=st.session_state.imagem_manual)
+
+    imagem_manual = ""
+    imagem_url = ""
+    imagem_resized = None
 
     if url:
         with st.spinner('Carregando o produto...'):
@@ -76,10 +79,12 @@ def auto_post_app():
                 title = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else ""
                 preco_original = soup.find('span', {'id': 'priceblock_ourprice'}).text.strip() if soup.find('span', {'id': 'priceblock_ourprice'}) else ""
                 preco_atual = soup.find('span', {'id': 'priceblock_dealprice'}).text.strip() if soup.find('span', {'id': 'priceblock_dealprice'}) else preco_original
-                imagem_url = ""
                 imagem_div = soup.find('div', {'class': 'imgTagWrapper'})
+
+                # Se imagem for encontrada na div com a classe 'imgTagWrapper', usa o link
                 if imagem_div:
                     imagem_url = imagem_div.find('img')['src'] if imagem_div.find('img') else ""
+                
                 cupom = st.session_state.cupom
                 tags = ["promoção", title.replace(" ", "").lower()]  # Tags genéricas e o nome do produto
 
@@ -105,12 +110,11 @@ def auto_post_app():
                     'cupom': cupom
                 }
 
-                # Se a imagem não foi encontrada no link de afiliado, usa a imagem manual fornecida
-                imagem_resized = None
-                if imagem_manual:
-                    imagem_resized = redimensionar_imagem(imagem_manual, 1200, 628)
-                elif imagem_url:
+                # Se a imagem não foi encontrada no link de afiliado, exibe a opção de link manual
+                if imagem_url:
                     imagem_resized = redimensionar_imagem(imagem_url, 1200, 628)
+                else:
+                    imagem_manual = st.text_input("Ou insira o link direto da imagem:")
 
                 # Início da criação do post
                 if st.button("Gerar Post"):
