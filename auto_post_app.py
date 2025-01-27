@@ -22,9 +22,6 @@ def gerar_post(produto, link_referencia, tags, estilo="emoji"):
     cupom = produto['cupom']
     desconto = calcular_desconto(preco_original, preco_atual)
 
-    # Tags padrão
-    tags_default = ["#amazon", "#dailypromo", "#promotion", f"#{nome.replace(' ', '').lower()}"]
-
     if estilo == "emoji":
         post_texto = f"📢 **Oferta Imperdível!** 📢\n"
         post_texto += f"🔹 **{nome}**\n"
@@ -34,7 +31,7 @@ def gerar_post(produto, link_referencia, tags, estilo="emoji"):
             post_texto += f"💥 Use o código de cupom no checkout: **{cupom}**\n"
         post_texto += f"👉 [Compra agora]({link_referencia})\n"
         if tags:
-            post_texto += "\n" + " ".join(tags_default + tags)
+            post_texto += "\n" + " ".join([f"#{tag}" for tag in tags])
     else:
         post_texto = f"**Oferta Imperdível!**\n"
         post_texto += f"Produto: **{nome}**\n"
@@ -44,7 +41,7 @@ def gerar_post(produto, link_referencia, tags, estilo="emoji"):
             post_texto += f"Cupom: {cupom}\n"
         post_texto += f"Link: [Clique aqui para comprar]({link_referencia})\n"
         if tags:
-            post_texto += "\nTags: " + ", ".join(tags_default + tags)
+            post_texto += "\nTags: " + ", ".join(tags)
 
     return post_texto
 
@@ -88,13 +85,13 @@ def auto_post_app():
                 response.raise_for_status()  # Levanta um erro para status 4xx ou 5xx
                 soup = BeautifulSoup(response.content, 'html.parser')
 
-                # Extração de informações essenciais
+                # Extração de informações do produto
                 title = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else "Produto Genérico"
                 preco_original = 100.0
                 preco_atual = 75.0
-                imagem_url = "https://via.placeholder.com/1200x628.png?text=Imagem+Produto"
+                imagem_url = "URL_DIRETO_IMAGEM_AQUI"  # Substitua com um link direto de imagem
                 cupom = "PROMO2023"
-                tags = ["desconto", "promoção"]
+                tags = ["promoção", title.replace(" ", "").lower()]  # Tags genéricas e o nome do produto
 
                 title = st.text_input("Título do produto:", title)
                 preco_original = st.number_input("Preço original (€):", value=preco_original, step=0.01)
