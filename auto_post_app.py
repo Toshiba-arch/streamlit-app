@@ -15,14 +15,13 @@ def calcular_desconto(preco_original, preco_atual):
     except (ValueError, TypeError, ZeroDivisionError):
         return 0
 
-def gerar_post(produto, link_referencia, tags, estilo="emoji"):
+def gerar_post(produto, link_referencia, tags):
     nome = produto['nome']
     preco_original = produto['preco_original']
     preco_atual = produto['preco_atual']
     cupom = produto['cupom']
     desconto = calcular_desconto(preco_original, preco_atual)
 
-    # Formato com emojis
     post_texto = f"📢 **Oferta Imperdível!** 📢\n"
     post_texto += f"🔹 **{nome}**\n"
     post_texto += f"💰 Antes **€{preco_original:.2f}** AGORA **€{preco_atual:.2f}**!\n"
@@ -49,11 +48,18 @@ def redimensionar_imagem(imagem_url, largura, altura):
 def auto_post_app():
     st.title("Gerador Automático de Posts")
 
-    url = st.text_input("Insira o link de referência para gerar o post automaticamente:")
-
-    # Input para link da imagem direto (aparece somente se não carregar a imagem automaticamente)
-    imagem_manual = None
-    imagem_url = None
+    # Definir placeholders para os campos
+    if 'url' not in st.session_state:
+        st.session_state.url = ""
+        st.session_state.imagem_manual = ""
+        st.session_state.title = ""
+        st.session_state.preco_original = 0.0
+        st.session_state.preco_atual = 0.0
+        st.session_state.cupom = "PROMO2023"
+        st.session_state.tags = ["promoção", ""]
+    
+    url = st.text_input("Insira o link de referência para gerar o post automaticamente:", value=st.session_state.url)
+    imagem_manual = st.text_input("Ou insira o link direto da imagem:", value=st.session_state.imagem_manual)
 
     if url:
         with st.spinner('Carregando o produto...'):
@@ -68,23 +74,29 @@ def auto_post_app():
 
                 # Extração de informações do produto
                 title = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else ""
-                product_overview = soup.find('div', {'id': 'productOverview_feature_div'}).text.strip() if soup.find('div', {'id': 'productOverview_feature_div'}) else ""
                 preco_original = soup.find('span', {'id': 'priceblock_ourprice'}).text.strip() if soup.find('span', {'id': 'priceblock_ourprice'}) else ""
                 preco_atual = soup.find('span', {'id': 'priceblock_dealprice'}).text.strip() if soup.find('span', {'id': 'priceblock_dealprice'}) else preco_original
+                imagem_url = ""
                 imagem_div = soup.find('div', {'class': 'imgTagWrapper'})
                 if imagem_div:
                     imagem_url = imagem_div.find('img')['src'] if imagem_div.find('img') else ""
-                cupom = "PROMO2023"
+                cupom = st.session_state.cupom
                 tags = ["promoção", title.replace(" ", "").lower()]  # Tags genéricas e o nome do produto
 
-                # Preenchendo os campos automaticamente
+                # Preenchendo os campos
                 title = st.text_input("Título do produto:", value=title)
-                product_overview = st.text_area("Descrição do produto:", value=product_overview, height=100)
                 preco_original = st.number_input("Preço original (€):", value=float(preco_original.replace("€", "").replace(",", ".")) if preco_original else 0.0, step=0.01)
                 preco_atual = st.number_input("Preço atual (€):", value=float(preco_atual.replace("€", "").replace(",", ".")) if preco_atual else preco_original, step=0.01)
                 cupom = st.text_input("Cupom:", value=cupom)
                 tags = st.text_input("Tags (separadas por vírgula):", value=",".join(tags)).split(",")
-                estilo_post = st.radio("Estilo do post:", ["emoji"], index=0)
+
+                st.session_state.url = url
+                st.session_state.imagem_manual = imagem_manual
+                st.session_state.title = title
+                st.session_state.preco_original = preco_original
+                st.session_state.preco_atual = preco_atual
+                st.session_state.cupom = cupom
+                st.session_state.tags = tags
 
                 produto = {
                     'nome': title,
@@ -93,30 +105,21 @@ def auto_post_app():
                     'cupom': cupom
                 }
 
-                # Se a imagem não foi carregada automaticamente, permite inserir um link manual
+                # Se a imagem não foi encontrada no link de afiliado, usa a imagem manual fornecida
                 imagem_resized = None
-                if imagem_url:
-                    imagem_resized = redimensionar_imagem(imagem_url, 1200, 628)
-                if not imagem_resized and not imagem_url:
-                    imagem_manual = st.text_input("Link direto da imagem (caso não carregue automaticamente):")
-
                 if imagem_manual:
                     imagem_resized = redimensionar_imagem(imagem_manual, 1200, 628)
+                elif imagem_url:
+                    imagem_resized = redimensionar_imagem(imagem_url, 1200, 628)
 
-                # Botão limpar
-                if st.button("Limpar Campos"):
-                    st.experimental_rerun()
-
-                # Gerar o post quando o botão for pressionado
+                # Início da criação do post
                 if st.button("Gerar Post"):
-                    post_texto = gerar_post(produto, url, tags, estilo=estilo_post)
+                    post_texto = gerar_post(produto, url, tags)
                     st.write("### Pré-visualização do Post:")
                     st.text_area("Texto do Post:", post_texto, height=200)
-
-                    # Download do post em formato .txt
                     st.download_button("Baixar Post (.txt)", data=post_texto, file_name="post_gerado.txt")
 
-                    # Exibir a imagem redimensionada e permitir download
+                    # Exibir imagem redimensionada
                     if imagem_resized:
                         st.image(imagem_resized, caption="Pré-visualização da Imagem", use_container_width=True)
                         buffer = io.BytesIO()
@@ -125,9 +128,20 @@ def auto_post_app():
                     else:
                         st.error("Não foi possível carregar a imagem para este produto.")
 
-                    # Link para compartilhar no Facebook
+                    # Link para o Facebook
                     facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={url}"
                     st.markdown(f"[Compartilhar no Facebook]({facebook_url})")
+
+                # Botão para limpar os campos
+                if st.button("Limpar Campos"):
+                    st.session_state.url = ""
+                    st.session_state.imagem_manual = ""
+                    st.session_state.title = ""
+                    st.session_state.preco_original = 0.0
+                    st.session_state.preco_atual = 0.0
+                    st.session_state.cupom = "PROMO2023"
+                    st.session_state.tags = ["promoção", ""]
+                    st.experimental_rerun()
 
             except requests.exceptions.RequestException as e:
                 st.error(f"Erro ao processar o link: {e}")
