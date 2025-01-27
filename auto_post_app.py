@@ -4,34 +4,6 @@ from bs4 import BeautifulSoup
 from PIL import Image, ImageDraw, ImageFont
 import io
 
-if url:
-    with st.spinner('Carregando...'):
-        try:
-            # Melhorando os cabeçalhos
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36",
-                "Accept-Language": "pt-PT,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-                "Accept-Encoding": "gzip, deflate, br",
-                "Connection": "keep-alive",
-                "Upgrade-Insecure-Requests": "1"
-            }
-
-            # Limpeza da URL
-            url_base = url.split('?')[0]
-
-            response = requests.get(url_base, headers=headers)
-            response.raise_for_status()
-
-            soup = BeautifulSoup(response.content, 'html.parser')
-
-            # Resto do processamento...
-            st.success("Dados carregados com sucesso!")
-
-        except requests.exceptions.HTTPError as http_err:
-            st.error(f"Erro HTTP: {http_err}")
-        except requests.exceptions.RequestException as req_err:
-            st.error(f"Erro de conexão: {req_err}")
-
 # Função para calcular o desconto em percentagem
 def calcular_desconto(preco_original, preco_atual):
     try:
@@ -75,12 +47,17 @@ def gerar_post(produto, link_referencia, tags, estilo="emoji"):
 
     return post_texto
 
-# Função para redimensionar imagem
+# Função para redimensionar imagem com tratamento de erros
 def redimensionar_imagem(imagem_url, largura, altura):
-    response = requests.get(imagem_url)
-    imagem = Image.open(io.BytesIO(response.content))
-    imagem = imagem.resize((largura, altura))
-    return imagem
+    try:
+        response = requests.get(imagem_url, timeout=10)
+        response.raise_for_status()
+        imagem = Image.open(io.BytesIO(response.content))
+        imagem = imagem.resize((largura, altura))
+        return imagem
+    except requests.exceptions.RequestException:
+        st.error("Erro ao carregar a imagem do produto. Verifique a URL ou tente novamente mais tarde.")
+        return None
 
 # Função para sobrepor texto na imagem
 def sobrepor_texto_na_imagem(imagem, texto):
@@ -114,7 +91,7 @@ def auto_post_app():
                 title = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else "Produto Genérico"
                 preco_original = 100.0
                 preco_atual = 75.0
-                imagem_url = "https://via.placeholder.com/1200x628.png?text=Imagem+Produto"
+                imagem_url = "https://placeimg.com/1200/628/tech"  # Placeholder alternativa
                 cupom = "PROMO2023"
                 tags = ["desconto", "promoção"]
 
@@ -142,11 +119,12 @@ def auto_post_app():
                 # Controle de imagem
                 st.write("### Imagem do Produto:")
                 imagem_resized = redimensionar_imagem(imagem_url, 1200, 628)
-                imagem_final = sobrepor_texto_na_imagem(imagem_resized, f"{calcular_desconto(preco_original, preco_atual)}% OFF")
-                st.image(imagem_final, caption="Pré-visualização da Imagem", use_column_width=True)
-                buffer = io.BytesIO()
-                imagem_final.save(buffer, format="PNG")
-                st.download_button("Baixar Imagem", data=buffer.getvalue(), file_name="imagem_produto.png", mime="image/png")
+                if imagem_resized:
+                    imagem_final = sobrepor_texto_na_imagem(imagem_resized, f"{calcular_desconto(preco_original, preco_atual)}% OFF")
+                    st.image(imagem_final, caption="Pré-visualização da Imagem", use_column_width=True)
+                    buffer = io.BytesIO()
+                    imagem_final.save(buffer, format="PNG")
+                    st.download_button("Baixar Imagem", data=buffer.getvalue(), file_name="imagem_produto.png", mime="image/png")
 
                 # Integração com redes sociais (simulado)
                 st.write("### Compartilhar:")
@@ -154,3 +132,7 @@ def auto_post_app():
 
             except requests.exceptions.RequestException as e:
                 st.error(f"Erro ao processar o link: {e}")
+
+# Executa a aplicação
+if __name__ == "__main__":
+    auto_post_app()
