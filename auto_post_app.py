@@ -122,7 +122,7 @@ def auto_post_app():
                 imagem_resized = redimensionar_imagem(imagem_url, 1200, 628)
                 if imagem_resized:
                     imagem_final = sobrepor_texto_na_imagem(imagem_resized, f"{calcular_desconto(preco_original, preco_atual)}% OFF")
-                    st.image(imagem_final, caption="Pré-visualização da Imagem", use_column_width=True)
+                    st.image(imagem_final, caption="Pré-visualização da Imagem", use_container_width=True)
                     buffer = io.BytesIO()
                     imagem_final.save(buffer, format="PNG")
                     st.download_button("Baixar Imagem", data=buffer.getvalue(), file_name="imagem_produto.png", mime="image/png")
