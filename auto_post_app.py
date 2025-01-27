@@ -59,7 +59,7 @@ def redimensionar_imagem(imagem_url, largura, altura):
 def sobrepor_texto_na_imagem(imagem, texto):
     try:
         draw = ImageDraw.Draw(imagem)
-        fonte = ImageFont.load_default()
+        fonte = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", size=40)
         largura, altura = imagem.size
         texto_largura, texto_altura = draw.textbbox((0, 0), texto, font=fonte)[2:]
         posicao = ((largura - texto_largura) // 2, altura - texto_altura - 20)
@@ -73,8 +73,6 @@ def auto_post_app():
     st.title("Gerador Automático de Posts")
 
     url = st.text_input("Insira o link de referência para gerar o post automaticamente:")
-
-    imagem_url_input = st.text_input("Ou insira o link direto da imagem (opcional):")
 
     if url:
         with st.spinner('Carregando o produto...'):
@@ -91,7 +89,7 @@ def auto_post_app():
                 title = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else "Produto Genérico"
                 preco_original = 100.0
                 preco_atual = 75.0
-                imagem_url = imagem_url_input or soup.find('img', {'id': 'imgBlkFront'})['src'] if soup.find('img', {'id': 'imgBlkFront'}) else None
+                imagem_url = soup.find('img', {'id': 'imgBlkFront'})['src'] if soup.find('img', {'id': 'imgBlkFront'}) else None
                 cupom = "PROMO2023"
                 tags = ["promoção", title.replace(" ", "").lower()]  # Tags genéricas e o nome do produto
 
@@ -109,23 +107,31 @@ def auto_post_app():
                     'cupom': cupom
                 }
 
+                # Início da criação do post
                 if st.button("Gerar Post"):
                     post_texto = gerar_post(produto, url, tags, estilo=estilo_post)
                     st.write("### Pré-visualização do Post:")
                     st.text_area("Texto do Post:", post_texto, height=200)
                     st.download_button("Baixar Post (.txt)", data=post_texto, file_name="post_gerado.txt")
 
-                st.write("### Imagem do Produto:")
-                if imagem_url:
-                    imagem_resized = redimensionar_imagem(imagem_url, 1200, 628)
+                    # Solicitar o link direto da imagem caso a imagem não tenha sido encontrada automaticamente
+                    imagem_url_input = st.text_input("Caso a imagem não tenha carregado corretamente, insira o link direto da imagem:")
+
+                    if imagem_url_input:
+                        imagem_resized = redimensionar_imagem(imagem_url_input, 1200, 628)
+                    elif imagem_url:
+                        imagem_resized = redimensionar_imagem(imagem_url, 1200, 628)
+                    else:
+                        imagem_resized = None
+
                     if imagem_resized:
                         imagem_final = sobrepor_texto_na_imagem(imagem_resized, f"{calcular_desconto(preco_original, preco_atual)}% OFF")
                         st.image(imagem_final, caption="Pré-visualização da Imagem", use_container_width=True)
                         buffer = io.BytesIO()
                         imagem_final.save(buffer, format="PNG")
                         st.download_button("Baixar Imagem", data=buffer.getvalue(), file_name="imagem_produto.png", mime="image/png")
-                else:
-                    st.error("Não foi possível encontrar a imagem para este produto.")
+                    else:
+                        st.error("Não foi possível carregar a imagem para este produto.")
 
                 st.write("### Compartilhar:")
                 st.button("Compartilhar no Facebook (Simulado)")
