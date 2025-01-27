@@ -124,5 +124,10 @@ def auto_post_app():
                 st.write("### Compartilhar:")
                 st.button("Compartilhar no Facebook (Simulado)")
 
-            except requests.exceptions.RequestException as e:
-                st.error(f"Erro ao processar o link: {e}")
+            try:
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()  # Isso vai levantar um erro para status 4xx ou 5xx
+    st.write(response.status_code)  # Exiba o status da resposta
+except requests.exceptions.RequestException as e:
+    st.error(f"Erro ao processar o link: {e}")
+
