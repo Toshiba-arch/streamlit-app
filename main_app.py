@@ -12,22 +12,22 @@ st.title("App de Funcionalidades Diversas")
 opcao = st.selectbox(
     "Selecione a funcionalidade",
     [
+        "Chatbot Interativo",
         "Gerador de Números do Euromilhões",
         "Criação de Posts de Vendas - Basico",
-        "Consulta de Marca do Carro pela Matrícula",
         "Criação de Posts de Vendas",
-        "Chatbot Interativo"  # Adicionando a nova funcionalidade
+        "Consulta de Marca do Carro pela Matrícula"
     ]
 )
 
 # De acordo com a seleção, chamamos a função correspondente
-if opcao == "Gerador de Números do Euromilhões":
+if opcao == "Chatbot Interativo":
+    run_chatbot()
+elif opcao == "Gerador de Números do Euromilhões":
     run_euromilhoes()
 elif opcao == "Criação de Posts de Vendas - Basico":
     run_ofertas()
-elif opcao == "Consulta de Marca do Carro pela Matrícula":
-    run_matricula()
 elif opcao == "Criação de Posts de Vendas":
     auto_post_app()
-elif opcao == "Chatbot Interativo":  # Chamando a nova funcionalidade
-    run_chatbot()
+elif opcao == "Consulta de Marca do Carro pela Matrícula":
+    run_matricula()
