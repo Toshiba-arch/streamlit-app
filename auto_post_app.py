@@ -41,11 +41,33 @@ def fetch_with_retry(url, max_retries=3):
         try:
             response = requests.get(url, headers=get_random_headers(), timeout=15)
             response.raise_for_status()
+            
+            if "Parece que você está offline" in response.text:
+                raise requests.exceptions.RequestException("Bloqueio detectado pela Amazon")
+                
             return response
-        except requests.exceptions.RequestException:
-            st.warning(f"Tentativa {_+1} falhou. Aguardando 5 segundos...")
+        except requests.exceptions.RequestException as e:
             time.sleep(5)
     return None
+
+def processar_preco(preco_text):
+    try:
+        preco_text = preco_text.replace('\xa0', '').replace(',', '.').strip()
+        numeros = [float(s) for s in re.findall(r'\d+\.\d+|\d+', preco_text)]
+        
+        if len(numeros) == 0:
+            return {'original': 0.0, 'atual': 0.0}
+        
+        if len(numeros) > 1:
+            return {
+                'original': max(numeros),
+                'atual': min(numeros) if min(numeros) > 0 else max(numeros)
+            }
+        else:
+            return {'original': numeros[0], 'atual': numeros[0]}
+        
+    except:
+        return {'original': 0.0, 'atual': 0.0}
 
 def extrair_dados_produto(url):
     try:
@@ -54,18 +76,27 @@ def extrair_dados_produto(url):
             return None
             
         soup = BeautifulSoup(response.content, 'html.parser')
-
-        # Extração do título
-        nome = soup.find('span', {'id': 'productTitle'})
+        
+        nome = soup.find('span', {'id': 'productTitle'}) or soup.find('h1', {'id': 'title'})
         nome = nome.get_text(strip=True) if nome else "Produto Desconhecido"
 
-        # Extração de preço
-        preco_data = {}
-        price_text = soup.find('span', {'class': 'a-price-whole'})
-        if price_text:
-            preco_data = processar_preco(price_text.get_text())
+        # Extração de preços
+        preco_data = {'original': 0.0, 'atual': 0.0}
+        price_selectors = [
+            ('span', {'id': 'priceblock_ourprice'}),
+            ('span', {'id': 'priceblock_dealprice'}),
+            ('span', {'class': 'a-price-whole'}),
+            ('span', {'class': 'a-offscreen'})
+        ]
+        
+        for tag, attrs in price_selectors:
+            element = soup.find(tag, attrs)
+            if element:
+                preco_text = element.get_text(strip=True)
+                preco_data = processar_preco(preco_text)
+                break
 
-        # Extração de cupom
+        # Demais extrações
         cupom = ""
         coupon_section = soup.find('div', {'id': 'promoPriceBlockMessage'})
         if coupon_section:
@@ -73,18 +104,18 @@ def extrair_dados_produto(url):
             if cupom_badge:
                 cupom = cupom_badge.get_text(strip=True)
 
-        # Características do produto
+        moeda_symbol = soup.find('span', {'class': 'a-price-symbol'})
+        moeda = moeda_symbol.get_text(strip=True) if moeda_symbol else "€"
+
         caracteristicas = []
         bullet_points = soup.find('div', {'id': 'feature-bullets'})
         if bullet_points:
             for li in bullet_points.find_all('li'):
                 caracteristicas.append(li.get_text(strip=True))
 
-        # Avaliação
         avaliacao = soup.find('span', {'class': 'a-icon-alt'})
         avaliacao = avaliacao.get_text(strip=True).split()[0] if avaliacao else "N/A"
 
-        # Imagem
         imagem_url = ""
         img_container = soup.find('div', {'id': 'imgTagWrapperId'})
         if img_container:
@@ -94,106 +125,154 @@ def extrair_dados_produto(url):
 
         return {
             "nome": nome,
-            "preco_original": preco_data.get('original', 0),
-            "preco_atual": preco_data.get('atual', 0),
-            "moeda": "€",
+            "preco_original": preco_data['original'],
+            "preco_atual": preco_data['atual'],
+            "moeda": moeda,
             "cupom": cupom,
             "caracteristicas": caracteristicas,
             "avaliacao": avaliacao,
-            "imagem_url": imagem_url,
-            "url": url
+            "imagem_url": imagem_url
         }
 
     except Exception as e:
         st.error(f"Erro crítico: {str(e)}")
         return None
 
-def processar_preco(preco_text):
-    try:
-        preco_text = preco_text.replace('\xa0', '').replace(',', '.')
-        numeros = [float(s) for s in re.findall(r'\d+\.\d+|\d+', preco_text)]
-        
-        if len(numeros) > 1:
-            return {'original': max(numeros), 'atual': min(numeros)}
-        elif numeros:
-            return {'original': numeros[0], 'atual': numeros[0]}
-        return {}
-    except:
-        return {}
-
-def calcular_desconto(preco_original, preco_atual):
-    try:
-        if preco_original > 0:
-            return round(((preco_original - preco_atual) / preco_original) * 100, 2)
-        return 0
-    except ZeroDivisionError:
-        return 0
-
-def gerar_post(produto, tags):
+def gerar_post(produto, tags, url_afiliado):
     post = f"🔥 **Oferta Especial!** 🔥\n\n"
     post += f"📌 **{produto['nome']}**\n\n"
-
+    
     if produto['avaliacao'] != "N/A":
         post += f"⭐ **Avaliação:** {produto['avaliacao']}/5\n"
     
-    post += "\n🚀 **Características Principais:**\n"
-    for feature in produto['caracteristicas'][:3]:
-        post += f"✔️ {feature}\n"
-
-    post += f"\n💵 **Preço Original:** {produto['moeda']}{produto['preco_original']:.2f}\n"
-    post += f"💥 **Preço Atual:** {produto['moeda']}{produto['preco_atual']:.2f}\n"
-
-    desconto = calcular_desconto(produto['preco_original'], produto['preco_atual'])
-    if desconto > 0:
-        post += f"🎯 **Desconto:** {desconto}% OFF!\n"
-
+    if produto['caracteristicas']:
+        post += "\n🚀 **Características Principais:**\n"
+        for feature in produto['caracteristicas'][:3]:
+            post += f"✔️ {feature}\n"
+    
+    # Preços
+    if produto['preco_original'] > 0 and produto['preco_original'] > produto['preco_atual']:
+        post += f"\n💵 **Preço Original:** {produto['moeda']}{produto['preco_original']:.2f}"
+        post += f"\n💥 **Preço Atual:** {produto['moeda']}{produto['preco_atual']:.2f}"
+        
+        try:
+            desconto = ((produto['preco_original'] - produto['preco_atual'])/produto['preco_original'])*100
+            post += f" (⬇️ {desconto:.0f}% de desconto!)\n"
+        except ZeroDivisionError:
+            post += "\n"
+    else:
+        post += f"\n💰 **Preço Atual:** {produto['moeda']}{produto['preco_atual']:.2f}\n"
+    
     if produto['cupom']:
-        post += f"\n🎁 **Cupom de Desconto:** `{produto['cupom']}`\n"
-
-    post += f"\n🛒 [Compre Agora]({produto['url']})\n\n"
+        post += f"\n🎟️ **Cupom de Desconto:** `{produto['cupom']}`\n"
+    
+    post += f"\n🛒 [Compre Agora]({url_afiliado}) 🔗\n\n"
     post += " ".join([f"#{tag.strip()}" for tag in tags])
-
+    
     return post
 
-def auto_post_app():
-    st.title("🛍️ Gerador de Ofertas Amazon")
-
-    url = st.text_input("Cole o link do produto Amazon:", "")
-
-    if st.button("Analisar Produto"):
-        if not url.startswith(('http', 'www')):
-            st.error("Link inválido!")
-            return
+def main():
+    st.title("🛍️ Gerador de Posts para Afiliados Amazon")
+    
+    # Inicializar estado da sessão
+    if 'produto' not in st.session_state:
+        st.session_state.produto = None
+    if 'url_afiliado' not in st.session_state:
+        st.session_state.url_afiliado = ""
+    
+    # Entrada do URL
+    url_input = st.text_input("Cole seu link de afiliado Amazon:", value=st.session_state.url_afiliado)
+    
+    if st.button("Validar Link"):
+        with st.spinner("Analisando produto..."):
+            expanded_url = expandir_link(url_input) if url_input.startswith(('http', 'www')) else url_input
+            st.session_state.url_afiliado = url_input  # Guarda o URL original de afiliado
             
-        with st.spinner("🔍 Analisando o produto..."):
-            expanded_url = expandir_link(url)
-            if not expanded_url:
-                return
-                
-            produto = extrair_dados_produto(expanded_url)
+            if expanded_url:
+                produto = extrair_dados_produto(expanded_url)
+                if produto:
+                    st.session_state.produto = produto
+                    st.success("Dados do produto carregados!")
+                else:
+                    st.error("Não foi possível extrair dados automaticamente. Preencha manualmente abaixo.")
+            else:
+                st.error("Link inválido ou não pôde ser expandido.")
+
+    # Seção de edição manual
+    if st.session_state.produto:
+        st.divider()
+        st.subheader("Editar Informações do Produto")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            novo_preco_original = st.number_input("Preço Original:", 
+                                                value=st.session_state.produto['preco_original'],
+                                                min_value=0.0,
+                                                step=0.01)
             
-            if produto:
-                st.session_state.produto = produto
-                st.success("✅ Produto analisado com sucesso!")
-
-                if produto['imagem_url']:
-                    st.image(produto['imagem_url'], use_column_width=True)
-
-                st.markdown(f"**{produto['nome']}**")
-                st.markdown(f"**Preço:** {produto['moeda']}{produto['preco_atual']:.2f}")
-                if produto['preco_original'] > produto['preco_atual']:
-                    st.markdown(f"~~{produto['moeda']}{produto['preco_original']:.2f}~~")
-
-    if 'produto' in st.session_state:
-        tags = st.text_input("Tags para redes sociais (separadas por vírgula):", "oferta, promoção, amazon")
-
+            novo_preco_atual = st.number_input("Preço Atual:", 
+                                             value=st.session_state.produto['preco_atual'],
+                                             min_value=0.0,
+                                             step=0.01)
+            
+            novo_cupom = st.text_input("Cupom de Desconto:", 
+                                     value=st.session_state.produto['cupom'])
+        
+        with col2:
+            novas_tags = st.text_area("Tags (separadas por vírgula):", 
+                                    value="promoção, oferta, amazon")
+            
+            nova_imagem = st.text_input("URL da Imagem (opcional):", 
+                                      value=st.session_state.produto['imagem_url'])
+        
+        # Atualizar dados
+        st.session_state.produto.update({
+            'preco_original': novo_preco_original,
+            'preco_atual': novo_preco_atual,
+            'cupom': novo_cupom,
+            'imagem_url': nova_imagem
+        })
+        
+        # Gerar preview
+        st.divider()
+        st.subheader("Pré-visualização do Post")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.session_state.produto['imagem_url']:
+                st.image(st.session_state.produto['imagem_url'], use_column_width=True)
+        
+        with col2:
+            st.markdown(f"**Nome:** {st.session_state.produto['nome']}")
+            st.markdown(f"**Preço Atual:** {st.session_state.produto['moeda']}{st.session_state.produto['preco_atual']:.2f}")
+            if st.session_state.produto['preco_original'] > st.session_state.produto['preco_atual']:
+                st.markdown(f"~~{st.session_state.produto['moeda']}{st.session_state.produto['preco_original']:.2f}~~")
+            st.markdown(f"**Avaliação:** {st.session_state.produto['avaliacao']}/5")
+        
+        # Gerar post final
         if st.button("Gerar Post Final"):
-            post = gerar_post(st.session_state.produto, tags.split(','))
-
-            st.subheader("📝 Preview do Post")
+            post = gerar_post(st.session_state.produto, novas_tags.split(','), st.session_state.url_afiliado)
+            
             st.code(post, language=None)
-
+            
+            # Botões de download
+            col1, col2 = st.columns(2)
+            with col1:
+                st.download_button("Baixar Texto", post, file_name="post_afiliado.txt")
+            with col2:
+                if st.session_state.produto['imagem_url']:
+                    st.download_button("Baixar Imagem", 
+                                     requests.get(st.session_state.produto['imagem_url']).content,
+                                     file_name="imagem_produto.jpg")
+            
+            # Compartilhamento
+            st.markdown("**Compartilhar:**")
             texto_share = urllib.parse.quote(post)
-            st.markdown(f"[Compartilhar no WhatsApp](https://wa.me/?text={texto_share})")
+            st.markdown(f"""
+            [Twitter](https://twitter.com/intent/tweet?text={texto_share}) | 
+            [Facebook](https://www.facebook.com/sharer/sharer.php?u={st.session_state.url_afiliado}) | 
+            [WhatsApp](https://wa.me/?text={texto_share})
+            """)
 
-auto_post_app()
+if __name__ == "__main__":
+    main()
