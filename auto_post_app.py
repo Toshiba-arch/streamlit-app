@@ -1,9 +1,6 @@
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
-from PIL import Image
-import io
-import urllib.parse
 import re
 
 # Configurações globais
@@ -34,10 +31,6 @@ def extrair_dados_produto(url_afiliado):
             "preco_original": 0.0,
             "preco_atual": 0.0,
             "cupom": "",
-            "avaliacao": "Sem avaliação",
-            "num_avaliacoes": "0 avaliações",
-            "descricao": "Descrição não disponível",
-            "imagem_url": "",
             "url_afiliado": url_afiliado
         }
 
@@ -63,26 +56,6 @@ def extrair_dados_produto(url_afiliado):
             cupom_badge = coupon_section.find('span', {'class': 'couponBadge'})
             dados['cupom'] = cupom_badge.text.strip() if cupom_badge else ""
 
-        # Avaliação
-        rating = soup.find('span', {'class': 'a-icon-alt'})
-        if rating:
-            dados['avaliacao'] = rating.text.split()[0]
-
-        reviews = soup.find('span', {'id': 'acrCustomerReviewText'})
-        if reviews:
-            dados['num_avaliacoes'] = reviews.text.strip()
-
-        # Descrição
-        desc = soup.find('div', {'id': 'productDescription'})
-        if desc:
-            dados['descricao'] = desc.text.strip()
-
-        # Imagem
-        img_container = soup.find('div', {'id': 'imgTagWrapperId'}) or soup.find('div', {'class': 'imgTagWrapper'})
-        if img_container:
-            img = img_container.find('img')
-            dados['imagem_url'] = img.get('src', '') if img else ''
-
         return dados
 
     except Exception as e:
@@ -98,32 +71,40 @@ def calcular_desconto(original, atual):
     except ZeroDivisionError:
         return 0.0
 
+def formatar_moeda(valor):
+    """Formata valores para exibição monetária"""
+    return f"€{valor:,.2f}".replace(',', ' ').replace('.', ',')
+
 def gerar_post(data, tags):
-    """Geração de post usando o URL de afiliado original"""
+    """Geração de post com formatação copiável"""
     desconto = calcular_desconto(data['preco_original'], data['preco_atual'])
     
-    post = f"🔥 **{data['nome']}**\n\n"
-    post += f"⭐ {data['avaliacao']}/5 ({data['num_avaliacoes']})\n"
+    post = []
+    post.append(f"🔥 {data['nome']}")
     
-    if data['preco_original'] > data['preco_atual']:
-        post += f"~~€{data['preco_original']:.2f}~~ ➡️ **€{data['preco_atual']:.2f}** "
-        post += f"({desconto}% OFF!)\n\n"
+    # Linha de preços
+    if desconto > 0:
+        preco_original_formatado = formatar_moeda(data['preco_original'])
+        preco_atual_formatado = formatar_moeda(data['preco_atual'])
+        post.append(f"~~{preco_original_formatado}~~ ➡️ {preco_atual_formatado} (-{desconto}%)")
     else:
-        post += f"**Preço: €{data['preco_atual']:.2f}**\n\n"
+        post.append(f"Preço: {formatar_moeda(data['preco_atual'])}")
     
+    # Cupom
     if data['cupom']:
-        post += f"🎟️ **Cupom:** `{data['cupom']}`\n\n"
+        post.append(f"🎟 Cupom: {data['cupom']}")
     
-    post += f"📌 {data['descricao']}\n\n"
-    post += f"🛒 [COMPRAR AGORA]({data['url_afiliado']})\n\n"
-    post += " ".join([f"#{tag.strip()}" for tag in tags])
+    # Link de afiliado
+    post.append(f"🔗 {data['url_afiliado']}")
     
-    return post
+    # Hashtags
+    post.append(" ".join([f"#{tag.strip()}" for tag in tags]))
+    
+    return "\n".join(post)
 
-def auto_post_app():  # ← Nome original mantido
+def auto_post_app():
     st.title("🛒 Gerador de Posts para Afiliados")
     
-    # Gerenciamento de estado
     if 'dados_produto' not in st.session_state:
         st.session_state.dados_produto = None
     
@@ -141,47 +122,44 @@ def auto_post_app():  # ← Nome original mantido
     if st.session_state.dados_produto:
         dados = st.session_state.dados_produto
         
-        # Seção de edição manual
-        with st.expander("🔧 Editar Detalhes do Produto"):
-            dados['preco_original'] = st.number_input("Preço Original (€):", 
-                                                    value=dados['preco_original'],
-                                                    min_value=0.0,
-                                                    step=0.01)
+        with st.expander("🔧 Editar Detalhes"):
+            col1, col2 = st.columns(2)
+            with col1:
+                dados['preco_original'] = st.number_input("Preço Original:", 
+                                                        value=dados['preco_original'],
+                                                        min_value=0.0,
+                                                        step=0.01)
+                
+                dados['preco_atual'] = st.number_input("Preço Atual:", 
+                                                     value=dados['preco_atual'],
+                                                     min_value=0.0,
+                                                     step=0.01)
             
-            dados['preco_atual'] = st.number_input("Preço Atual (€):", 
-                                                 value=dados['preco_atual'],
-                                                 min_value=0.0,
-                                                 step=0.01)
-            
-            dados['cupom'] = st.text_input("Código do Cupom:", value=dados['cupom'])
-            tags = st.text_area("Tags (separar por vírgulas):", value="promoção, desconto, amazon")
+            with col2:
+                dados['cupom'] = st.text_input("Código do Cupom:", value=dados['cupom'])
+                tags = st.text_input("Hashtags (separar por vírgulas):", value="promoção, desconto, amazon")
 
-        # Visualização do post
-        st.divider()
-        st.subheader("Pré-visualização do Post")
-        
-        if dados['imagem_url']:
-            try:
-                response = requests.get(dados['imagem_url'], timeout=10)
-                imagem = Image.open(io.BytesIO(response.content))
-                st.image(imagem, use_column_width=True)
-            except:
-                st.warning("Não foi possível carregar a imagem")
-        
         post_gerado = gerar_post(dados, tags.split(','))
-        st.markdown(post_gerado)
         
-        # Opções de exportação
-        st.download_button("📥 Baixar Post", post_gerado, file_name="post_afiliado.txt")
+        # Área copiável
+        st.subheader("📋 Post Formatado para Copiar")
+        st.text_area("Clique para selecionar e copiar:", 
+                    value=post_gerado, 
+                    height=200,
+                    key="post_area")
         
-        # Compartilhamento direto
-        st.markdown("**Compartilhar:**")
-        texto_compartilhamento = urllib.parse.quote(post_gerado)
-        st.markdown(f"""
-        [Twitter](https://twitter.com/intent/tweet?text={texto_compartilhamento}) | 
-        [Facebook](https://www.facebook.com/sharer/sharer.php?u={dados['url_afiliado']}) | 
-        [WhatsApp](https://wa.me/?text={texto_compartilhamento})
-        """)
+        # Visualização estilizada
+        st.subheader("👀 Pré-visualização")
+        preview_lines = []
+        for line in post_gerado.split('\n'):
+            if '➡️' in line:
+                preview_lines.append(f"<div style='color: #e74c3c; font-weight: bold;'>{line}</div>")
+            elif '🎟' in line:
+                preview_lines.append(f"<div style='color: #2ecc71;'>{line}</div>")
+            else:
+                preview_lines.append(f"<div>{line}</div>")
+        
+        st.markdown("\n".join(preview_lines), unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    auto_post_app()  # ← Chamada mantida com o nome original
+    auto_post_app()
