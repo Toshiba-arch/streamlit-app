@@ -195,7 +195,7 @@ def auto_post_app():
                 col1, col2 = st.columns(2)
                 with col1:
                     if produto['imagem_url']:
-                        st.image(produto['imagem_url'], use_column_width=True)
+                        st.image(produto['imagem_url'], use_container_width=True)
                 
                 with col2:
                     st.subheader(produto['nome'])
