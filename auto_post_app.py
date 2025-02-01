@@ -68,10 +68,10 @@ def extrair_dados_produto(url):
         # Extração de preço com fallbacks
         preco_data = {}
         price_selectors = [
-            ('span', {'id': 'priceblock_ourprice'}),
-            ('span', {'id': 'priceblock_dealprice'}),
-            ('span', {'class': 'a-price-whole'}),
-            ('span', {'class': 'a-offscreen'})
+            ('span', {'id': 'apex_dp_center_column'}),
+            ('span', {'id': 'apex_dp_center_column'}),
+            ('span', {'class': 'celwidget'}),
+            ('span', {'class': 'corePriceDisplay_desktop'})
         ]
         
         for tag, attrs in price_selectors:
