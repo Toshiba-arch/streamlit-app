@@ -170,7 +170,7 @@ def gerar_post(produto, tags):
     
     return post
 
-def main():
+def auto_post_app():
     st.title("🛍️ Gerador de Ofertas Amazon")
     
     url = st.text_input("Cole o link do produto Amazon:", "")
@@ -234,6 +234,3 @@ def main():
             [Facebook](https://www.facebook.com/sharer/sharer.php?u={st.session_state.produto['url']}) | 
             [WhatsApp](https://wa.me/?text={texto_share})
             """)
-
-if __name__ == "__main__":
-    main()
