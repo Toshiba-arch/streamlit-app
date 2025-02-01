@@ -12,8 +12,6 @@ import re
 def auto_post_app():
     print("Auto post app is running!")
 
-    url_input = st.text_input("Cole seu link de afiliado Amazon:")
-
     # Configurações globais
     HEADERS_LIST = [
         {
@@ -187,7 +185,7 @@ def auto_post_app():
             st.session_state.url_afiliado = ""
         
         # Entrada do URL
-        url_input = st.text_input("Cole seu link de afiliado Amazon:", value=st.session_state.url_afiliado)
+        url_input = st.text_input("Cole seu link de afiliado Amazon:")
         
         if st.button("Validar Link"):
             with st.spinner("Analisando produto..."):
