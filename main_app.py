@@ -2,7 +2,7 @@ import streamlit as st
 from app_euromilhoes import run as run_euromilhoes
 from app_ofertas import run as run_ofertas
 from app_matricula import run as run_matricula
-from auto_post_app import auto_post_app  # Importando a nova app
+from auto_post_app import run as auto_post_app  # Importando a nova app
 from app_chatbot import run as run_chatbot  # Importando a funcionalidade do chatbot
 
 # Título principal da app
