@@ -184,6 +184,7 @@ def auto_post_app():
         if st.button("Validar Link"):
             with st.spinner("Analisando produto..."):
                 expanded_url = expandir_link(url_input) if url_input.startswith(('http', 'www')) else url_input
+                produto = None  # Adicionar a declaração de produto aqui
                 
                 if expanded_url:
                     produto = extrair_dados_produto(expanded_url)
