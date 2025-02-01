@@ -8,6 +8,8 @@ import time
 import random
 import re
 
+def auto_post_app():
+
 # Configurações globais
 HEADERS_LIST = [
     {
