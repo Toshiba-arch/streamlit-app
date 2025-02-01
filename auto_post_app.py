@@ -12,7 +12,7 @@ import re
 def auto_post_app():
     print("Auto post app is running!")
 
-url_input = st.text_input("Cole seu link de afiliado Amazon:")
+    url_input = st.text_input("Cole seu link de afiliado Amazon:")
 
     # Configurações globais
     HEADERS_LIST = [
