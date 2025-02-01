@@ -38,7 +38,7 @@ def extrair_dados_produto(url_afiliado):
             "num_avaliacoes": "0 avaliações",
             "descricao": "Descrição não disponível",
             "imagem_url": "",
-            "url_afiliado": url_afiliado  # Mantemos o URL original
+            "url_afiliado": url_afiliado
         }
 
         # Preços com fallback
@@ -57,8 +57,31 @@ def extrair_dados_produto(url_afiliado):
                 dados['preco_atual'] = extrair_preco(atual_elem.text)
                 break
 
-        # Resto da extração mantido igual...
-        # ... (mantenha o restante da função igual)
+        # Cupom
+        coupon_section = soup.find('div', {'id': 'promoPriceBlockMessage'})
+        if coupon_section:
+            cupom_badge = coupon_section.find('span', {'class': 'couponBadge'})
+            dados['cupom'] = cupom_badge.text.strip() if cupom_badge else ""
+
+        # Avaliação
+        rating = soup.find('span', {'class': 'a-icon-alt'})
+        if rating:
+            dados['avaliacao'] = rating.text.split()[0]
+
+        reviews = soup.find('span', {'id': 'acrCustomerReviewText'})
+        if reviews:
+            dados['num_avaliacoes'] = reviews.text.strip()
+
+        # Descrição
+        desc = soup.find('div', {'id': 'productDescription'})
+        if desc:
+            dados['descricao'] = desc.text.strip()
+
+        # Imagem
+        img_container = soup.find('div', {'id': 'imgTagWrapperId'}) or soup.find('div', {'class': 'imgTagWrapper'})
+        if img_container:
+            img = img_container.find('img')
+            dados['imagem_url'] = img.get('src', '') if img else ''
 
         return dados
 
@@ -97,7 +120,7 @@ def gerar_post(data, tags):
     
     return post
 
-def interface_usuario():
+def auto_post_app():  # ← Nome original mantido
     st.title("🛒 Gerador de Posts para Afiliados")
     
     # Gerenciamento de estado
@@ -161,4 +184,4 @@ def interface_usuario():
         """)
 
 if __name__ == "__main__":
-    interface_usuario()
+    auto_post_app()  # ← Chamada mantida com o nome original
