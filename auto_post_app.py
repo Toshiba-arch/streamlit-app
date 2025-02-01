@@ -178,24 +178,16 @@ def auto_post_app():
     def main():
         st.title("🛍️ Gerador de Posts para Afiliados Amazon")
         
-        # Inicializar estado da sessão
-        if 'produto' not in st.session_state:
-            st.session_state.produto = None
-        if 'url_afiliado' not in st.session_state:
-            st.session_state.url_afiliado = ""
-        
         # Entrada do URL
         url_input = st.text_input("Cole seu link de afiliado Amazon:")
         
         if st.button("Validar Link"):
             with st.spinner("Analisando produto..."):
                 expanded_url = expandir_link(url_input) if url_input.startswith(('http', 'www')) else url_input
-                st.session_state.url_afiliado = url_input  # Guarda o URL original de afiliado
                 
                 if expanded_url:
                     produto = extrair_dados_produto(expanded_url)
                     if produto:
-                        st.session_state.produto = produto
                         st.success("Dados do produto carregados!")
                     else:
                         st.error("Não foi possível extrair dados automaticamente. Preencha manualmente abaixo.")
@@ -203,34 +195,34 @@ def auto_post_app():
                     st.error("Link inválido ou não pôde ser expandido.")
     
         # Seção de edição manual
-        if st.session_state.produto:
+        if produto:
             st.divider()
             st.subheader("Editar Informações do Produto")
             
             col1, col2 = st.columns(2)
             with col1:
                 novo_preco_original = st.number_input("Preço Original:", 
-                                                    value=st.session_state.produto['preco_original'],
+                                                    value=produto['preco_original'],
                                                     min_value=0.0,
                                                     step=0.01)
                 
                 novo_preco_atual = st.number_input("Preço Atual:", 
-                                                 value=st.session_state.produto['preco_atual'],
+                                                 value=produto['preco_atual'],
                                                  min_value=0.0,
                                                  step=0.01)
                 
                 novo_cupom = st.text_input("Cupom de Desconto:", 
-                                         value=st.session_state.produto['cupom'])
+                                         value=produto['cupom'])
             
             with col2:
                 novas_tags = st.text_area("Tags (separadas por vírgula):", 
                                         value="promoção, oferta, amazon")
                 
                 nova_imagem = st.text_input("URL da Imagem (opcional):", 
-                                          value=st.session_state.produto['imagem_url'])
+                                          value=produto['imagem_url'])
             
             # Atualizar dados
-            st.session_state.produto.update({
+            produto.update({
                 'preco_original': novo_preco_original,
                 'preco_atual': novo_preco_atual,
                 'cupom': novo_cupom,
@@ -243,19 +235,19 @@ def auto_post_app():
             
             col1, col2 = st.columns(2)
             with col1:
-                if st.session_state.produto['imagem_url']:
-                    st.image(st.session_state.produto['imagem_url'], use_column_width=True)
+                if produto['imagem_url']:
+                    st.image(produto['imagem_url'], use_column_width=True)
             
             with col2:
-                st.markdown(f"**Nome:** {st.session_state.produto['nome']}")
-                st.markdown(f"**Preço Atual:** {st.session_state.produto['moeda']}{st.session_state.produto['preco_atual']:.2f}")
-                if st.session_state.produto['preco_original'] > st.session_state.produto['preco_atual']:
-                    st.markdown(f"~~{st.session_state.produto['moeda']}{st.session_state.produto['preco_original']:.2f}~~")
-                st.markdown(f"**Avaliação:** {st.session_state.produto['avaliacao']}/5")
+                st.markdown(f"**Nome:** {produto['nome']}")
+                st.markdown(f"**Preço Atual:** {produto['moeda']}{produto['preco_atual']:.2f}")
+                if produto['preco_original'] > produto['preco_atual']:
+                    st.markdown(f"~~{produto['moeda']}{produto['preco_original']:.2f}~~")
+                st.markdown(f"**Avaliação:** {produto['avaliacao']}/5")
             
             # Gerar post final
             if st.button("Gerar Post Final"):
-                post = gerar_post(st.session_state.produto, novas_tags.split(','), st.session_state.url_afiliado)
+                post = gerar_post(produto, novas_tags.split(','), url_input)
                 
                 st.code(post, language=None)
                 
@@ -264,9 +256,9 @@ def auto_post_app():
                 with col1:
                     st.download_button("Baixar Texto", post, file_name="post_afiliado.txt")
                 with col2:
-                    if st.session_state.produto['imagem_url']:
+                    if produto['imagem_url']:
                         st.download_button("Baixar Imagem", 
-                                         requests.get(st.session_state.produto['imagem_url']).content,
+                                         requests.get(produto['imagem_url']).content,
                                          file_name="imagem_produto.jpg")
                 
                 # Compartilhamento
@@ -274,9 +266,9 @@ def auto_post_app():
                 texto_share = urllib.parse.quote(post)
                 st.markdown(f"""
                 [Twitter](https://twitter.com/intent/tweet?text={texto_share}) | 
-                [Facebook](https://www.facebook.com/sharer/sharer.php?u={st.session_state.url_afiliado}) | 
+                [Facebook](https://www.facebook.com/sharer/sharer.php?u={url_input}) | 
                 [WhatsApp](https://wa.me/?text={texto_share})
                 """)
-    
+
     if __name__ == "__main__":
         main()
