@@ -162,9 +162,15 @@ def gerar_post(produto, tags):
     post += f"\n💵 **Preço Original:** {produto['moeda']}{produto['preco_original']:.2f}\n"
     post += f"💥 **Preço Atual:** {produto['moeda']}{produto['preco_atual']:.2f} "
     
-    desconto = ((produto['preco_original'] - produto['preco_atual'])/produto['preco_original'])*100
-    if desconto > 0:
-        post += f"(Economize {desconto:.0f}%!)\n"
+   def calcular_desconto(preco_original, preco_atual):
+    try:
+        if preco_original > 0:
+            desconto = calcular_desconto(produto['preco_original'], produto['preco_atual'])
+            return round(desconto, 2)
+        else:
+            return 0  # Evita divisão por zero
+    except (ValueError, TypeError, ZeroDivisionError):
+        return 0
     
     if produto['cupom']:
         post += f"\n🎁 **Cupom de Desconto:** `{produto['cupom']}`\n"
