@@ -8,6 +8,9 @@ import time
 import random
 import re
 
+def run():
+    st.title("\U0001F6CD️ Gerador de Ofertas Amazon")
+
 # Configurações globais
 HEADERS_LIST = [
     {
