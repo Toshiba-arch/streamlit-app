@@ -70,6 +70,10 @@ def extrair_dados_produto(url):
         price_selectors = [
             ('span', {'id': 'apex_dp_center_column'}),
             ('span', {'id': 'apex_dp_center_column'}),
+            ('span', {'id': 'celwidget'}),
+            ('span', {'id': 'corePriceDisplay_desktop'}),
+            ('span', {'class': 'apex_dp_center_column'}),
+            ('span', {'class': 'apex_dp_center_column'}),
             ('span', {'class': 'celwidget'}),
             ('span', {'class': 'corePriceDisplay_desktop'})
         ]
