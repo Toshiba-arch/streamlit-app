@@ -8,7 +8,9 @@ import time
 import random
 import re
 
+# Define the name "auto_post_app" (e.g., a function)
 def auto_post_app():
+    print("Auto post app is running!")
 
 # Configurações globais
 HEADERS_LIST = [
