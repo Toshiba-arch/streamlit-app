@@ -4,20 +4,26 @@ from bs4 import BeautifulSoup
 from PIL import Image
 import io
 import urllib.parse
+import time
 
+# Função para expandir links encurtados
 def expandir_link(url_encurtado):
     try:
         response = requests.head(url_encurtado, allow_redirects=True)
         return response.url
     except requests.exceptions.RequestException as e:
-        print(f"Erro ao expandir o link: {e}")
+        st.error(f"Erro ao expandir o link: {e}")
         return None
 
+# Função para extrair dados do produto
 def extrair_dados_produto(url):
     try:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
             "Accept-Language": "en-US,en;q=0.9,pt;q=0.8",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive",
+            "Referer": "https://www.amazon.com/",
         }
         response = requests.get(url, headers=headers, timeout=15)
         response.raise_for_status()
@@ -25,45 +31,42 @@ def extrair_dados_produto(url):
 
         # Extração de dados do produto
         nome = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else "Produto Desconhecido"
-        preco_original = soup.find('span', {'id': 'priceblock_ourprice'}).text.strip() if soup.find('span', {'id': 'priceblock_ourprice'}) else "0.00"
+        preco_original = (
+            soup.find('span', {'id': 'priceblock_ourprice'}) or
+            soup.find('span', {'id': 'priceblock_dealprice'}) or
+            soup.find('span', {'class': 'a-price a-text-price'})
+        )
+        preco_original = preco_original.text.strip() if preco_original else "0.00"
         preco_atual = soup.find('span', {'id': 'priceblock_dealprice'}).text.strip() if soup.find('span', {'id': 'priceblock_dealprice'}) else preco_original
+        cupom = soup.find('span', {'class': 'couponBadge'})
+        cupom = cupom.text.strip() if cupom else ""
+        avaliacao = soup.find('span', {'class': 'a-icon-alt'})
+        avaliacao = avaliacao.text.strip() if avaliacao else "Sem avaliação"
+        num_avaliacoes = soup.find('span', {'id': 'acrCustomerReviewText'})
+        num_avaliacoes = num_avaliacoes.text.strip() if num_avaliacoes else "0 avaliações"
+        descricao = soup.find('div', {'id': 'productDescription'})
+        descricao = descricao.text.strip() if descricao else "Descrição não disponível"
         imagem_div = soup.find('div', {'class': 'imgTagWrapper'})
         imagem_url = imagem_div.find('img')['src'] if imagem_div and imagem_div.find('img') else ""
 
         return {
             "nome": nome,
-            "preco_original": preco_original,
-            "preco_atual": preco_atual,
+            "preco_original": float(preco_original.replace("€", "").replace(",", ".")) if preco_original else 0.0,
+            "preco_atual": float(preco_atual.replace("€", "").replace(",", ".")) if preco_atual else 0.0,
+            "cupom": cupom,
+            "avaliacao": avaliacao,
+            "num_avaliacoes": num_avaliacoes,
+            "descricao": descricao,
             "imagem_url": imagem_url,
         }
     except requests.exceptions.RequestException as e:
-        print(f"Erro ao acessar a página do produto: {e}")
+        st.error(f"Erro ao acessar a página do produto: {e}")
         return None
     except Exception as e:
-        print(f"Erro ao processar os dados: {e}")
+        st.error(f"Erro ao processar os dados: {e}")
         return None
 
-# Link encurtado
-link_encurtado = "https://amzn.to/3Eog6jJ"
-
-# Expandir o link
-link_expandido = expandir_link(link_encurtado)
-if link_expandido:
-    print(f"Link expandido: {link_expandido}")
-    # Extrair dados do produto
-    dados_produto = extrair_dados_produto(link_expandido)
-    if dados_produto:
-        print("Dados extraídos:")
-        print(f"Nome: {dados_produto['nome']}")
-        print(f"Preço Original: {dados_produto['preco_original']}")
-        print(f"Preço Atual: {dados_produto['preco_atual']}")
-        print(f"URL da Imagem: {dados_produto['imagem_url']}")
-    else:
-        print("Não foi possível extrair os dados do produto.")
-else:
-    print("Não foi possível expandir o link.")
-
-# Funções auxiliares
+# Função para calcular o desconto
 def calcular_desconto(preco_original, preco_atual):
     try:
         if preco_original == 0:
@@ -73,25 +76,33 @@ def calcular_desconto(preco_original, preco_atual):
     except (ValueError, TypeError, ZeroDivisionError):
         return 0
 
+# Função para gerar o post
 def gerar_post(produto, link_referencia, tags):
     nome = produto['nome']
     preco_original = produto['preco_original']
     preco_atual = produto['preco_atual']
     cupom = produto['cupom']
     desconto = calcular_desconto(preco_original, preco_atual)
+    avaliacao = produto['avaliacao']
+    num_avaliacoes = produto['num_avaliacoes']
+    descricao = produto['descricao']
 
     post_texto = f"📢 **Oferta Imperdível!** 📢\n"
     post_texto += f"🔹 **{nome}**\n"
-    post_texto += f"💰 Antes **€{preco_original:.2f}** AGORA **€{preco_atual:.2f}**!\n"
-    post_texto += f"📉 Poupa já **{desconto}%**!\n"
+    post_texto += f"⭐ **Avaliação:** {avaliacao} ({num_avaliacoes})\n"
+    post_texto += f"📝 **Descrição:** {descricao}\n"
+    post_texto += f"💰 **Preço Original:** €{preco_original:.2f}\n"
+    post_texto += f"💥 **Preço Atual:** €{preco_atual:.2f}\n"
+    post_texto += f"📉 **Desconto:** {desconto}%\n"
     if cupom:
-        post_texto += f"💥 Use o código de cupom no checkout: **{cupom}**\n"
-    post_texto += f"👉 [Compra agora]({link_referencia})\n"
+        post_texto += f"🎟️ **Cupom:** {cupom}\n"
+    post_texto += f"👉 [Compre Agora]({link_referencia})\n"
     if tags:
         post_texto += "\n" + " ".join([f"#{tag}" for tag in tags])
 
     return post_texto
 
+# Função para redimensionar a imagem
 def redimensionar_imagem(imagem_url, largura, altura):
     try:
         response = requests.get(imagem_url)
@@ -114,6 +125,9 @@ def auto_post_app():
             "preco_original": 0.0,
             "preco_atual": 0.0,
             "cupom": "",
+            "avaliacao": "",
+            "num_avaliacoes": "",
+            "descricao": "",
             "imagem_url": "",
         }
     if "produto_validado" not in st.session_state:
@@ -124,34 +138,17 @@ def auto_post_app():
 
     if st.button("Validar Link"):
         with st.spinner("Validando o link e carregando os dados do produto..."):
-            try:
-                headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-                    "Accept-Language": "en-US,en;q=0.9,pt;q=0.8",
-                }
-                response = requests.get(url_input, headers=headers, timeout=15)
-                response.raise_for_status()
-                soup = BeautifulSoup(response.content, 'html.parser')
-
-                # Extração de informações do produto
-                nome = soup.find('span', {'id': 'productTitle'}).text.strip() if soup.find('span', {'id': 'productTitle'}) else "Produto Desconhecido"
-                preco_original = soup.find('span', {'id': 'priceblock_ourprice'}).text.strip() if soup.find('span', {'id': 'priceblock_ourprice'}) else "0.00"
-                preco_atual = soup.find('span', {'id': 'priceblock_dealprice'}).text.strip() if soup.find('span', {'id': 'priceblock_dealprice'}) else preco_original
-                imagem_div = soup.find('div', {'class': 'imgTagWrapper'})
-                imagem_url = imagem_div.find('img')['src'] if imagem_div and imagem_div.find('img') else ""
-
-                # Atualiza os dados do produto no estado
-                st.session_state.produto = {
-                    "nome": nome,
-                    "preco_original": float(preco_original.replace("€", "").replace(",", ".")) if preco_original else 0.0,
-                    "preco_atual": float(preco_atual.replace("€", "").replace(",", ".")) if preco_atual else 0.0,
-                    "cupom": "",
-                    "imagem_url": imagem_url,
-                }
-                st.session_state.produto_validado = True
-                st.success("Produto validado com sucesso!")
-            except requests.exceptions.RequestException as e:
-                st.error(f"Erro ao processar o link: {e}")
+            link_expandido = expandir_link(url_input) if "http" in url_input else url_input
+            if link_expandido:
+                dados_produto = extrair_dados_produto(link_expandido)
+                if dados_produto:
+                    st.session_state.produto = dados_produto
+                    st.session_state.produto_validado = True
+                    st.success("Produto validado com sucesso!")
+                else:
+                    st.error("Não foi possível extrair os dados do produto.")
+            else:
+                st.error("Não foi possível expandir o link.")
 
     # Formulário para inserir os detalhes e gerar o post
     if st.session_state.produto_validado:
