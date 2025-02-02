@@ -214,13 +214,13 @@ def auto_post_app():
                 🐦 Twitter
             </button>
         </a>
-        
+    <div style="margin-top: 20px;">   
         <a href="https://www.facebook.com/sharer/sharer.php?u={url_afiliado_encoded}&quote={texto_compartilhamento}" target="_blank" style="text-decoration: none;">
             <button style="background-color: #1877F2; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
                 📘 Facebook
             </button>
         </a>
-        
+   <div style="margin-top: 20px;">     
         <a href="https://api.whatsapp.com/send?text={texto_compartilhamento}%20{url_afiliado_encoded}" target="_blank" style="text-decoration: none;">
             <button style="background-color: #25D366; color: white; padding: 8px 16px; border: none; border-radius: 5px;">
                 📱 WhatsApp
