@@ -199,7 +199,7 @@ def auto_post_app():
 
     # Compartilhamento direto
         st.markdown("**Compartilhar:**")
-        texto_compartilhamento = urllib.parse.quote(post_gerado)
+        #texto_compartilhamento = urllib.parse.quote(post_gerado)
         st.markdown(f"""
         [Twitter](https://twitter.com/intent/tweet?text={texto_compartilhamento}) | 
         [Facebook](https://www.facebook.com/sharer/sharer.php?u={dados['url_afiliado']}) | 
