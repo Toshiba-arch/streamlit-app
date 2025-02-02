@@ -41,7 +41,8 @@ def extrair_dados_produto(url_afiliado):
         price_selectors = [
             ('priceblock_ourprice', 'priceblock_dealprice'),
             ('a-price-whole', 'a-offscreen'),
-            ('apexPriceToPay', 'basisPrice')
+            ('priceToPay', 'basisPrice'),
+            ('apexPriceToPay', 'apex_dp_offer_display')
         ]
         
         for original, atual in price_selectors:
