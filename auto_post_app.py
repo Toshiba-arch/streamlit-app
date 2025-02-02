@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 from io import BytesIO
+import urllib.parse
 
 # Configurações globais
 HEADERS = {
@@ -197,14 +198,36 @@ def auto_post_app():
         """
         st.markdown(preview_html, unsafe_allow_html=True)
 
-    # Compartilhamento direto
-        st.markdown("**Compartilhar:**")
-        texto_compartilhamento = {post_gerado}
-        st.markdown(f"""
-        [Twitter](https://twitter.com/intent/tweet?text={texto_compartilhamento}) | 
-        [Facebook](https://www.facebook.com/sharer/sharer.php?u={dados['url_afiliado']}) | 
-        [WhatsApp](https://wa.me/?text={texto_compartilhamento})
-        """)
+    # Seção de compartilhamento direto (adicione isto após a pré-visualização)
+    st.markdown("---")
+    st.subheader("📤 Compartilhar Diretamente")
+    
+    # Codificar texto e URL separadamente
+    texto_compartilhamento = urllib.parse.quote(post_gerado)
+    url_afiliado_encoded = urllib.parse.quote(dados['url_afiliado'])
+    
+    # HTML personalizado para os botões
+    st.markdown(f"""
+    <div style="margin-top: 20px;">
+        <a href="https://twitter.com/intent/tweet?text={texto_compartilhamento}&url={url_afiliado_encoded}" target="_blank" style="text-decoration: none;">
+            <button style="background-color: #1DA1F2; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
+                🐦 Twitter
+            </button>
+        </a>
+        
+        <a href="https://www.facebook.com/sharer/sharer.php?u={url_afiliado_encoded}&quote={texto_compartilhamento}" target="_blank" style="text-decoration: none;">
+            <button style="background-color: #1877F2; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
+                📘 Facebook
+            </button>
+        </a>
+        
+        <a href="https://api.whatsapp.com/send?text={texto_compartilhamento}%20{url_afiliado_encoded}" target="_blank" style="text-decoration: none;">
+            <button style="background-color: #25D366; color: white; padding: 8px 16px; border: none; border-radius: 5px;">
+                📱 WhatsApp
+            </button>
+        </a>
+    </div>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     auto_post_app()
