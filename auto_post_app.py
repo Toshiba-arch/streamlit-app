@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 import re
+from io import BytesIO
 
 # Configurações globais
 HEADERS = {
@@ -31,7 +32,8 @@ def extrair_dados_produto(url_afiliado):
             "preco_original": 0.0,
             "preco_atual": 0.0,
             "cupom": "",
-            "url_afiliado": url_afiliado
+            "url_afiliado": url_afiliado,
+            "imagem_url": ""
         }
 
         # Preços com fallback
@@ -55,6 +57,17 @@ def extrair_dados_produto(url_afiliado):
         if coupon_section:
             cupom_badge = coupon_section.find('span', {'class': 'couponBadge'})
             dados['cupom'] = cupom_badge.text.strip() if cupom_badge else ""
+
+        # Imagem do produto
+        img_container = soup.find('div', {'id': 'imgTagWrapperId'})
+        if img_container:
+            img = img_container.find('img')
+            if img and 'src' in img.attrs:
+                dados['imagem_url'] = img['src']
+        else:
+            main_image = soup.find('img', {'id': 'landingImage'})
+            if main_image and 'src' in main_image.attrs:
+                dados['imagem_url'] = main_image['src']
 
         return dados
 
@@ -80,30 +93,30 @@ def gerar_post(data, tags):
     desconto = calcular_desconto(data['preco_original'], data['preco_atual'])
     
     post = []
-    post.append(f"🔥 {data['nome']}")
+    post.append(f"🚨🔥 OFERTA RELÂMPAGO! 🔥🚨\n📦 {data['nome']}")
     
     # Linha de preços
     if desconto > 0:
         preco_original_formatado = formatar_moeda(data['preco_original'])
         preco_atual_formatado = formatar_moeda(data['preco_atual'])
-        post.append(f"~~{preco_original_formatado}~~ ➡️ {preco_atual_formatado} (-{desconto}%)")
+        post.append(f"\n💵 De: ~~{preco_original_formatado}~~\n💸 Para: {preco_atual_formatado}\n🎉 ECONOMIZE {desconto}%!")
     else:
-        post.append(f"Preço: {formatar_moeda(data['preco_atual'])}")
+        post.append(f"\n💵 Preço: {formatar_moeda(data['preco_atual'])}")
     
     # Cupom
     if data['cupom']:
-        post.append(f"🎟 Cupom: {data['cupom']}")
+        post.append(f"\n🎁 CUPOM EXCLUSIVO: {data['cupom'].upper()} 🎁")
     
     # Link de afiliado
-    post.append(f"🔗 {data['url_afiliado']}")
+    post.append(f"\n🛒 Compre agora: {data['url_afiliado']}")
     
     # Hashtags
-    post.append(" ".join([f"#{tag.strip()}" for tag in tags]))
+    post.append("\n📌 " + "  ".join([f"#{tag.strip()}" for tag in tags]))
     
     return "\n".join(post)
 
 def auto_post_app():
-    st.title("🛒 Gerador de Posts para Afiliados")
+    st.title("🛒 Gerador de Posts para Afiliados Pro")
     
     if 'dados_produto' not in st.session_state:
         st.session_state.dados_produto = None
@@ -137,7 +150,27 @@ def auto_post_app():
             
             with col2:
                 dados['cupom'] = st.text_input("Código do Cupom:", value=dados['cupom'])
-                tags = st.text_input("Hashtags (separar por vírgulas):", value="promoção, desconto, amazon")
+                tags = st.text_input("Hashtags (separar por vírgulas):", value="promoção, desconto, amazon, oferta")
+
+        # Seção de imagem do produto
+        if dados['imagem_url']:
+            st.subheader("📸 Imagem do Produto")
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                st.image(dados['imagem_url'], use_column_width=True)
+            
+            with col2:
+                # Download da imagem
+                response = requests.get(dados['imagem_url'])
+                if response.status_code == 200:
+                    st.download_button(
+                        label="⬇️ Baixar Imagem",
+                        data=BytesIO(response.content),
+                        file_name="produto.jpg",
+                        mime="image/jpeg"
+                    )
+                else:
+                    st.warning("Imagem não disponível para download")
 
         post_gerado = gerar_post(dados, tags.split(','))
         
@@ -145,21 +178,24 @@ def auto_post_app():
         st.subheader("📋 Post Formatado para Copiar")
         st.text_area("Clique para selecionar e copiar:", 
                     value=post_gerado, 
-                    height=200,
+                    height=250,
                     key="post_area")
         
         # Visualização estilizada
-        st.subheader("👀 Pré-visualização")
-        preview_lines = []
-        for line in post_gerado.split('\n'):
-            if '➡️' in line:
-                preview_lines.append(f"<div style='color: #e74c3c; font-weight: bold;'>{line}</div>")
-            elif '🎟' in line:
-                preview_lines.append(f"<div style='color: #2ecc71;'>{line}</div>")
-            else:
-                preview_lines.append(f"<div>{line}</div>")
-        
-        st.markdown("\n".join(preview_lines), unsafe_allow_html=True)
+        st.subheader("👀 Pré-visualização do Post")
+        preview_html = f"""
+        <div style="
+            border: 2px solid #e74c3c;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px 0;
+            background-color: #fff5f5;
+            font-family: Arial, sans-serif;
+        ">
+            {post_gerado.replace('\n', '<br>')}
+        </div>
+        """
+        st.markdown(preview_html, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     auto_post_app()
