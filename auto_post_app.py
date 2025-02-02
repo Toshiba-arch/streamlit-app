@@ -176,7 +176,7 @@ def auto_post_app():
         # Inicializa a variável post_gerado para evitar erro
         
         post_gerado = gerar_post(dados, tags.split(','))
-        post_gerado = ""
+        #post_gerado = ""
 
         # Área copiável
         st.subheader("📋 Post Formatado para Copiar")
