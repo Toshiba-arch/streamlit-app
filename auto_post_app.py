@@ -99,16 +99,16 @@ def gerar_post(data, tags):
     if desconto > 0:
         preco_original_formatado = formatar_moeda(data['preco_original'])
         preco_atual_formatado = formatar_moeda(data['preco_atual'])
-        post.append(f"\n💵 De: ~~{preco_original_formatado}~~\n💸 Para: {preco_atual_formatado}\n🎉 ECONOMIZE {desconto}%!")
+        post.append(f"\n💵 ANTES: ~~{preco_original_formatado}~~\n💸 AGORA: {preco_atual_formatado}\n🎉 POUPANÇA {desconto}%!")
     else:
         post.append(f"\n💵 Preço: {formatar_moeda(data['preco_atual'])}")
     
     # Cupom
     if data['cupom']:
-        post.append(f"\n🎁 CUPOM EXCLUSIVO: {data['cupom'].upper()} 🎁")
+        post.append(f"\n🎁 CUPOM para usar no checkout: {data['cupom'].upper()} 🎁")
     
     # Link de afiliado
-    post.append(f"\n🛒 Compre agora: {data['url_afiliado']}")
+    post.append(f"\n🛒 Clica no link: {data['url_afiliado']}")
     
     # Hashtags
     post.append("\n📌 " + "  ".join([f"#{tag.strip()}" for tag in tags]))
