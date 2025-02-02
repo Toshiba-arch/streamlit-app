@@ -157,7 +157,7 @@ def auto_post_app():
             st.subheader("📸 Imagem do Produto")
             col1, col2 = st.columns([2, 1])
             with col1:
-                st.image(dados['imagem_url'], use_column_width=True)
+                st.image(dados['imagem_url'], use_container_width=True)
             
             with col2:
                 # Download da imagem
