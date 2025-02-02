@@ -174,9 +174,10 @@ def auto_post_app():
                     st.warning("Imagem não disponível para download")
 
         # Inicializa a variável post_gerado para evitar erro
-        post_gerado = ""
-        #post_gerado = gerar_post(dados, tags.split(','))
         
+        post_gerado = gerar_post(dados, tags.split(','))
+        post_gerado = ""
+
         # Área copiável
         st.subheader("📋 Post Formatado para Copiar")
         st.text_area("Clique para selecionar e copiar:", 
@@ -200,10 +201,6 @@ def auto_post_app():
         """
         st.markdown(preview_html, unsafe_allow_html=True)
 
-    # Seção de compartilhamento direto (adicione isto após a pré-visualização)
-    st.markdown("---")
-    st.subheader("📤 Compartilhar Diretamente")
-    
     # Gera o post se os dados do produto existirem
     if st.session_state.dados_produto:
         dados = st.session_state.dados_produto
