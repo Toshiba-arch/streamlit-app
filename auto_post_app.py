@@ -197,5 +197,14 @@ def auto_post_app():
         """
         st.markdown(preview_html, unsafe_allow_html=True)
 
+    # Compartilhamento direto
+        st.markdown("**Compartilhar:**")
+        texto_compartilhamento = urllib.parse.quote(post_gerado)
+        st.markdown(f"""
+        [Twitter](https://twitter.com/intent/tweet?text={texto_compartilhamento}) | 
+        [Facebook](https://www.facebook.com/sharer/sharer.php?u={dados['url_afiliado']}) | 
+        [WhatsApp](https://wa.me/?text={texto_compartilhamento})
+        """)
+
 if __name__ == "__main__":
     auto_post_app()
