@@ -29,10 +29,10 @@ def obter_informacoes_veiculo(matricula):
 # Função para consultar dados do veículo pelo VIN
 def obter_dados_por_vin(vin):
     # Substitua pela URL da API que fornece dados de veículos com base no VIN
-    url = f"https://auto.dev/api/vin/ZPBUA1ZL9KLA00848?apikey=ZrQEPSkKdG9zaGliYS5zYWxhQGdtYWlsLmNvbQ=="
+    url = f"https://auto.dev/api/vin/(dados_vin)"
 
     headers = {
-        'Authorization': 'vazio',  # Se necessário
+        'Authorization': 'ZrQEPSkKdG9zaGliYS5zYWxhQGdtYWlsLmNvbQ==',  # Se necessário
     }
 
     try:
