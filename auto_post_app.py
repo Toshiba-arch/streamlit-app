@@ -173,7 +173,9 @@ def auto_post_app():
                 else:
                     st.warning("Imagem não disponível para download")
 
-        post_gerado = gerar_post(dados, tags.split(','))
+        # Inicializa a variável post_gerado para evitar erro
+        post_gerado = ""
+        #post_gerado = gerar_post(dados, tags.split(','))
         
         # Área copiável
         st.subheader("📋 Post Formatado para Copiar")
@@ -202,32 +204,43 @@ def auto_post_app():
     st.markdown("---")
     st.subheader("📤 Compartilhar Diretamente")
     
-    # Codificar texto e URL separadamente
-    texto_compartilhamento = urllib.parse.quote(post_gerado)
-    url_afiliado_encoded = urllib.parse.quote(dados['url_afiliado'])
+    # Gera o post se os dados do produto existirem
+    if st.session_state.dados_produto:
+        dados = st.session_state.dados_produto
+        post_gerado = gerar_post(dados, tags.split(','))
     
-    # HTML personalizado para os botões
-    st.markdown(f"""
-    <div style="margin-top: 20px;">
-        <a href="https://twitter.com/intent/tweet?text={texto_compartilhamento}&url={url_afiliado_encoded}" target="_blank" style="text-decoration: none;">
-            <button style="background-color: #1DA1F2; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
-                🐦 Twitter
-            </button>
-        </a>
-    <div style="margin-top: 20px;">   
-        <a href="https://www.facebook.com/sharer/sharer.php?u={url_afiliado_encoded}&quote={texto_compartilhamento}" target="_blank" style="text-decoration: none;">
-            <button style="background-color: #1877F2; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
-                📘 Facebook
-            </button>
-        </a>
-   <div style="margin-top: 20px;">     
-        <a href="https://api.whatsapp.com/send?text={texto_compartilhamento}%20{url_afiliado_encoded}" target="_blank" style="text-decoration: none;">
-            <button style="background-color: #25D366; color: white; padding: 8px 16px; border: none; border-radius: 5px;">
-                📱 WhatsApp
-            </button>
-        </a>
-    </div>
-    """, unsafe_allow_html=True)
+    # Se post_gerado estiver vazio, a seção de compartilhamento não deve ser exibida
+    if post_gerado:
+        st.markdown("---")
+        st.subheader("📤 Compartilhar Diretamente")
+    
+        # Codificar texto e URL separadamente
+        texto_compartilhamento = urllib.parse.quote(post_gerado)
+        url_afiliado_encoded = urllib.parse.quote(dados['url_afiliado'])
+    
+        st.markdown(f"""
+        <div style="margin-top: 20px;">
+            <a href="https://twitter.com/intent/tweet?text={texto_compartilhamento}&url={url_afiliado_encoded}" target="_blank" style="text-decoration: none;">
+                <button style="background-color: #1DA1F2; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
+                    🐦 Twitter
+                </button>
+            </a>
+        </div>
+        <div style="margin-top: 20px;">   
+            <a href="https://www.facebook.com/sharer/sharer.php?u={url_afiliado_encoded}&quote={texto_compartilhamento}" target="_blank" style="text-decoration: none;">
+                <button style="background-color: #1877F2; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
+                    📘 Facebook
+                </button>
+            </a>
+        </div>
+        <div style="margin-top: 20px;">     
+            <a href="https://api.whatsapp.com/send?text={texto_compartilhamento}%20{url_afiliado_encoded}" target="_blank" style="text-decoration: none;">
+                <button style="background-color: #25D366; color: white; padding: 8px 16px; border: none; border-radius: 5px;">
+                    📱 WhatsApp
+                </button>
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     auto_post_app()
