@@ -176,7 +176,7 @@ def auto_post_app():
         # Inicializa a variável post_gerado para evitar erro
         
         post_gerado = gerar_post(dados, tags.split(','))
-        post_gerado = ""
+        #post_gerado = ""
 
         # Área copiável
         st.subheader("📋 Post Formatado para Copiar")
@@ -203,8 +203,10 @@ def auto_post_app():
 
     # Gera o post se os dados do produto existirem
     if st.session_state.dados_produto:
-        dados = st.session_state.dados_produto
-        post_gerado = gerar_post(dados, tags.split(','))
+    dados = st.session_state.dados_produto
+    post_gerado = gerar_post(dados, tags.split(','))
+else:
+    post_gerado = ""
     
     # Se post_gerado estiver vazio, a seção de compartilhamento não deve ser exibida
     if post_gerado:
