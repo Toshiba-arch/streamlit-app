@@ -184,7 +184,7 @@ def auto_post_app():
             cols = st.columns(4)
             for idx, img_url in enumerate(dados['imagens_url'][:8]):
                 with cols[idx % 4]:
-                    st.image(img_url, use_column_width=True)
+                    st.image(img_url, use_container_width=True)
                     checkbox_state = st.checkbox(f"Selecionar Imagem {idx+1}", 
                                                key=f"img_{idx}",
                                                value=img_url in st.session_state.selected_images)
@@ -199,7 +199,7 @@ def auto_post_app():
                 selected_cols = st.columns(len(st.session_state.selected_images))
                 for idx, img_url in enumerate(st.session_state.selected_images):
                     with selected_cols[idx]:
-                        st.image(img_url, use_column_width=True)
+                        st.image(img_url, use_container_width=True)
                         response = requests.get(img_url)
                         if response.status_code == 200:
                             st.download_button(
