@@ -101,7 +101,7 @@ def gerar_post(data, tags):
     if desconto > 0:
         preco_original_formatado = formatar_moeda(data['preco_original'])
         preco_atual_formatado = formatar_moeda(data['preco_atual'])
-        post.append(f"\n💵 ANTES: ~~{preco_original_formatado}~~\n💸 AGORA: {preco_atual_formatado}\n🎉 POUPANÇA {desconto}%!")
+        post.append(f"\n💵 Preço anterior: ~~{preco_original_formatado}~~\n💸 AGORA: {preco_atual_formatado}\n🎉 POUPAS: {desconto}%!")
     else:
         post.append(f"\n💵 Preço: {formatar_moeda(data['preco_atual'])}")
     
