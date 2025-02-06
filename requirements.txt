@@ -4,3 +4,4 @@ pillow
 certifi
 beautifulsoup4
 openai
+urllib3
