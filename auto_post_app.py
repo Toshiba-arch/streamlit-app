@@ -8,7 +8,7 @@ import urllib.parse
 # Configurações globais
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Language": "es-ES,es;q=0.9",
     "Accept-Encoding": "gzip, deflate, br",
     "Connection": "keep-alive"
 }
@@ -21,60 +21,60 @@ def extrair_preco(texto):
         return 0.0
 
 def extrair_dados_produto(url_afiliado):
-    """Função de extração de dados usando o URL original"""
+    """Função melhorada com seletores atualizados para Amazon ES"""
     try:
         response = requests.get(url_afiliado, headers=HEADERS, timeout=15)
         response.raise_for_status()
         soup = BeautifulSoup(response.content, 'html.parser')
 
-        # Extração de dados
-        dados = {
-            "nome": (soup.find('span', {'id': 'productTitle'}) or soup.find('h1', {'id': 'title'})).get_text(strip=True),
-            "preco_original": 0.0,
-            "preco_atual": 0.0,
-            "cupom": "",
-            "url_afiliado": url_afiliado,
-            "imagem_url": ""
-        }
+        # Extração do título
+        title = soup.find('span', {'id': 'productTitle'}) or soup.find('h1', {'class': 'a-size-large a-spacing-none'})
+        title = title.get_text(strip=True) if title else "Produto sem nome"
 
-        # Preços com fallback
-        price_selectors = [
-            ('priceblock_ourprice', 'priceblock_dealprice'),
-            ('a-price-whole', 'a-offscreen'),
-            ('priceToPay', 'basisPrice'),
-            ('apexPriceToPay', 'apex_dp_offer_display')
-        ]
-        
-        for original, atual in price_selectors:
-            original_elem = soup.find('span', {'id': original}) or soup.find('span', {'class': original})
-            atual_elem = soup.find('span', {'id': atual}) or soup.find('span', {'class': atual})
+        # Extração de preços
+        price_wrapper = soup.find('div', {'class': 'a-section a-spacing-none aok-align-center'})
+        preco_atual = 0.0
+        preco_original = 0.0
+
+        if price_wrapper:
+            current_price = price_wrapper.find('span', {'class': 'a-price-whole'})
+            if current_price:
+                preco_atual = extrair_preco(current_price.get_text())
             
-            if original_elem and atual_elem:
-                dados['preco_original'] = extrair_preco(original_elem.text)
-                dados['preco_atual'] = extrair_preco(atual_elem.text)
-                break
+            original_price = price_wrapper.find('span', {'class': 'a-price a-text-price'})
+            if original_price:
+                preco_original = extrair_preco(original_price.find('span', {'class': 'a-offscreen'}).get_text())
 
-        # Cupom
-        coupon_section = soup.find('div', {'id': 'promoPriceBlockMessage'})
-        if coupon_section:
-            cupom_badge = coupon_section.find('span', {'class': 'couponBadge'})
-            dados['cupom'] = cupom_badge.text.strip() if cupom_badge else ""
+        # Extração de imagens
+        image_urls = []
+        image_thumbs = soup.select('li.imageThumbnail img')
+        for img in image_thumbs:
+            if 'src' in img.attrs:
+                high_res_url = img['src'].replace('_SL36_', '_SL500_')
+                image_urls.append(high_res_url)
 
-        # Imagem do produto
-        img_container = soup.find('div', {'id': 'imgTagWrapperId'})
-        if img_container:
-            img = img_container.find('img')
-            if img and 'src' in img.attrs:
-                dados['imagem_url'] = img['src']
-        else:
+        if not image_urls:
             main_image = soup.find('img', {'id': 'landingImage'})
             if main_image and 'src' in main_image.attrs:
-                dados['imagem_url'] = main_image['src']
+                image_urls.append(main_image['src'])
 
-        return dados
+        # Extração de cupons
+        cupom = ""
+        coupon_badge = soup.find('span', {'class': 'a-size-base a-color-success'})
+        if coupon_badge and 'cupón' in coupon_badge.text.lower():
+            cupom = coupon_badge.find_next('span').get_text(strip=True)
+
+        return {
+            "nome": title,
+            "preco_original": preco_original,
+            "preco_atual": preco_atual,
+            "cupom": cupom,
+            "url_afiliado": url_afiliado,
+            "imagens_url": image_urls
+        }
 
     except Exception as e:
-        st.error(f"Erro na extração de dados: {str(e)}")
+        st.error(f"Erro na extração: {str(e)}")
         return None
 
 def calcular_desconto(original, atual):
@@ -97,7 +97,6 @@ def gerar_post(data, tags):
     post = []
     post.append(f"🚨🔥 OFERTA RELÂMPAGO! 🔥🚨\n📦 {data['nome']}")
     
-    # Linha de preços
     if desconto > 0:
         preco_original_formatado = formatar_moeda(data['preco_original'])
         preco_atual_formatado = formatar_moeda(data['preco_atual'])
@@ -105,14 +104,10 @@ def gerar_post(data, tags):
     else:
         post.append(f"\n💵 Preço: {formatar_moeda(data['preco_atual'])}")
     
-    # Cupom
     if data['cupom']:
         post.append(f"\n🎁 CUPOM para usar no checkout: {data['cupom'].upper()} 🎁")
     
-    # Link de afiliado
     post.append(f"\n🛒 Clica no link: {data['url_afiliado']}")
-    
-    # Hashtags
     post.append("\n📌 " + "  ".join([f"#{tag.strip()}" for tag in tags]))
     
     return "\n".join(post)
@@ -120,9 +115,14 @@ def gerar_post(data, tags):
 def auto_post_app():
     st.title("🛒 Gerador de Posts para Afiliados Pro")
     
+    # Inicialização de estados
     if 'dados_produto' not in st.session_state:
         st.session_state.dados_produto = None
-    
+    if 'selected_images' not in st.session_state:
+        st.session_state.selected_images = []
+    if 'temp_data' not in st.session_state:
+        st.session_state.temp_data = {}
+
     url_afiliado = st.text_input("Cole seu link de afiliado curto:", key="url_input")
     
     if st.button("Carregar Produto"):
@@ -130,6 +130,8 @@ def auto_post_app():
             dados = extrair_dados_produto(url_afiliado)
             if dados:
                 st.session_state.dados_produto = dados
+                st.session_state.temp_data = dados.copy()
+                st.session_state.selected_images = dados['imagens_url'][:1]
                 st.success("Dados carregados!")
             else:
                 st.error("Erro ao carregar dados. Verifique o link ou preencha manualmente.")
@@ -137,56 +139,87 @@ def auto_post_app():
     if st.session_state.dados_produto:
         dados = st.session_state.dados_produto
         
-        with st.expander("🔧 Editar Detalhes"):
-            col1, col2 = st.columns(2)
-            with col1:
-                dados['preco_original'] = st.number_input("Preço Original:", 
-                                                        value=dados['preco_original'],
+        with st.expander("🔧 Editar Detalhes", expanded=True):
+            with st.form(key='edit_form'):
+                col1, col2 = st.columns(2)
+                with col1:
+                    novo_titulo = st.text_input("Título:", 
+                                              value=st.session_state.temp_data.get('nome', ''),
+                                              key='edit_title')
+                    
+                    novo_preco_original = st.number_input("Preço Original:", 
+                                                        value=st.session_state.temp_data.get('preco_original', 0.0),
                                                         min_value=0.0,
-                                                        step=0.01)
-                
-                dados['preco_atual'] = st.number_input("Preço Atual:", 
-                                                     value=dados['preco_atual'],
+                                                        step=0.01,
+                                                        key='edit_original')
+                    
+                    novo_preco_atual = st.number_input("Preço Atual:", 
+                                                     value=st.session_state.temp_data.get('preco_atual', 0.0),
                                                      min_value=0.0,
-                                                     step=0.01)
+                                                     step=0.01,
+                                                     key='edit_atual')
+                
+                with col2:
+                    novo_cupom = st.text_input("Código do Cupom:", 
+                                             value=st.session_state.temp_data.get('cupom', ''),
+                                             key='edit_cupom')
+                    
+                    novas_tags = st.text_input("Hashtags (separar por vírgulas):", 
+                                             value="promoção, desconto, amazon, oferta",
+                                             key='edit_tags')
+                
+                if st.form_submit_button("💾 Atualizar Dados"):
+                    st.session_state.dados_produto.update({
+                        'nome': novo_titulo,
+                        'preco_original': novo_preco_original,
+                        'preco_atual': novo_preco_atual,
+                        'cupom': novo_cupom
+                    })
+                    st.success("Dados atualizados!")
+
+        # Seção de imagens
+        if dados['imagens_url']:
+            st.subheader("📸 Seleção de Imagens")
             
-            with col2:
-                dados['cupom'] = st.text_input("Código do Cupom:", value=dados['cupom'])
-                tags = st.text_input("Hashtags (separar por vírgulas):", value="promoção, desconto, amazon, oferta")
+            cols = st.columns(4)
+            for idx, img_url in enumerate(dados['imagens_url'][:8]):
+                with cols[idx % 4]:
+                    st.image(img_url, use_column_width=True)
+                    checkbox_state = st.checkbox(f"Selecionar Imagem {idx+1}", 
+                                               key=f"img_{idx}",
+                                               value=img_url in st.session_state.selected_images)
+                    
+                    if checkbox_state and img_url not in st.session_state.selected_images:
+                        st.session_state.selected_images.append(img_url)
+                    elif not checkbox_state and img_url in st.session_state.selected_images:
+                        st.session_state.selected_images.remove(img_url)
 
-        # Seção de imagem do produto
-        if dados['imagem_url']:
-            st.subheader("📸 Imagem do Produto")
-            col1, col2 = st.columns([2, 1])
-            with col1:
-                st.image(dados['imagem_url'], use_container_width=True)
-            
-            with col2:
-                # Download da imagem
-                response = requests.get(dados['imagem_url'])
-                if response.status_code == 200:
-                    st.download_button(
-                        label="⬇️ Baixar Imagem",
-                        data=BytesIO(response.content),
-                        file_name="produto.jpg",
-                        mime="image/jpeg"
-                    )
-                else:
-                    st.warning("Imagem não disponível para download")
+            if st.session_state.selected_images:
+                st.subheader("🖼️ Imagens Selecionadas")
+                selected_cols = st.columns(len(st.session_state.selected_images))
+                for idx, img_url in enumerate(st.session_state.selected_images):
+                    with selected_cols[idx]:
+                        st.image(img_url, use_column_width=True)
+                        response = requests.get(img_url)
+                        if response.status_code == 200:
+                            st.download_button(
+                                label=f"⬇️ Baixar Imagem {idx+1}",
+                                data=BytesIO(response.content),
+                                file_name=f"produto_{idx+1}.jpg",
+                                mime="image/jpeg",
+                                key=f"download_{idx}"
+                            )
 
-        # Inicializa a variável post_gerado para evitar erro
-        
-        post_gerado = gerar_post(dados, tags.split(','))
-        #post_gerado = ""
+        # Geração do post
+        tags = novas_tags.split(',') if 'novas_tags' in locals() else []
+        post_gerado = gerar_post(st.session_state.dados_produto, tags)
 
-        # Área copiável
         st.subheader("📋 Post Formatado para Copiar")
         st.text_area("Clique para selecionar e copiar:", 
                     value=post_gerado, 
                     height=250,
                     key="post_area")
         
-        # Visualização estilizada
         st.subheader("👀 Pré-visualização do Post")
         preview_html = f"""
         <div style="
@@ -202,39 +235,26 @@ def auto_post_app():
         """
         st.markdown(preview_html, unsafe_allow_html=True)
 
-    # Gera o post se os dados do produto existirem
-    if st.session_state.dados_produto:
-        dados = st.session_state.dados_produto
-        post_gerado = gerar_post(dados, tags.split(','))
-    else:
-        post_gerado = ""
-    
-    # Se post_gerado estiver vazio, a seção de compartilhamento não deve ser exibida
-    if post_gerado:
+        # Compartilhamento
         st.markdown("---")
         st.subheader("📤 Compartilhar Diretamente")
     
-        # Codificar texto e URL separadamente
         texto_compartilhamento = urllib.parse.quote(post_gerado)
         url_afiliado_encoded = urllib.parse.quote(dados['url_afiliado'])
     
         st.markdown(f"""
         <div style="margin-top: 20px;">
-            <a href="https://twitter.com/intent/tweet?text={texto_compartilhamento}&url={url_afiliado_encoded}" target="_blank" style="text-decoration: none;">
+            <a href="https://twitter.com/intent/tweet?text={texto_compartilhamento}&url={url_afiliado_encoded}" target="_blank">
                 <button style="background-color: #1DA1F2; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
                     🐦 Twitter
                 </button>
             </a>
-        </div>
-        <div style="margin-top: 20px;">   
-            <a href="https://www.facebook.com/sharer/sharer.php?u={url_afiliado_encoded}&quote={texto_compartilhamento}" target="_blank" style="text-decoration: none;">
+            <a href="https://www.facebook.com/sharer/sharer.php?u={url_afiliado_encoded}&quote={texto_compartilhamento}" target="_blank">
                 <button style="background-color: #1877F2; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
                     📘 Facebook
                 </button>
             </a>
-        </div>
-        <div style="margin-top: 20px;">     
-            <a href="https://api.whatsapp.com/send?text={texto_compartilhamento}%20{url_afiliado_encoded}" target="_blank" style="text-decoration: none;">
+            <a href="https://api.whatsapp.com/send?text={texto_compartilhamento}%20{url_afiliado_encoded}" target="_blank">
                 <button style="background-color: #25D366; color: white; padding: 8px 16px; border: none; border-radius: 5px;">
                     📱 WhatsApp
                 </button>
