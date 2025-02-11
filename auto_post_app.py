@@ -243,7 +243,7 @@ def auto_post_app():
         url_afiliado_encoded = urllib.parse.quote(dados['url_afiliado'])
     
         st.markdown(f"""
-        <div style="margin-top: 20px;">
+                <div style="margin-top: 20px;">
             <a href="https://twitter.com/intent/tweet?text={texto_compartilhamento}&url={url_afiliado_encoded}" target="_blank">
                 <button style="background-color: #1DA1F2; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
                     🐦 Twitter
