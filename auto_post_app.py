@@ -255,8 +255,13 @@ def auto_post_app():
                 </button>
             </a>
             <a href="https://api.whatsapp.com/send?text={texto_compartilhamento}%20{url_afiliado_encoded}" target="_blank">
-                <button style="background-color: #25D366; color: white; padding: 8px 16px; border: none; border-radius: 5px;">
+                <button style="background-color: #25D366; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
                     📱 WhatsApp
+                </button>
+            </a>
+            <a href="https://www.pinterest.com/pin/create/button/?url={url_afiliado_encoded}&description={texto_compartilhamento}&media={url_da_imagem}" target="_blank">
+                <button style="background-color: #BD081C; color: white; padding: 8px 16px; border: none; border-radius: 5px;">
+                    📌 Pinterest
                 </button>
             </a>
         </div>
