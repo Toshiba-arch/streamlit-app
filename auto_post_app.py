@@ -241,6 +241,7 @@ def auto_post_app():
     
         texto_compartilhamento = urllib.parse.quote(post_gerado)
         url_afiliado_encoded = urllib.parse.quote(dados['url_afiliado'])
+        url_da_imagem = urllib.parse.quote(st.session_state.selected_images[0]) if st.session_state.selected_images else ""
     
         st.markdown(f"""
                 <div style="margin-top: 20px;">
