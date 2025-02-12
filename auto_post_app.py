@@ -194,23 +194,8 @@ def auto_post_app():
                     elif not checkbox_state and img_url in st.session_state.selected_images:
                         st.session_state.selected_images.remove(img_url)
 
-            if st.session_state.selected_images:
-                st.subheader("🖼️ Imagens Selecionadas")
-                selected_cols = st.columns(len(st.session_state.selected_images))
-                for idx, img_url in enumerate(st.session_state.selected_images):
-                    with selected_cols[idx]:
-                        st.image(img_url, use_container_width=True)
-                        response = requests.get(img_url)
-                        if response.status_code == 200:
-                            st.download_button(
-                                label=f"⬇️ Baixar Imagem {idx+1}",
-                                data=BytesIO(response.content),
-                                file_name=f"produto_{idx+1}.jpg",
-                                mime="image/jpeg",
-                                key=f"download_{idx}"
-                            )
-
-                            if st.session_state.selected_images:
+   
+                    if st.session_state.selected_images:
                         st.subheader("🖼️ Imagens Selecionadas para Edição")
                     
                         for idx, img_url in enumerate(st.session_state.selected_images):
@@ -239,7 +224,7 @@ def auto_post_app():
                                 <iframe src="{photopea_url}" width="100%" height="700px" style="border:none;"></iframe>
                                 """,
                                 unsafe_allow_html=True
-                            )
+                            )                            
 
         # Geração do post
         tags = novas_tags.split(',') if 'novas_tags' in locals() else []
