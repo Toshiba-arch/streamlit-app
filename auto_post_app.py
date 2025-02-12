@@ -195,8 +195,8 @@ def auto_post_app():
                         st.session_state.selected_images.remove(img_url)
 
    
-                    if st.session_state.selected_images:
-                    st.subheader("🖼️ Imagens Selecionadas para Edição")
+        if st.session_state.selected_images:
+                st.subheader("🖼️ Imagens Selecionadas para Edição")
                 
                     for idx, img_url in enumerate(st.session_state.selected_images):
                         st.image(img_url, use_container_width=True)
