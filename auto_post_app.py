@@ -196,35 +196,49 @@ def auto_post_app():
 
    
                     if st.session_state.selected_images:
-                        st.subheader("🖼️ Imagens Selecionadas para Edição")
-                    
-                        for idx, img_url in enumerate(st.session_state.selected_images):
-                            st.image(img_url, use_container_width=True)
-                            
-                            # Botão para abrir o editor
-                            if st.button(f"🖌️ Editar Imagem {idx+1}", key=f"edit_img_{idx}"):
-                                st.session_state.img_url_edicao = img_url
-                    
-                        # Abrir o iframe com o Photopea
-                        if 'img_url_edicao' in st.session_state and st.session_state.img_url_edicao:
-                            st.subheader("🖌️ Editor de Imagens Integrado (Photopea)")
-                            photopea_url = f"https://www.photopea.com/#open:{st.session_state.img_url_edicao}"
-                            
-                            # Instruções para o usuário
-                            st.markdown("""
-                            🔧 **Dicas de Edição:**  
-                            - Adiciona o preço do produto usando a ferramenta de texto.  
-                            - Ajusta cores, tamanhos e posição conforme necessário.  
-                            - Faz o download manual da imagem usando **File > Export As > PNG**.
-                            """)
-                            
-                            # iFrame do Photopea
-                            st.markdown(
-                                f"""
-                                <iframe src="{photopea_url}" width="100%" height="700px" style="border:none;"></iframe>
-                                """,
-                                unsafe_allow_html=True
-                            )                            
+    st.subheader("🖼️ Imagens Selecionadas para Edição")
+
+    for idx, img_url in enumerate(st.session_state.selected_images):
+        st.image(img_url, use_container_width=True)
+        
+        # Botão para abrir o editor
+        if st.button(f"🖌️ Editar Imagem {idx+1}", key=f"edit_img_{idx}"):
+            st.session_state.img_url_edicao = img_url
+
+    # Verifica se há uma imagem selecionada para edição
+    if 'img_url_edicao' in st.session_state and st.session_state.img_url_edicao:
+        st.subheader("🖌️ Editor de Imagens Integrado (Photopea)")
+        photopea_url = f"https://www.photopea.com/#open:{st.session_state.img_url_edicao}"
+        
+        # Instruções para o usuário
+        st.markdown("""
+        🔧 **Dicas de Edição:**  
+        - Adiciona o preço do produto usando a ferramenta de texto.  
+        - Ajusta cores, tamanhos e posição conforme necessário.  
+        - Faz o download manual da imagem usando **File > Export As > PNG**.
+        """)
+        
+        # Centraliza o iframe e garante apenas um
+        st.markdown(
+            f"""
+            <style>
+                .iframe-container {{
+                    text-align: center;
+                }}
+                .iframe-container iframe {{
+                    border: none;
+                    width: 80%;
+                    height: 700px;
+                    border-radius: 10px;
+                    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+                }}
+            </style>
+            <div class="iframe-container">
+                <iframe src="{photopea_url}"></iframe>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )                            
 
         # Geração do post
         tags = novas_tags.split(',') if 'novas_tags' in locals() else []
