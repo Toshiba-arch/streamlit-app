@@ -144,29 +144,29 @@ def auto_post_app():
                 col1, col2 = st.columns(2)
                 with col1:
                     novo_titulo = st.text_input("Título:", 
-                                              value=st.session_state.temp_data.get('nome', ''),
-                                              key='edit_title')
+                                             value=st.session_state.temp_data.get('nome', ''),
+                                             key='edit_title')
                     
                     novo_preco_original = st.number_input("Preço Original:", 
-                                                        value=st.session_state.temp_data.get('preco_original', 0.0),
-                                                        min_value=0.0,
-                                                        step=0.01,
-                                                        key='edit_original')
+                                                       value=st.session_state.temp_data.get('preco_original', 0.0),
+                                                       min_value=0.0,
+                                                       step=0.01,
+                                                       key='edit_original')
                     
                     novo_preco_atual = st.number_input("Preço Atual:", 
-                                                     value=st.session_state.temp_data.get('preco_atual', 0.0),
-                                                     min_value=0.0,
-                                                     step=0.01,
-                                                     key='edit_atual')
+                                                    value=st.session_state.temp_data.get('preco_atual', 0.0),
+                                                    min_value=0.0,
+                                                    step=0.01,
+                                                    key='edit_atual')
                 
                 with col2:
                     novo_cupom = st.text_input("Código do Cupom:", 
-                                             value=st.session_state.temp_data.get('cupom', ''),
-                                             key='edit_cupom')
+                                            value=st.session_state.temp_data.get('cupom', ''),
+                                            key='edit_cupom')
                     
                     novas_tags = st.text_input("Hashtags (separar por vírgulas):", 
-                                             value="promoção, desconto, amazon, oferta",
-                                             key='edit_tags')
+                                            value="promoção, desconto, amazon, oferta",
+                                            key='edit_tags')
                 
                 if st.form_submit_button("💾 Atualizar Dados"):
                     st.session_state.dados_produto.update({
@@ -186,59 +186,58 @@ def auto_post_app():
                 with cols[idx % 4]:
                     st.image(img_url, use_container_width=True)
                     checkbox_state = st.checkbox(f"Selecionar Imagem {idx+1}", 
-                                               key=f"img_{idx}",
-                                               value=img_url in st.session_state.selected_images)
+                                              key=f"img_{idx}",
+                                              value=img_url in st.session_state.selected_images)
                     
                     if checkbox_state and img_url not in st.session_state.selected_images:
                         st.session_state.selected_images.append(img_url)
                     elif not checkbox_state and img_url in st.session_state.selected_images:
                         st.session_state.selected_images.remove(img_url)
 
-   
         if st.session_state.selected_images:
-                st.subheader("🖼️ Imagens Selecionadas para Edição")
+            st.subheader("🖼️ Imagens Selecionadas para Edição")
+            
+            for idx, img_url in enumerate(st.session_state.selected_images):
+                st.image(img_url, use_container_width=True)
                 
-                    for idx, img_url in enumerate(st.session_state.selected_images):
-                        st.image(img_url, use_container_width=True)
-                        
-                        # Botão para abrir o editor
-                        if st.button(f"🖌️ Editar Imagem {idx+1}", key=f"edit_img_{idx}"):
-                            st.session_state.img_url_edicao = img_url
+                # Botão para abrir o editor
+                if st.button(f"🖌️ Editar Imagem {idx+1}", key=f"edit_img_{idx}"):
+                    st.session_state.img_url_edicao = img_url
+            
+            # Verifica se há uma imagem selecionada para edição
+            if 'img_url_edicao' in st.session_state and st.session_state.img_url_edicao:
+                st.subheader("🖌️ Editor de Imagens Integrado (Photopea)")
+                photopea_url = f"https://www.photopea.com/#open:{st.session_state.img_url_edicao}"
                 
-                    # Verifica se há uma imagem selecionada para edição
-                    if 'img_url_edicao' in st.session_state and st.session_state.img_url_edicao:
-                        st.subheader("🖌️ Editor de Imagens Integrado (Photopea)")
-                        photopea_url = f"https://www.photopea.com/#open:{st.session_state.img_url_edicao}"
-                        
-                        # Instruções para o usuário
-                        st.markdown("""
-                        🔧 **Dicas de Edição:**  
-                        - Adiciona o preço do produto usando a ferramenta de texto.  
-                        - Ajusta cores, tamanhos e posição conforme necessário.  
-                        - Faz o download manual da imagem usando **File > Export As > PNG**.
-                        """)
-                        
-                        # Centraliza o iframe e garante apenas um
-                        st.markdown(
-                            f"""
-                            <style>
-                                .iframe-container {{
-                                    text-align: center;
-                                }}
-                                .iframe-container iframe {{
-                                    border: none;
-                                    width: 80%;
-                                    height: 700px;
-                                    border-radius: 10px;
-                                    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-                                }}
-                            </style>
-                            <div class="iframe-container">
-                                <iframe src="{photopea_url}"></iframe>
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )                            
+                # Instruções para o usuário
+                st.markdown("""
+                🔧 **Dicas de Edição:**  
+                - Adiciona o preço do produto usando a ferramenta de texto.  
+                - Ajusta cores, tamanhos e posição conforme necessário.  
+                - Faz o download manual da imagem usando **File > Export As > PNG**.
+                """)
+                
+                # Centraliza o iframe e garante apenas um
+                st.markdown(
+                    f"""
+                    <style>
+                        .iframe-container {{
+                            text-align: center;
+                        }}
+                        .iframe-container iframe {{
+                            border: none;
+                            width: 80%;
+                            height: 700px;
+                            border-radius: 10px;
+                            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+                        }}
+                    </style>
+                    <div class="iframe-container">
+                        <iframe src="{photopea_url}"></iframe>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )                            
 
         # Geração do post
         tags = novas_tags.split(',') if 'novas_tags' in locals() else []
@@ -246,9 +245,9 @@ def auto_post_app():
 
         st.subheader("📋 Post Formatado para Copiar")
         st.text_area("Clique para selecionar e copiar:", 
-                    value=post_gerado, 
-                    height=250,
-                    key="post_area")
+                   value=post_gerado, 
+                   height=250,
+                   key="post_area")
         
         st.subheader("👀 Pré-visualização do Post")
         preview_html = f"""
@@ -274,28 +273,28 @@ def auto_post_app():
         url_da_imagem = urllib.parse.quote(st.session_state.selected_images[0]) if st.session_state.selected_images else ""
     
         st.markdown(f"""
-                <div style="margin-top: 20px;">
-            <a href="https://twitter.com/intent/tweet?text={texto_compartilhamento}&url={url_afiliado_encoded}" target="_blank">
-                <button style="background-color: #1DA1F2; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
-                    🐦 Twitter
-                </button>
-            </a>
-            <a href="https://www.facebook.com/sharer/sharer.php?u={url_afiliado_encoded}&quote={texto_compartilhamento}" target="_blank">
-                <button style="background-color: #1877F2; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
-                    📘 Facebook
-                </button>
-            </a>
-            <a href="https://api.whatsapp.com/send?text={texto_compartilhamento}%20{url_afiliado_encoded}" target="_blank">
-                <button style="background-color: #25D366; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
-                    📱 WhatsApp
-                </button>
-            </a>
-            <a href="https://www.pinterest.com/pin/create/button/?url={url_afiliado_encoded}&description={texto_compartilhamento}&media={url_da_imagem}" target="_blank">
-                <button style="background-color: #BD081C; color: white; padding: 8px 16px; border: none; border-radius: 5px;">
-                    📌 Pinterest
-                </button>
-            </a>
-        </div>
+            <div style="margin-top: 20px;">
+                <a href="https://twitter.com/intent/tweet?text={texto_compartilhamento}&url={url_afiliado_encoded}" target="_blank">
+                    <button style="background-color: #1DA1F2; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
+                        🐦 Twitter
+                    </button>
+                </a>
+                <a href="https://www.facebook.com/sharer/sharer.php?u={url_afiliado_encoded}&quote={texto_compartilhamento}" target="_blank">
+                    <button style="background-color: #1877F2; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
+                        📘 Facebook
+                    </button>
+                </a>
+                <a href="https://api.whatsapp.com/send?text={texto_compartilhamento}%20{url_afiliado_encoded}" target="_blank">
+                    <button style="background-color: #25D366; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
+                        📱 WhatsApp
+                    </button>
+                </a>
+                <a href="https://www.pinterest.com/pin/create/button/?url={url_afiliado_encoded}&description={texto_compartilhamento}&media={url_da_imagem}" target="_blank">
+                    <button style="background-color: #BD081C; color: white; padding: 8px 16px; border: none; border-radius: 5px;">
+                        📌 Pinterest
+                    </button>
+                </a>
+            </div>
         """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
