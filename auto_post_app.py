@@ -123,7 +123,7 @@ def auto_post_app():
     if 'temp_data' not in st.session_state:
         st.session_state.temp_data = {}
 
-    url_afiliado = st.text_input("Cole seu link de afiliado curto:", key="url_input")
+    url_afiliado = st.text_input("URL Amazon de afiliado:", key="url_input")
     
     if st.button("Carregar Produto"):
         with st.spinner("A extrair dados..."):
