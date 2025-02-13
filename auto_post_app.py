@@ -113,7 +113,7 @@ def gerar_post(data, tags):
     return "\n".join(post)
 
 def auto_post_app():
-    st.title("🛒 Gerador de Posts para Afiliados Pro")
+    st.title("🛒 Gerador de Posts para Afiliados")
     
     # Inicialização de estados
     if 'dados_produto' not in st.session_state:
@@ -126,7 +126,7 @@ def auto_post_app():
     url_afiliado = st.text_input("Cole seu link de afiliado curto:", key="url_input")
     
     if st.button("Carregar Produto"):
-        with st.spinner("Analisando produto..."):
+        with st.spinner("A extrair dados..."):
             dados = extrair_dados_produto(url_afiliado)
             if dados:
                 st.session_state.dados_produto = dados
@@ -266,7 +266,7 @@ def auto_post_app():
 
         # Compartilhamento
         st.markdown("---")
-        st.subheader("📤 Compartilhar Diretamente")
+        st.subheader("📤 Partilhar Diretamente Por:")
     
         texto_compartilhamento = urllib.parse.quote(post_gerado)
         url_afiliado_encoded = urllib.parse.quote(dados['url_afiliado'])
