@@ -177,33 +177,44 @@ def auto_post_app():
                     })
                     st.success("Dados atualizados!")
 
-        # Seção de imagens
+         # Seção de imagens
         if dados['imagens_url']:
-            st.subheader("📸 Seleção de Imagens")
+            st.subheader("📸 Imagem do Produto")
             
-            cols = st.columns(4)
-            for idx, img_url in enumerate(dados['imagens_url'][:8]):
-                with cols[idx % 4]:
-                    st.image(img_url, use_container_width=True)
-                    checkbox_state = st.checkbox(f"Selecionar Imagem {idx+1}", 
-                                              key=f"img_{idx}",
-                                              value=img_url in st.session_state.selected_images)
-                    
-                    if checkbox_state and img_url not in st.session_state.selected_images:
-                        st.session_state.selected_images.append(img_url)
-                    elif not checkbox_state and img_url in st.session_state.selected_images:
-                        st.session_state.selected_images.remove(img_url)
-
+            # Exibe apenas a primeira imagem em tamanho reduzido
+            img_url = dados['imagens_url'][0]
+            st.image(img_url, width=300)  # Tamanho reduzido da imagem
+            
+            # Seleção de imagem (apenas uma, pois só há uma disponível)
+            if st.checkbox("Selecionar Imagem", 
+                           key="img_select",
+                           value=img_url in st.session_state.selected_images):
+                st.session_state.selected_images = [img_url]
+            else:
+                st.session_state.selected_images = []
+        
         if st.session_state.selected_images:
-            st.subheader("🖼️ Imagens Selecionadas para Edição")
+            st.subheader("🖼️ Imagem Selecionada para Edição")
             
-            for idx, img_url in enumerate(st.session_state.selected_images):
-                st.image(img_url, use_container_width=True)
-                
-                # Botão para abrir o editor
-                if st.button(f"🖌️ Editar Imagem {idx+1}", key=f"edit_img_{idx}"):
-                    st.session_state.img_url_edicao = img_url
+            # Exibe a imagem selecionada em tamanho menor com botão de download
+            img_url = st.session_state.selected_images[0]
+            st.image(img_url, width=300)
             
+            # Botão de download da imagem
+            response = requests.get(img_url)
+            if response.status_code == 200:
+                img_data = response.content
+                st.download_button(
+                    label="📥 Fazer Download da Imagem",
+                    data=img_data,
+                    file_name="imagem_produto.png",
+                    mime="image/png"
+                )
+            
+            # Botão para abrir o editor
+            if st.button("🖌️ Editar Imagem", key="edit_img"):
+                st.session_state.img_url_edicao = img_url
+        
             # Verifica se há uma imagem selecionada para edição
             if 'img_url_edicao' in st.session_state and st.session_state.img_url_edicao:
                 st.subheader("🖌️ Editor de Imagens Integrado (Photopea)")
@@ -227,7 +238,7 @@ def auto_post_app():
                         .iframe-container iframe {{
                             border: none;
                             width: 80%;
-                            height: 350px;
+                            height: 700px;
                             border-radius: 10px;
                             box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
                         }}
