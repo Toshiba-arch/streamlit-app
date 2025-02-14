@@ -227,7 +227,7 @@ def auto_post_app():
                         .iframe-container iframe {{
                             border: none;
                             width: 80%;
-                            height: 700px;
+                            height: 350px;
                             border-radius: 10px;
                             box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
                         }}
