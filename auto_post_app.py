@@ -227,7 +227,10 @@ def auto_post_app():
         if st.session_state.selected_images:
             st.subheader("🖼️ Imagem Selecionada para Edição")
             img_url = st.session_state.selected_images[0]
-            st.image(img_url, width=300)
+            # Cria um container vazio para a imagem (que será atualizado)
+            image_container = st.empty()
+            # Exibe a imagem original no container
+            image_container.image(img_url, width=300)
             
             # Botão para download da imagem original
             response = requests.get(img_url)
@@ -239,11 +242,12 @@ def auto_post_app():
                     mime="image/png"
                 )
             
-            # Aplicar sobreposição de texto na imagem
+            # Seção para aplicar sobreposição de texto na imagem
             overlay_text = st.text_input("Texto para sobreposição (ex: Desconto 20%)", value="")
             if overlay_text and st.button("Aplicar Sobreposição"):
                 imagem_editada = adicionar_overlay(response.content, overlay_text, posicao=(20,20), font_size=32)
-                st.image(imagem_editada, width=300)
+                # Atualiza o container com a imagem editada (substituindo a original)
+                image_container.image(imagem_editada, width=300)
                 st.download_button(
                     label="📥 Fazer Download da Imagem Editada",
                     data=imagem_editada,
@@ -254,7 +258,7 @@ def auto_post_app():
             # Botão para abrir o editor integrado (Photopea)
             if st.button("🖌️ Editar Imagem", key="edit_img"):
                 st.session_state.img_url_edicao = img_url
-            
+        
             if 'img_url_edicao' in st.session_state and st.session_state.img_url_edicao:
                 st.subheader("🖌️ Editor de Imagens Integrado (Photopea)")
                 photopea_url = f"https://www.photopea.com/#open:{st.session_state.img_url_edicao}"
