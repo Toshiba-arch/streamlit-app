@@ -5,6 +5,7 @@ import re
 from io import BytesIO
 import urllib.parse
 from PIL import Image, ImageDraw, ImageFont
+import validators
 
 # =============================================================================
 # Configurações Globais e Funções de Utilidade
@@ -17,6 +18,9 @@ HEADERS = {
     "Accept-Encoding": "gzip, deflate, br",
     "Connection": "keep-alive"
 }
+
+def is_valid_amazon_url(url):
+    return validators.url(url) and "amazon" in url.lower()
 
 def extrair_preco(texto):
     """Extrai valores numéricos de strings de preço."""
