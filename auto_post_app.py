@@ -119,14 +119,14 @@ def gerar_post(data, tags):
 
 def adicionar_overlay(imagem_bytes, texto, posicao=(20,20), font_size=32):
     """
-    Adiciona sobreposição de texto à imagem.
-    Modifique 'posicao' e 'font_size' para ajustar a aparência do overlay.
+    Adiciona sobreposição de texto à imagem usando Pillow.
+    Ajuste 'posicao' e 'font_size' para modificar a aparência do overlay.
     """
     imagem = Image.open(BytesIO(imagem_bytes)).convert("RGBA")
     txt = Image.new("RGBA", imagem.size, (255, 255, 255, 0))
     draw = ImageDraw.Draw(txt)
     try:
-        # Tente carregar a fonte Arial; caso não encontre, usa fonte padrão
+        # Tenta carregar a fonte Arial; se não encontrar, usa a fonte padrão
         font = ImageFont.truetype("arial.ttf", font_size)
     except IOError:
         font = ImageFont.load_default()
@@ -142,6 +142,18 @@ def adicionar_overlay(imagem_bytes, texto, posicao=(20,20), font_size=32):
 def auto_post_app():
     st.title("🛒 Gerador de Posts para Afiliados")
     
+    # Inicialização dos estados (session_state)
+    if 'dados_produto' not in st.session_state:
+        st.session_state.dados_produto = None
+    if 'selected_images' not in st.session_state:
+        st.session_state.selected_images = []
+    if 'temp_data' not in st.session_state:
+        st.session_state.temp_data = {}
+    if 'img_url_edicao' not in st.session_state:
+        st.session_state.img_url_edicao = None
+    if 'trending_hashtags' not in st.session_state:
+        st.session_state.trending_hashtags = []  # Armazena as trending hashtags selecionadas
+
     # =========================================================================
     # 1. Inserir URL do Produto
     # =========================================================================
@@ -154,17 +166,15 @@ def auto_post_app():
         with st.spinner("A extrair dados..."):
             dados = extrair_dados_produto(url_afiliado)
             if dados:
-                # Armazena os dados extraídos na sessão
                 st.session_state.dados_produto = dados
                 st.session_state.temp_data = dados.copy()
-                # Seleciona automaticamente a primeira imagem
-                st.session_state.selected_images = dados['imagens_url'][:1]
+                st.session_state.selected_images = dados['imagens_url'][:1]  # Seleciona a primeira imagem
                 st.success("Dados carregados!")
             else:
                 st.error("Erro ao carregar dados. Verifique o link ou preencha manualmente.")
     
     # =========================================================================
-    # 3. Editar Dados do Produto (se necessário)
+    # 3. Editar Dados do Produto (incluindo Trending Hashtags)
     # =========================================================================
     if st.session_state.dados_produto:
         dados = st.session_state.dados_produto
@@ -173,12 +183,21 @@ def auto_post_app():
                 col1, col2 = st.columns(2)
                 with col1:
                     novo_titulo = st.text_input("Título:", value=st.session_state.temp_data.get('nome', ''), key='edit_title')
-                    novo_preco_original = st.number_input("Preço Original:", value=st.session_state.temp_data.get('preco_original', 0.0), min_value=0.0, step=0.01, key='edit_original')
-                    novo_preco_atual = st.number_input("Preço Atual:", value=st.session_state.temp_data.get('preco_atual', 0.0), min_value=0.0, step=0.01, key='edit_atual')
+                    novo_preco_original = st.number_input("Preço Original:", 
+                                                          value=st.session_state.temp_data.get('preco_original', 0.0),
+                                                          min_value=0.0, step=0.01, key='edit_original')
+                    novo_preco_atual = st.number_input("Preço Atual:", 
+                                                       value=st.session_state.temp_data.get('preco_atual', 0.0),
+                                                       min_value=0.0, step=0.01, key='edit_atual')
                 with col2:
                     novo_cupom = st.text_input("Código do Cupom:", value=st.session_state.temp_data.get('cupom', ''), key='edit_cupom')
-                    # Tags adicionais podem ser inseridas pelo usuário
-                    novas_tags = st.text_input("Hashtags (separar por vírgulas):", value="promoção, desconto, amazon, oferta", key='edit_tags')
+                    # Campo para hashtags adicionais (digitadas pelo usuário)
+                    novas_tags = st.text_input("Hashtags adicionais (separar por vírgulas):", 
+                                               value="promoção, desconto, amazon, oferta", key='edit_tags')
+                    # Trending hashtags integradas na edição
+                    trending_options = ["oferta", "desconto", "promoção", "Amazon", "economize", "compreagora"]
+                    trending_selected = st.multiselect("Trending Hashtags:", trending_options, default=st.session_state.trending_hashtags)
+                
                 if st.form_submit_button("💾 Atualizar Dados"):
                     st.session_state.dados_produto.update({
                         'nome': novo_titulo,
@@ -186,23 +205,19 @@ def auto_post_app():
                         'preco_atual': novo_preco_atual,
                         'cupom': novo_cupom
                     })
+                    # Atualiza as trending hashtags selecionadas
+                    st.session_state.trending_hashtags = trending_selected
                     st.success("Dados atualizados!")
-        
-        # =========================================================================
-        # 4. Trending Hashtags (Pré-seleção) + Tags Adicionais
-        # =========================================================================
-        trending_tags = ["oferta", "desconto", "promoção", "Amazon", "economize", "compreagora"]
-        st.markdown("### Trending Hashtags")
-        tags_trending = st.multiselect("Selecione hashtags trending:", trending_tags)
-        
-        # =========================================================================
-        # 5. Geração e Visualização da Imagem para Edição e Download
-        # =========================================================================
+    
+    # =========================================================================
+    # 4. Geração e Visualização da Imagem para Edição e Download
+    # =========================================================================
+    if st.session_state.dados_produto:
+        dados = st.session_state.dados_produto
         if dados['imagens_url']:
             st.subheader("📸 Imagem do Produto")
-            img_url = dados['imagens_url'][0]  # Usa a primeira imagem extraída
+            img_url = dados['imagens_url'][0]  # Usa a primeira imagem
             st.image(img_url, width=300)
-            
             # Seleção da imagem (única)
             if st.checkbox("Selecionar Imagem", key="img_select", value=img_url in st.session_state.selected_images):
                 st.session_state.selected_images = [img_url]
@@ -269,12 +284,14 @@ def auto_post_app():
                     """,
                     unsafe_allow_html=True
                 )
-        
-        # =========================================================================
-        # 6. Geração do Post
-        # =========================================================================
-        # Combina as hashtags adicionais (digitadas) com as trending selecionadas
-        tags_adicionais = [tag.strip() for tag in novas_tags.split(',') if tag.strip()] + tags_trending
+    
+    # =========================================================================
+    # 5. Geração do Post
+    # =========================================================================
+    if st.session_state.dados_produto:
+        # Combina as hashtags adicionais digitadas com as trending selecionadas
+        tags_manually = st.session_state.edit_tags if "edit_tags" in st.session_state else "promoção, desconto, amazon, oferta"
+        tags_adicionais = [tag.strip() for tag in tags_manually.split(',') if tag.strip()] + st.session_state.trending_hashtags
         post_gerado = gerar_post(st.session_state.dados_produto, tags_adicionais)
         
         st.subheader("📋 Post Formatado para Copiar")
@@ -294,37 +311,30 @@ def auto_post_app():
         </div>
         """
         st.markdown(preview_html, unsafe_allow_html=True)
-        
-        # =========================================================================
-        # 7. Botões de Partilha
-        # =========================================================================
+    
+    # =========================================================================
+    # 6. Botões de Partilha
+    # =========================================================================
+    if st.session_state.dados_produto:
         st.markdown("---")
         st.subheader("📤 Partilhar Diretamente Por:")
         texto_compartilhamento = urllib.parse.quote(post_gerado)
-        url_afiliado_encoded = urllib.parse.quote(dados['url_afiliado'])
+        url_afiliado_encoded = urllib.parse.quote(st.session_state.dados_produto['url_afiliado'])
         url_da_imagem = urllib.parse.quote(st.session_state.selected_images[0]) if st.session_state.selected_images else ""
         st.markdown(
             f"""
             <div style="margin-top: 20px;">
                 <a href="https://twitter.com/intent/tweet?text={texto_compartilhamento}&url={url_afiliado_encoded}" target="_blank">
-                    <button style="background-color: #1DA1F2; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
-                        🐦 Twitter
-                    </button>
+                    <button style="background-color: #1DA1F2; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">🐦 Twitter</button>
                 </a>
                 <a href="https://www.facebook.com/sharer/sharer.php?u={url_afiliado_encoded}&quote={texto_compartilhamento}" target="_blank">
-                    <button style="background-color: #1877F2; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
-                        📘 Facebook
-                    </button>
+                    <button style="background-color: #1877F2; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">📘 Facebook</button>
                 </a>
                 <a href="https://api.whatsapp.com/send?text={texto_compartilhamento}%20{url_afiliado_encoded}" target="_blank">
-                    <button style="background-color: #25D366; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
-                        📱 WhatsApp
-                    </button>
+                    <button style="background-color: #25D366; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">📱 WhatsApp</button>
                 </a>
                 <a href="https://www.pinterest.com/pin/create/button/?url={url_afiliado_encoded}&description={texto_compartilhamento}&media={url_da_imagem}" target="_blank">
-                    <button style="background-color: #BD081C; color: white; padding: 8px 16px; border: none; border-radius: 5px;">
-                        📌 Pinterest
-                    </button>
+                    <button style="background-color: #BD081C; color: white; padding: 8px 16px; border: none; border-radius: 5px;">📌 Pinterest</button>
                 </a>
             </div>
             """,
