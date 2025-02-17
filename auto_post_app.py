@@ -5,7 +5,6 @@ import re
 from io import BytesIO
 import urllib.parse
 from PIL import Image, ImageDraw, ImageFont
-import validators
 
 # =============================================================================
 # Configurações Globais e Funções de Utilidade
