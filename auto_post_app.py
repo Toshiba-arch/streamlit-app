@@ -117,21 +117,51 @@ def gerar_post(data, tags):
     post.append("\n📌 " + "  ".join([f"#{tag.strip()}" for tag in tags]))
     return "\n".join(post)
 
-def adicionar_overlay(imagem_bytes, texto, posicao=(20,20), font_size=32):
+def adicionar_overlay(imagem_bytes, texto, font_size=32, margin=10):
     """
-    Adiciona sobreposição de texto à imagem usando Pillow.
-    Ajuste 'posicao' e 'font_size' para modificar a aparência do overlay.
+    Adiciona sobreposição de texto na parte inferior da imagem com fundo preto.
+    
+    Parâmetros:
+      - imagem_bytes: bytes da imagem original.
+      - texto: o texto a ser sobreposto.
+      - font_size: tamanho da fonte.
+      - margin: margem em pixels a partir da borda da imagem.
+    
+    O texto é desenhado com fonte bold (Arial Bold) se disponível, em branco, sobre um retângulo preto.
     """
+    # Abre a imagem e garante o modo RGBA
     imagem = Image.open(BytesIO(imagem_bytes)).convert("RGBA")
-    txt = Image.new("RGBA", imagem.size, (255, 255, 255, 0))
-    draw = ImageDraw.Draw(txt)
+    
+    # Cria uma camada transparente com as mesmas dimensões da imagem
+    overlay = Image.new("RGBA", imagem.size, (255, 255, 255, 0))
+    draw = ImageDraw.Draw(overlay)
+    
     try:
-        # Tenta carregar a fonte Arial; se não encontrar, usa a fonte padrão
-        font = ImageFont.truetype("arial.ttf", font_size)
+        # Tenta carregar a fonte Arial Bold; caso não encontre, usa a fonte padrão
+        font = ImageFont.truetype("arialbd.ttf", font_size)
     except IOError:
         font = ImageFont.load_default()
-    draw.text(posicao, texto, font=font, fill=(255, 0, 0, 255))
-    imagem_editada = Image.alpha_composite(imagem, txt)
+    
+    # Calcula o tamanho do texto para criar o fundo
+    text_width, text_height = draw.textsize(texto, font=font)
+    
+    # Define a posição no canto inferior esquerdo com margem
+    x = margin
+    y = imagem.height - text_height - margin
+    
+    # Define um padding para o retângulo de fundo
+    padding = 5
+    rect_coords = [x - padding, y - padding, x + text_width + padding, y + text_height + padding]
+    
+    # Desenha o retângulo preto (com opacidade 200) como fundo do texto
+    draw.rectangle(rect_coords, fill=(0, 0, 0, 200))
+    
+    # Desenha o texto em branco sobre o retângulo
+    draw.text((x, y), texto, font=font, fill=(255, 255, 255, 255))
+    
+    # Combina a imagem original com o overlay
+    imagem_editada = Image.alpha_composite(imagem, overlay)
+    
     output = BytesIO()
     imagem_editada.save(output, format="PNG")
     return output.getvalue()
