@@ -275,7 +275,7 @@ def auto_post_app():
             # Seção para aplicar sobreposição de texto na imagem
             overlay_text = st.text_input("Texto para sobreposição (ex: Desconto 20%)", value="")
             if overlay_text and st.button("Aplicar Sobreposição"):
-                imagem_editada = adicionar_overlay(response.content, overlay_text, posicao=(20,20), font_size=32)
+                imagem_editada = adicionar_overlay(response.content, overlay_text, position=(20,20), font_size=32)
                 # Atualiza o container com a imagem editada (substituindo a original)
                 image_container.image(imagem_editada, width=300)
                 st.download_button(
