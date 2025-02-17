@@ -19,9 +19,6 @@ HEADERS = {
     "Connection": "keep-alive"
 }
 
-def is_valid_amazon_url(url):
-    return validators.url(url) and "amazon" in url.lower()
-
 def extrair_preco(texto):
     """Extrai valores numéricos de strings de preço."""
     try:
@@ -277,7 +274,10 @@ def auto_post_app():
                 )
             
             # Seção para aplicar sobreposição de texto na imagem
-            overlay_text = st.text_input("Texto para sobreposição (ex: Desconto 20%)", value="")
+            overlay_text = st.text_input("Texto para sobreposição", value="Desconto 20%")
+            font_size = st.slider("Tamanho da fonte", min_value=10, max_value=100, value=32)
+            text_color = st.color_picker("Cor do texto", "#FFFFFF")
+            background_color = st.color_picker("Cor de fundo", "#000000")
             if overlay_text and st.button("Aplicar Sobreposição"):
                 imagem_editada = adicionar_overlay(response.content, overlay_text, position=(20,20), font_size=32)
                 # Atualiza o container com a imagem editada (substituindo a original)
