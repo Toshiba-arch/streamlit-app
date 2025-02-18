@@ -19,6 +19,19 @@ HEADERS = {
     "Sec-Fetch-User": "?1"
 }
 
+def obter_tags_populares():
+    """Busca tags populares em uma plataforma ou serviço de tendências"""
+    try:
+        # Exemplo de uma requisição para pegar tags populares
+        response = requests.get("https://api.some-trending-tags-service.com/tags")
+        response.raise_for_status()
+        data = response.json()
+        return data['tags']  # Ajustar conforme a resposta da API
+
+    except Exception as e:
+        st.error(f"Erro ao obter tags populares: {str(e)}")
+        return []
+
 def extrair_preco(texto):
     """Extrai valores numéricos de strings de preço"""
     try:
@@ -173,6 +186,15 @@ def auto_post_app():
                     novas_tags = st.text_input("Hashtags (separar por vírgulas):", 
                                             value="promoção, desconto, amazon, oferta",
                                             key='edit_tags')
+                    
+                    # Botão para carregar tags populares
+                    if st.button("Carregar Tags Populares"):
+                        tags_populares = obter_tags_populares()
+                        if tags_populares:
+                            novas_tags = ", ".join(tags_populares)
+                            st.success("Tags populares carregadas!")
+                        else:
+                            st.error("Erro ao carregar as tags populares.")
                 
                 if st.form_submit_button("💾 Atualizar Dados"):
                     st.session_state.dados_produto.update({
