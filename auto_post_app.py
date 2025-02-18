@@ -19,19 +19,6 @@ HEADERS = {
     "Sec-Fetch-User": "?1"
 }
 
-def obter_tags_populares():
-    """Busca tags populares em uma plataforma ou serviço de tendências"""
-    try:
-        # Exemplo de uma requisição para pegar tags populares
-        response = requests.get("https://api.some-trending-tags-service.com/tags")
-        response.raise_for_status()
-        data = response.json()
-        return data['tags']  # Ajustar conforme a resposta da API
-
-    except Exception as e:
-        st.error(f"Erro ao obter tags populares: {str(e)}")
-        return []
-
 def extrair_preco(texto):
     """Extrai valores numéricos de strings de preço"""
     try:
@@ -130,6 +117,125 @@ def gerar_post(data, tags):
     post.append("\n📌 " + "  ".join([f"#{tag.strip()}" for tag in tags]))
     
     return "\n".join(post)
+
+def auto_post_app():
+    st.title("🛒 Gerador de Posts para Afiliados")
+    
+    # Inicialização de estados
+    if 'dados_produto' not in st.session_state:
+        st.session_state.dados_produto = None
+    if 'selected_images' not in st.session_state:
+        st.session_state.selected_images = []
+    if 'temp_data' not in st.session_state:
+        st.session_state.temp_data = {}
+
+    url_afiliado = st.text_input("URL Amazon de afiliado:", key="url_input")
+    
+    if st.button("Carregar Produto"):
+        with st.spinner("A extrair dados..."):
+            dados = extrair_dados_produto(url_afiliado)
+            if dados:
+                st.session_state.dados_produto = dados
+                st.session_state.temp_data = dados.copy()
+                st.session_state.selected_images = dados['imagens_url'][:1]
+                st.success("Dados carregados!")
+            else:
+                st.error("Erro ao carregar dados. Verifique o link ou preencha manualmente.")
+
+    if st.session_state.dados_produto:
+        dados = st.session_state.dados_produto
+        
+        with st.expander("🔧 Editar Detalhes", expanded=True):
+            with st.form(key='edit_form'):
+                col1, col2 = st.columns(2)
+                with col1:
+                    novo_titulo = st.text_input("Título:", 
+                                             value=st.session_state.temp_data.get('nome', ''), 
+                                             key='edit_title')
+                    
+                    novo_preco_original = st.number_input("Preço Original:", 
+                                                       value=st.session_state.temp_data.get('preco_original', 0.0),
+                                                       min_value=0.0,
+                                                       step=0.01,
+                                                       key='edit_original')
+                    
+                    novo_preco_atual = st.number_input("Preço Atual:", 
+                                                    value=st.session_state.temp_data.get('preco_atual', 0.0),
+                                                    min_value=0.0,
+                                                    step=0.01,
+                                                    key='edit_atual')
+                
+                with col2:
+                    novo_cupom = st.text_input("Código do Cupom:", 
+                                            value=st.session_state.temp_data.get('cupom', ''), 
+                                            key='edit_cupom')
+                    
+                    # Dropdown multiselect para hashtags
+                    tags_populares = [
+                        "promoção", "desconto", "oferta", "amazon", "preço", "superdesconto", "shopping", 
+                        "vendas", "tech", "eletrônicos", "gadgets", "livros", "roupas", "sapatos"
+                    ]
+                    
+                    novas_tags = st.multiselect("Selecione as Hashtags populares:", 
+                                               options=tags_populares, 
+                                               default=["promoção", "desconto"], 
+                                               key='edit_tags')
+
+                # Botão para submissão do formulário
+                if st.form_submit_button("💾 Atualizar Dados"):
+                    st.session_state.dados_produto.update({
+                        'nome': novo_titulo,
+                        'preco_original': novo_preco_original,
+                        'preco_atual': novo_preco_atual,
+                        'cupom': novo_cupom
+                    })
+                    st.success("Dados atualizados!")
+
+        # Seção de imagens
+        if dados['imagens_url']:
+            st.subheader("📸 Imagem do Produto")
+            
+            # Exibe apenas a primeira imagem em tamanho reduzido
+            img_url = dados['imagens_url'][0]
+            st.image(img_url, width=300)  # Tamanho reduzido da imagem
+            
+            # Seleção de imagem (apenas uma, pois só há uma disponível)
+            if st.checkbox("Selecionar Imagem", 
+                           key="img_select", 
+                           value=img_url in st.session_state.selected_images):
+                st.session_state.selected_images = [img_url]
+            else:
+                st.session_state.selected_images = []
+        
+        if st.session_state.selected_images:
+            st.subheader("🖼️ Imagem Selecionada para Edição")
+            
+            # Exibe a imagem selecionada em tamanho menor com botão de download
+            img_url = st.session_state.selected_images[0]
+            st.image(img_url, width=300)
+            
+            # Botão de download da imagem
+            response = requests.get(img_url)
+            if response.status_code == 200:
+                img_data = response.content
+                st.download_button(
+                    label="📥 Fazer Download da Imagem",
+                    data=img_data,
+                    file_name="imagem_produto.png",
+                    mime="image/png"
+                )
+            
+            # Botão para abrir o editor
+            if st.button("🖌️ Editar Imagem", key="edit_img"):
+                st.session_state.img_url_edicao = img_url
+                st.session_state.img_url_download = img_url
+
+        st.subheader("💬 Gerar Post")
+        if st.button("Gerar Post"):
+            if dados:
+                post = gerar_post(dados, novas_tags)
+                st.text_area("Post Gerado", post, height=300)
+                st.download_button("📥 Baixar Post", post, "post.txt")
 
 def auto_post_app():
     st.title("🛒 Gerador de Posts para Afiliados")
