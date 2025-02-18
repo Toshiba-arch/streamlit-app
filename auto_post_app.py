@@ -275,7 +275,7 @@ def auto_post_app():
                     </button>
                 </a>
                 <a href="https://www.pinterest.com/pin/create/button/?url={url_afiliado_encoded}&description={texto_compartilhamento}&media={url_da_imagem}" target="_blank">
-                    <button style="background-color: #BD081C; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px">
+                    <button style="background-color: #BD081C; color: white; padding: 8px 16px; border: outset; border-radius: 5px; margin-right: 10px">
                         📌 Pinterest
                     </button>
                 </a>
