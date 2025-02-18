@@ -260,17 +260,17 @@ def auto_post_app():
         st.markdown(f"""
             <div style="margin-top: 20px;">
                 <a href="https://twitter.com/intent/tweet?text={texto_compartilhamento}&url={url_afiliado_encoded}" target="_blank">
-                    <button style="background-color: #1DA1F2; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
+                    <button style="background-color: #1DA1F2; color: white; padding: 8px 16px; border: outset; 5px; margin-right: 10px;">
                         🐦 Twitter
                     </button>
                 </a>
                 <a href="https://www.facebook.com/sharer/sharer.php?u={url_afiliado_encoded}&quote={texto_compartilhamento}" target="_blank">
-                    <button style="background-color: #1877F2; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
+                    <button style="background-color: #1877F2; color: white; padding: 8px 16px; border: outset; border-radius: 5px; margin-right: 10px;">
                         📘 Facebook
                     </button>
                 </a>
                 <a href="https://api.whatsapp.com/send?text={texto_compartilhamento}%20{url_afiliado_encoded}" target="_blank">
-                    <button style="background-color: #25D366; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
+                    <button style="background-color: #25D366; color: white; padding: 8px 16px; border: outset; border-radius: 5px; margin-right: 10px;">
                         💬 WhatsApp
                     </button>
                 </a>
