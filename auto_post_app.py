@@ -225,10 +225,19 @@ def auto_post_app():
                     mime="image/png"
                 )
             
-            # Botão para abrir o editor
+            # Botão para abrir o editor Photopea
             if st.button("🖌️ Editar Imagem", key="edit_img"):
                 st.session_state.img_url_edicao = img_url
                 st.session_state.img_url_download = img_url
+
+                # Gerar o link do Photopea
+                photopea_url = f"https://www.photopea.com/#open:{img_url}"
+                st.markdown(
+                    f"""
+                    <iframe src="{photopea_url}" width="100%" height="700px" frameborder="0"></iframe>
+                    """,
+                    unsafe_allow_html=True
+                )
 
         st.subheader("💬 Gerar Post")
         if st.button("Gerar Post"):
@@ -267,8 +276,8 @@ def auto_post_app():
                     </button>
                 </a>
                 <a href="https://api.whatsapp.com/send?text={texto_compartilhamento}%20{url_afiliado_encoded}" target="_blank">
-                    <button style="background-color: #25D366; color: white; padding: 8px 16px; border: none; border-radius: 5px; margin-right: 10px;">
-                        📱 WhatsApp
+                    <button style="background-color: #25D366; color: white; padding: 8px 16px; border: none; border-radius: 5px;">
+                        💬 WhatsApp
                     </button>
                 </a>
                 <a href="https://www.pinterest.com/pin/create/button/?url={url_afiliado_encoded}&description={texto_compartilhamento}&media={url_da_imagem}" target="_blank">
@@ -279,5 +288,3 @@ def auto_post_app():
             </div>
         """, unsafe_allow_html=True)
 
-if __name__ == "__main__":
-    auto_post_app()
