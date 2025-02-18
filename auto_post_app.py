@@ -235,7 +235,6 @@ def auto_post_app():
             if dados:
                 post = gerar_post(dados, novas_tags)
                 st.text_area("Post Gerado", post, height=300)
-                st.download_button("📥 Baixar Post", post, "post.txt")                            
 
         # Geração do post
         tags = novas_tags
@@ -247,21 +246,6 @@ def auto_post_app():
                    height=250,
                    key="post_area")
         
-        st.subheader("👀 Pré-visualização do Post")
-        preview_html = f"""
-        <div style="
-            border: 2px solid #e74c3c;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 10px 0;
-            background-color: #fff5f5;
-            font-family: Arial, sans-serif;
-        ">
-            {post_gerado.replace('\n', '<br>')}
-        </div>
-        """
-        st.markdown(preview_html, unsafe_allow_html=True)
-
         # Compartilhamento
         st.markdown("---")
         st.subheader("📤 Partilhar Diretamente Por:")
