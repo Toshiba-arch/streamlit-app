@@ -187,16 +187,7 @@ def auto_post_app():
                                             value="promoção, desconto, amazon, oferta",
                                             key='edit_tags')
 
-                # Botão para carregar tags populares
-                carregar_tags_populares = st.button("Carregar Tags Populares")
-                if carregar_tags_populares:
-                    tags_populares = obter_tags_populares()
-                    if tags_populares:
-                        novas_tags = ", ".join(tags_populares)
-                        st.success("Tags populares carregadas!")
-                    else:
-                        st.error("Erro ao carregar as tags populares.")
-                
+                # Botão para submissão do formulário
                 if st.form_submit_button("💾 Atualizar Dados"):
                     st.session_state.dados_produto.update({
                         'nome': novo_titulo,
@@ -206,6 +197,16 @@ def auto_post_app():
                     })
                     st.success("Dados atualizados!")
 
+        # Botão para carregar tags populares fora do formulário
+        carregar_tags_populares = st.button("Carregar Tags Populares")
+        if carregar_tags_populares:
+            tags_populares = obter_tags_populares()
+            if tags_populares:
+                novas_tags = ", ".join(tags_populares)
+                st.success("Tags populares carregadas!")
+            else:
+                st.error("Erro ao carregar as tags populares.")
+        
         # Seção de imagens
         if dados['imagens_url']:
             st.subheader("📸 Imagem do Produto")
@@ -278,31 +279,6 @@ def auto_post_app():
                     """,
                     unsafe_allow_html=True
                 )                            
-
-        # Geração do post
-        tags = novas_tags.split(',') if 'novas_tags' in locals() else []
-        post_gerado = gerar_post(st.session_state.dados_produto, tags)
-
-        st.subheader("📋 Post Formatado para Copiar")
-        st.text_area("Clique para selecionar e copiar:", 
-                   value=post_gerado, 
-                   height=250,
-                   key="post_area")
-        
-        st.subheader("👀 Pré-visualização do Post")
-        preview_html = f"""
-        <div style="
-            border: 2px solid #e74c3c;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 10px 0;
-            background-color: #fff5f5;
-            font-family: Arial, sans-serif;
-        ">
-            {post_gerado.replace('\n', '<br>')}
-        </div>
-        """
-        st.markdown(preview_html, unsafe_allow_html=True)                            
 
         # Geração do post
         tags = novas_tags.split(',') if 'novas_tags' in locals() else []
