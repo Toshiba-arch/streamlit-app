@@ -239,12 +239,6 @@ def auto_post_app():
                     unsafe_allow_html=True
                 )
 
-        st.subheader("💬 Gerar Post")
-        if st.button("Gerar Post"):
-            if dados:
-                post = gerar_post(dados, novas_tags)
-                st.text_area("Post Gerado", post, height=300)
-
         # Geração do post
         tags = novas_tags
         post_gerado = gerar_post(st.session_state.dados_produto, tags)
@@ -252,7 +246,7 @@ def auto_post_app():
         st.subheader("📋 Post Formatado para Copiar")
         st.text_area("Clique para selecionar e copiar:", 
                    value=post_gerado, 
-                   height=250,
+                   height=300,
                    key="post_area")
         
         # Compartilhamento
