@@ -260,7 +260,7 @@ def auto_post_app():
         st.markdown(f"""
             <div style="margin-top: 20px;">
                 <a href="https://twitter.com/intent/tweet?text={texto_compartilhamento}&url={url_afiliado_encoded}" target="_blank">
-                    <button style="background-color: #1DA1F2; color: white; padding: 8px 16px; border: outset; margin-right: 10px;">
+                    <button style="background-color: #1DA1F2; color: white; padding: 8px 16px; border: outset; border-radius: 1px 0 3px 4px; margin-right: 10px;">
                         🐦 Twitter
                     </button>
                 </a>
