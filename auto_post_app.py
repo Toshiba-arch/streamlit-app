@@ -197,7 +197,7 @@ def auto_post_app():
             
             # Exibe apenas a primeira imagem em tamanho reduzido
             img_url = dados['imagens_url'][0]
-            st.image(img_url, width=300)  # Tamanho reduzido da imagem
+            st.image(img_url, width=150)  # Tamanho reduzido da imagem
             
             # Seleção de imagem (apenas uma, pois só há uma disponível)
             if st.checkbox("Selecionar Imagem", 
