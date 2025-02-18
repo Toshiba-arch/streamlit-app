@@ -238,7 +238,7 @@ def auto_post_app():
                 st.download_button("📥 Baixar Post", post, "post.txt")                            
 
         # Geração do post
-        tags = novas_tags.split(',') if 'novas_tags' in locals() else []
+        tags = novas_tags
         post_gerado = gerar_post(st.session_state.dados_produto, tags)
 
         st.subheader("📋 Post Formatado para Copiar")
